@@ -127,7 +127,8 @@ function dodoApiRequest(method, path) {
  */
 async function verifyPaymentAndUpgrade(email) {
     console.log(`\n🔍 Verifying payment for: ${email}`)
-    
+    console.log(`📡 Using Dodo API: ${DODO_API_BASE}`)
+
     try {
         // Get recent payments from Dodo API
         const paymentsRes = await dodoApiRequest('GET', '/payments?limit=10')
@@ -358,6 +359,22 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') {
         res.writeHead(204)
         return res.end()
+    }
+
+    // Root endpoint - show config (without secrets)
+    if (req.method === 'GET' && req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        return res.end(JSON.stringify({
+            status: 'running',
+            service: 'sfht-webhook',
+            config: {
+                dodo_api_base: DODO_API_BASE,
+                supabase_url: SUPABASE_URL,
+                has_dodo_key: !!DODO_API_KEY,
+                has_supabase_key: !!SUPABASE_SERVICE_KEY,
+                has_webhook_secret: !!DODO_WEBHOOK_SECRET
+            }
+        }))
     }
 
     // Health check
