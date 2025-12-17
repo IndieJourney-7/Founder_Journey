@@ -73,9 +73,44 @@ const ExportModal = ({ isOpen, onClose, mountainRef }) => {
             link.href = previewUrl;
             link.click();
         } else if (actionType === 'share') {
-            // In a real app, this would upload to storage and open Twitter intent
-            const text = encodeURIComponent(`I'm conquering my goals on SFHT Ascent! 🏔️🚀 ${currentMountain?.title || 'My Journey'} \n\n#BuildInPublic #SaaS`);
-            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+            const shareText = `I'm conquering my goals on SFHT Ascent! 🏔️🚀 ${currentMountain?.title || 'My Journey'} \n\n#BuildInPublic #SaaS`;
+
+            // Try Web Share API first (works great on mobile with images)
+            if (navigator.share && navigator.canShare && previewUrl) {
+                try {
+                    // Convert base64 to blob
+                    const response = await fetch(previewUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], 'my-ascent.png', { type: 'image/png' });
+
+                    // Check if we can share files
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            text: shareText,
+                            files: [file]
+                        });
+                        return; // Successfully shared
+                    }
+                } catch (err) {
+                    console.log('Web Share API failed, using fallback:', err);
+                }
+            }
+
+            // Fallback: Download image and open Twitter
+            // Download the image first so user has it ready to attach
+            const link = document.createElement('a');
+            link.href = previewUrl;
+            link.download = `${currentMountain?.title || 'My-Ascent'}-${new Date().toISOString().split('T')[0]}.png`;
+            link.click();
+
+            // Small delay then open Twitter
+            setTimeout(() => {
+                const text = encodeURIComponent(shareText);
+                window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+
+                // Show user a helpful message
+                alert('Your mountain image has been downloaded! Please attach it to your tweet manually.');
+            }, 500);
         }
     };
 
