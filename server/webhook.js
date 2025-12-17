@@ -41,7 +41,8 @@ const PORT = process.env.PORT || 3001
 const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 const DODO_API_KEY = process.env.DODO_API_KEY
-const DODO_API_BASE = 'https://api.dodopayments.com'
+// Use test API for test mode payments
+const DODO_API_BASE = process.env.DODO_API_BASE || 'https://test.api.dodopayments.com'
 const DODO_WEBHOOK_SECRET = process.env.DODO_WEBHOOK_SECRET || ''
 
 // ============================================
