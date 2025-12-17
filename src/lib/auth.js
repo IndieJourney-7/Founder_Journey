@@ -54,13 +54,24 @@ export const signIn = async (email, password) => {
 
 /**
  * Sign in with Google OAuth
+ * Works for any Gmail user by dynamically detecting the current domain
  * @returns {Promise<{error: object|null}>}
  */
 export const signInWithGoogle = async () => {
+    // Dynamically get the redirect URL based on current environment
+    const redirectUrl = `${window.location.origin}/dashboard`
+
+    console.log('🔐 Initiating Google OAuth with redirect:', redirectUrl)
+
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: `${window.location.origin}/dashboard`
+            redirectTo: redirectUrl,
+            // Allow any Gmail user to sign in (no domain restriction)
+            queryParams: {
+                access_type: 'offline',
+                prompt: 'consent'
+            }
         }
     })
 
