@@ -154,11 +154,12 @@ async function verifyPaymentAndUpgrade(email) {
         })
 
         // Find a successful payment or active subscription for this email
+        // Only accept truly successful statuses (NOT requires_payment_method or failed)
         const payment = payments.find(p =>
             (p.customer?.email?.toLowerCase() === email.toLowerCase() ||
              p.metadata?.email?.toLowerCase() === email.toLowerCase()) &&
             (p.status === 'succeeded' || p.status === 'completed' || p.status === 'paid' ||
-             p.status === 'active' || p.status === 'trialing' || p.status === 'requires_payment_method')
+             p.status === 'active' || p.status === 'trialing')
         )
 
         if (!payment) {
