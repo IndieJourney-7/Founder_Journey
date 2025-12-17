@@ -23,7 +23,8 @@ export default function PaymentSuccess() {
 
             try {
                 // Call backend to verify payment with Dodo API and upgrade user
-                const response = await fetch('http://localhost:3001/verify-payment', {
+                const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'http://localhost:3001'
+                const response = await fetch(`${webhookUrl}/verify-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: user.email })

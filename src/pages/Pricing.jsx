@@ -99,7 +99,7 @@ export default function Pricing() {
 }
 
 // DODO PAYMENTS - TEST MODE
-const DODO_PAYMENT_LINK = 'https://test.checkout.dodopayments.com/buy/pdt_kbHpZ9UEYWvoGANoe2imB?quantity=1&redirect_url=http://localhost:5173/payment-success&cancel_url=http://localhost:5173/payment-cancel'
+const DODO_PAYMENT_LINK = 'https://test.checkout.dodopayments.com/buy/pdt_kbHpZ9UEYWvoGANoe2imB?quantity=1&redirect_url=https://sfht-ascent.vercel.app/payment-success&cancel_url=https://sfht-ascent.vercel.app/payment-cancel'
 
 function PricingCard({ title, price, period, description, features, buttonText, buttonLink, isPro, isWaitlist, delay, mostPopular }) {
     const { user } = useAuth()
