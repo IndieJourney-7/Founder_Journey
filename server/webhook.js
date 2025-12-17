@@ -131,16 +131,30 @@ async function verifyPaymentAndUpgrade(email) {
     try {
         // Get recent payments from Dodo API
         const paymentsRes = await dodoApiRequest('GET', '/payments?limit=10')
-        
+
+        console.log('🔍 Dodo API Response Status:', paymentsRes.status)
+        console.log('🔍 Dodo API Response:', JSON.stringify(paymentsRes.data, null, 2))
+
         if (paymentsRes.status !== 200) {
             console.error('❌ Failed to fetch payments:', paymentsRes.data)
             return { success: false, error: 'Failed to fetch payments from Dodo' }
         }
 
         const payments = paymentsRes.data.items || paymentsRes.data || []
-        
+        console.log(`📋 Found ${payments.length} payments total`)
+
+        // Log all payment emails for debugging
+        payments.forEach((p, i) => {
+            console.log(`Payment ${i + 1}:`, {
+                id: p.id,
+                status: p.status,
+                customer_email: p.customer?.email,
+                metadata_email: p.metadata?.email
+            })
+        })
+
         // Find a successful payment for this email
-        const payment = payments.find(p => 
+        const payment = payments.find(p =>
             (p.customer?.email?.toLowerCase() === email.toLowerCase() ||
              p.metadata?.email?.toLowerCase() === email.toLowerCase()) &&
             (p.status === 'succeeded' || p.status === 'completed' || p.status === 'paid')
@@ -148,7 +162,16 @@ async function verifyPaymentAndUpgrade(email) {
 
         if (!payment) {
             console.warn('⚠️ No successful payment found for this email')
-            return { success: false, error: 'No successful payment found' }
+            console.warn(`Looking for: ${email}`)
+            return {
+                success: false,
+                error: 'No successful payment found',
+                debug: {
+                    total_payments: payments.length,
+                    looking_for_email: email,
+                    available_emails: payments.map(p => p.customer?.email || p.metadata?.email).filter(Boolean)
+                }
+            }
         }
 
         console.log(`✅ Found payment: ${payment.id}`)
