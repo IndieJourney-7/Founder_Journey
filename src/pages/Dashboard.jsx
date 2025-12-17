@@ -222,10 +222,10 @@ export default function Dashboard() {
             )}
 
             {/* Header Actions */}
-            <div className={`absolute ${!user ? 'top-14' : 'top-4'} right-4 z-40 flex gap-2`}>
+            <div className={`absolute ${!user ? 'top-14' : 'top-4'} right-2 sm:right-4 z-40 flex flex-col sm:flex-row gap-2`}>
                 {!isPro && (
-                    <Link to="/pricing" className="px-3 py-2 bg-gradient-to-r from-brand-gold to-yellow-500 rounded-lg text-brand-blue font-bold hover:shadow-lg transition-all text-sm">
-                        Upgrade to Pro
+                    <Link to="/pricing" className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-brand-gold to-yellow-500 rounded-lg text-brand-blue font-bold hover:shadow-lg transition-all text-xs sm:text-sm whitespace-nowrap">
+                        Upgrade
                     </Link>
                 )}
                 <button
@@ -233,17 +233,17 @@ export default function Dashboard() {
                     className={`p-2 backdrop-blur-md rounded-full transition-colors border ${!isPro ? 'bg-black/10 text-white/30 border-white/5 cursor-not-allowed' : 'bg-black/30 text-white hover:bg-white/10 border-white/10'}`}
                     title={!isPro ? "Upgrade to Pro to export" : "Share Journey"}
                 >
-                    <Share2 size={20} />
+                    <Share2 size={18} className="sm:w-5 sm:h-5" />
                 </button>
             </div>
 
             {/* Progress Display */}
-            <div className={`absolute ${!user ? 'top-14' : 'top-4'} left-4 z-40`}>
-                <div className="bg-black/30 backdrop-blur-md rounded-lg px-4 py-2 border border-white/10">
-                    <div className="text-xs text-white/60">Journey Progress</div>
-                    <div className="text-2xl font-bold text-brand-gold">{Math.round(progress)}%</div>
-                    <div className="text-xs text-white/40">
-                        {resolvedSteps} / {totalPlanned} steps completed
+            <div className={`absolute ${!user ? 'top-14' : 'top-4'} left-2 sm:left-4 z-40`}>
+                <div className="bg-black/30 backdrop-blur-md rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 border border-white/10">
+                    <div className="text-[10px] sm:text-xs text-white/60">Progress</div>
+                    <div className="text-xl sm:text-2xl font-bold text-brand-gold">{Math.round(progress)}%</div>
+                    <div className="text-[10px] sm:text-xs text-white/40">
+                        {resolvedSteps}/{totalPlanned} done
                     </div>
                 </div>
             </div>
@@ -281,12 +281,12 @@ export default function Dashboard() {
             </div>
 
             {/* Steps Panel */}
-            <div className="h-1/3 bg-brand-blue border-t border-white/10 p-6 overflow-y-auto">
+            <div className="h-1/3 min-h-[250px] bg-brand-blue border-t border-white/10 p-3 sm:p-6 overflow-y-auto">
                 <div className="max-w-6xl mx-auto">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
                         <div>
-                            <h3 className="text-xl font-bold">Your Strategies</h3>
-                            <p className="text-sm text-white/50">{steps.length} steps added</p>
+                            <h3 className="text-lg sm:text-xl font-bold">Your Strategies</h3>
+                            <p className="text-xs sm:text-sm text-white/50">{steps.length} steps added</p>
                         </div>
                         <button
                             onClick={() => {
@@ -298,17 +298,17 @@ export default function Dashboard() {
                                 setNewStep({ title: '', description: '', expected_outcome: '' });
                                 setIsAddingStep(true);
                             }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${!checkLimit('add_step')
+                            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-bold transition-colors text-sm ${!checkLimit('add_step')
                                 ? 'bg-white/10 text-white/50 cursor-not-allowed hover:bg-white/10'
                                 : 'bg-brand-teal text-brand-blue hover:bg-teal-400'
                                 }`}
                         >
-                            <Plus size={18} />
+                            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
                             {!checkLimit('add_step') ? 'Limit Reached' : 'Add Step'}
                         </button>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-4">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                         {steps.length === 0 ? (
                             <div className="col-span-3 text-center py-10 text-white/50 border-2 border-dashed border-white/10 rounded-xl">
                                 <p className="mb-2">Your mountain is waiting.</p>

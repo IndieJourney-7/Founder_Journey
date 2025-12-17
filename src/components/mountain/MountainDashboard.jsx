@@ -164,12 +164,12 @@ const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepC
                 {/* Summit Goal & Target */}
                 <div className="absolute right-[10%] top-[15%] flex flex-col items-center z-20 transform translate-x-1/2">
                     {/* Target Goal (Above Flag) */}
-                    <div className="bg-brand-gold text-brand-blue font-bold px-4 py-1.5 rounded-full shadow-lg border-2 border-white/20 mb-2 whitespace-nowrap text-lg animate-bounce">
+                    <div className="bg-brand-gold text-brand-blue font-bold px-2 sm:px-4 py-1 sm:py-1.5 rounded-full shadow-lg border-2 border-white/20 mb-1 sm:mb-2 whitespace-nowrap text-xs sm:text-sm md:text-base lg:text-lg animate-bounce">
                         {goalTarget || 'Goal'}
                     </div>
 
                     <motion.div
-                        className="text-6xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.8)]"
+                        className="text-4xl sm:text-5xl md:text-6xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.8)]"
                         animate={{ y: [0, -5, 0] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
@@ -178,11 +178,11 @@ const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepC
                 </div>
 
                 {/* Mission Name (Center Top) */}
-                <div className="absolute top-10 left-1/2 transform -translate-x-1/2 z-40 text-center pointer-events-none w-full px-4">
-                    <h1 className="text-6xl md:text-7xl font-extrabold text-white mb-2 tracking-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 2px 5px rgba(0,0,0,1)' }}>
+                <div className="absolute top-6 sm:top-10 left-1/2 transform -translate-x-1/2 z-40 text-center pointer-events-none w-full px-4">
+                    <h1 className={`${titleSize} font-extrabold text-white mb-2 tracking-tight`} style={{ textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 2px 5px rgba(0,0,0,1)' }}>
                         {missionName || 'Your Ascent'}
                     </h1>
-                    <div className="h-1.5 w-32 bg-brand-gold mx-auto rounded-full shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
+                    <div className="h-1 sm:h-1.5 w-20 sm:w-32 bg-brand-gold mx-auto rounded-full shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
                 </div>
 
                 {/* Lesson Modal */}
