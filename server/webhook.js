@@ -229,16 +229,29 @@ async function verifyPaymentAndUpgrade(email) {
 
 /**
  * Verify Dodo webhook signature
+ * SECURITY: This MUST be enforced in production to prevent fake webhooks
  */
 function verifySignature(payload, signature) {
-    if (!DODO_WEBHOOK_SECRET) return true // Skip if not configured
-    
+    // In production, webhook secret is REQUIRED
+    if (!DODO_WEBHOOK_SECRET) {
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('DODO_WEBHOOK_SECRET is required in production for security');
+        }
+        console.warn('⚠️ WARNING: DODO_WEBHOOK_SECRET not set - webhook verification disabled (DEV ONLY)');
+        return true; // Only allow skip in development
+    }
+
+    if (!signature) {
+        console.error('❌ No signature provided in webhook request');
+        return false;
+    }
+
     const expectedSig = crypto
         .createHmac('sha256', DODO_WEBHOOK_SECRET)
         .update(payload)
-        .digest('hex')
-    
-    return signature === expectedSig || signature === `sha256=${expectedSig}`
+        .digest('hex');
+
+    return signature === expectedSig || signature === `sha256=${expectedSig}`;
 }
 
 /**
@@ -259,18 +272,26 @@ async function handleDodoWebhook(body, signature) {
 
     console.log('Event:', JSON.stringify(event, null, 2))
 
-    // Verify signature (warn but don't block for now)
-    if (DODO_WEBHOOK_SECRET && signature) {
-        const isValid = verifySignature(body, signature)
+    // Verify signature - ENFORCE in production
+    try {
+        const isValid = verifySignature(body, signature);
         if (!isValid) {
-            console.warn('⚠️ Invalid webhook signature - proceeding anyway for debugging')
-            console.warn(`Received signature: ${signature}`)
-            console.warn(`Webhook secret configured: ${DODO_WEBHOOK_SECRET ? 'Yes' : 'No'}`)
-        } else {
-            console.log('✅ Signature verified')
+            console.error('❌ SECURITY: Invalid webhook signature - REJECTING request');
+            console.error(`Received signature: ${signature}`);
+            console.error(`Webhook secret configured: ${DODO_WEBHOOK_SECRET ? 'Yes' : 'No'}`);
+
+            return {
+                success: false,
+                error: 'Invalid webhook signature - request rejected for security'
+            };
         }
-    } else {
-        console.log('ℹ️ Signature verification skipped (no secret or signature)')
+        console.log('✅ Webhook signature verified successfully');
+    } catch (error) {
+        console.error('❌ SECURITY: Signature verification failed:', error.message);
+        return {
+            success: false,
+            error: 'Signature verification failed'
+        };
     }
 
     // Check if this is a successful payment or subscription activation
@@ -382,18 +403,39 @@ function getBody(req) {
 }
 
 /**
+ * CORS Configuration - Only allow specific origins
+ */
+const ALLOWED_ORIGINS = [
+    'https://sfht-ascent.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:4173' // Vite preview
+];
+
+// Add development origins if in dev mode
+if (process.env.NODE_ENV !== 'production') {
+    ALLOWED_ORIGINS.push('http://127.0.0.1:5173');
+    ALLOWED_ORIGINS.push('http://127.0.0.1:4173');
+}
+
+/**
  * Main HTTP Server
  */
 const server = http.createServer(async (req, res) => {
-    // CORS Headers
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    // CORS Headers - Strict whitelist
+    const origin = req.headers.origin;
+
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
-        res.writeHead(204)
-        return res.end()
+        res.writeHead(204);
+        return res.end();
     }
 
     // Root endpoint - show config (without secrets)

@@ -1,13 +1,14 @@
 /**
  * Mountain Service
- * 
+ *
  * Handles all mountain-related database operations.
- * 
+ *
  * Schema: mountains (id uuid, user_id uuid, title text, target text, created_at)
  * MVP Rule: One mountain per user (enforced in code)
  */
 
-import { supabase } from './supabase'
+import { supabase } from './supabase';
+import { logger } from './logger';
 
 /**
  * Fetch the current user's mountain
@@ -48,22 +49,22 @@ export const createMountain = async (userId, mountainData) => {
     }
 
     // Check if user already has a mountain (enforce one per user)
-    const { mountain: existing } = await fetchUserMountain(userId)
+    const { mountain: existing } = await fetchUserMountain(userId);
     if (existing) {
-        console.log('User already has a mountain, returning existing')
-        return { mountain: existing, error: null }
+        logger.log('User already has a mountain, returning existing');
+        return { mountain: existing, error: null };
     }
 
     // Map field names (support both naming conventions)
-    const title = mountainData.title || mountainData.mission_name
-    const target = mountainData.target || mountainData.goal_target
-    const totalStepsPlanned = mountainData.total_steps_planned || 6
+    const title = mountainData.title || mountainData.mission_name;
+    const target = mountainData.target || mountainData.goal_target;
+    const totalStepsPlanned = mountainData.total_steps_planned || 6;
 
     if (!title || !target) {
-        return { mountain: null, error: { message: 'Title and target are required' } }
+        return { mountain: null, error: { message: 'Title and target are required' } };
     }
 
-    console.log('Creating mountain:', { userId, title, target, totalStepsPlanned })
+    logger.log('Creating mountain:', { userId, title, target, totalStepsPlanned });
 
     const { data, error } = await supabase
         .from('mountains')
@@ -77,12 +78,12 @@ export const createMountain = async (userId, mountainData) => {
         .single()
 
     if (error) {
-        console.error('Error creating mountain:', error.message)
-        return { mountain: null, error }
+        console.error('Error creating mountain:', error.message);
+        return { mountain: null, error };
     }
 
-    console.log('Mountain created successfully:', data)
-    return { mountain: data, error: null }
+    logger.log('Mountain created successfully:', data);
+    return { mountain: data, error: null };
 }
 
 /**

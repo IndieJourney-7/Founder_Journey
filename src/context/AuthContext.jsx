@@ -20,18 +20,26 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null)
-            setLoading(false)
-        })
+        supabase.auth.getSession()
+            .then(({ data: { session } }) => {
+                setUser(session?.user ?? null);
+            })
+            .catch((error) => {
+                console.error('Auth session fetch error:', error);
+                setUser(null);
+                setError('Failed to load session. Please refresh the page.');
+            })
+            .finally(() => {
+                setLoading(false);
+            });
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null)
-            setLoading(false)
-        })
+            setUser(session?.user ?? null);
+            setLoading(false);
+        });
 
-        return () => subscription.unsubscribe()
+        return () => subscription.unsubscribe();
     }, [])
 
     /**
@@ -98,9 +106,22 @@ export const AuthProvider = ({ children }) => {
      * Refresh user session
      */
     const refreshUser = async () => {
-        const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
-        return session?.user
+        try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+            if (sessionError) {
+                console.error('Refresh user error:', sessionError);
+                throw sessionError;
+            }
+
+            setUser(session?.user ?? null);
+            return session?.user;
+        } catch (error) {
+            console.error('Failed to refresh user session:', error);
+            setUser(null);
+            setError('Failed to refresh session');
+            return null;
+        }
     }
 
     const value = {
