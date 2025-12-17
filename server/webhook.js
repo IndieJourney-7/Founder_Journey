@@ -1,30 +1,47 @@
 /**
  * SFHT Ascent - Webhook Server (Pure Node.js - ES Module)
  * Handles Dodo Payments webhooks for payment verification
- * 
+ *
  * Usage:
- *   1. Set environment variables (or edit the values below)
+ *   1. Copy .env.example to .env and fill in your actual API keys
  *   2. Run: node server/webhook.js
  *   3. Use ngrok to expose: npx ngrok http 3001
  *   4. Add the ngrok URL to Dodo Dashboard as webhook endpoint
+ *
+ * Security:
+ *   - All sensitive keys are stored in .env (never commit this file!)
+ *   - .env is already in .gitignore
+ *   - Use .env.example as a template for required variables
  */
 
 import http from 'http'
 import https from 'https'
 import crypto from 'crypto'
+import { config } from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 
 // ============== CONFIGURATION ==============
+// Load environment variables from .env file
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+config({ path: join(__dirname, '..', '.env') })
+
+// Validate required environment variables
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'DODO_API_KEY']
+const missing = requiredEnvVars.filter(key => !process.env[key])
+
+if (missing.length > 0) {
+    console.error('❌ Missing required environment variables:', missing.join(', '))
+    console.error('Please check your .env file in the root directory')
+    process.exit(1)
+}
+
 const PORT = process.env.PORT || 3001
-
-// Supabase Config (Replace with your actual values)
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://your-project.supabase.co'
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'your-service-role-key'
-
-// Dodo Payments Config (TEST MODE)
-const DODO_API_KEY = process.env.DODO_API_KEY || 'XQxrYzksyHR3YbyB.0vUAjjAgYw_Iprd9bgg1YYVLz2xkEu9t5po_0OnLdctYHHFt'
-const DODO_API_BASE = 'https://api.dodopayments.com' // or test.api.dodopayments.com
-
-// Dodo Webhook Secret (Optional for now)
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
+const DODO_API_KEY = process.env.DODO_API_KEY
+const DODO_API_BASE = 'https://api.dodopayments.com'
 const DODO_WEBHOOK_SECRET = process.env.DODO_WEBHOOK_SECRET || ''
 
 // ============================================
