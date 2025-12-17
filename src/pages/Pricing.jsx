@@ -82,9 +82,9 @@ export default function Pricing() {
                             "HD Exports",
                             "All Premium Themes"
                         ]}
-                        buttonText="Buy Summit Pro"
+                        buttonText="Join Pro Waitlist"
                         isPro={true}
-                        isWaitlist={true} // Still using waitlist form for capture
+                        isWaitlist={true} // Using waitlist form (payment disabled)
                         delay={0.4}
                         mostPopular={true}
                     />
@@ -109,26 +109,11 @@ function PricingCard({ title, price, period, description, features, buttonText, 
         document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' })
     }
 
-    const handleProCheckout = () => {
-        if (!user) {
-            // Redirect to auth if not logged in
-            navigate('/auth')
-            return
-        }
-        // Redirect to Dodo Checkout
-        window.location.href = DODO_PAYMENT_LINK
-    }
-
-    // Determine handler based on card type
+    // Payments disabled - always scroll to waitlist
     const handleButtonClick = () => {
         if (isWaitlist) {
-            // This is the Pro card (we re-purposed isWaitlist flag for the Pro styling)
-            // If it has a specific button text like "Buy Summit Pro", we use checkout
-            if (buttonText.includes('Buy')) {
-                handleProCheckout()
-            } else {
-                scrollToWaitlist() // Fallback to waitlist if it's the "Join Waitlist" state
-            }
+            // Always scroll to waitlist form (payment disabled for now)
+            scrollToWaitlist()
         }
     }
 
