@@ -90,7 +90,7 @@ const MountainBackground = ({ theme = 'startup' }) => {
             <svg
                 className="absolute bottom-0 w-full h-full"
                 viewBox="0 0 1440 900"
-                preserveAspectRatio="xMidYMax slice"
+                preserveAspectRatio="xMidYMid meet"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
             >

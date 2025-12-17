@@ -112,8 +112,8 @@ const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepC
     return (
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
 
-            {/* Container to maintain aspect ratio */}
-            <div className="relative w-full h-full max-w-[1440px] aspect-[16/10]">
+            {/* Container to maintain aspect ratio - taller on mobile, wider on desktop */}
+            <div className="relative w-full h-full max-w-[1440px] aspect-[3/4] sm:aspect-[4/3] md:aspect-[16/11] lg:aspect-[16/10]">
 
                 <MountainBackground />
                 <WindingPath progress={progress} />

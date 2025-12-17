@@ -248,8 +248,8 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Mountain View */}
-            <div className="flex-1 bg-gradient-to-b from-[#0a1529] to-brand-blue relative overflow-hidden" ref={mountainRef}>
+            {/* Mountain View - Give more space on mobile */}
+            <div className="flex-1 min-h-[500px] sm:min-h-[600px] bg-gradient-to-b from-[#0a1529] to-brand-blue relative overflow-hidden" ref={mountainRef}>
                 <MountainDashboard
                     steps={steps}
                     stickyNotes={journeyNotes}
