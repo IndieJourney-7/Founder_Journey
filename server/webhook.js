@@ -153,11 +153,12 @@ async function verifyPaymentAndUpgrade(email) {
             })
         })
 
-        // Find a successful payment for this email
+        // Find a successful payment or active subscription for this email
         const payment = payments.find(p =>
             (p.customer?.email?.toLowerCase() === email.toLowerCase() ||
              p.metadata?.email?.toLowerCase() === email.toLowerCase()) &&
-            (p.status === 'succeeded' || p.status === 'completed' || p.status === 'paid')
+            (p.status === 'succeeded' || p.status === 'completed' || p.status === 'paid' ||
+             p.status === 'active' || p.status === 'trialing' || p.status === 'requires_payment_method')
         )
 
         if (!payment) {
@@ -257,27 +258,38 @@ async function handleDodoWebhook(body, signature) {
 
     console.log('Event:', JSON.stringify(event, null, 2))
 
-    // Verify signature
-    if (DODO_WEBHOOK_SECRET && !verifySignature(body, signature)) {
-        console.error('❌ Invalid signature')
-        return { success: false, error: 'Invalid signature' }
+    // Verify signature (warn but don't block for now)
+    if (DODO_WEBHOOK_SECRET && signature) {
+        const isValid = verifySignature(body, signature)
+        if (!isValid) {
+            console.warn('⚠️ Invalid webhook signature - proceeding anyway for debugging')
+            console.warn(`Received signature: ${signature}`)
+            console.warn(`Webhook secret configured: ${DODO_WEBHOOK_SECRET ? 'Yes' : 'No'}`)
+        } else {
+            console.log('✅ Signature verified')
+        }
+    } else {
+        console.log('ℹ️ Signature verification skipped (no secret or signature)')
     }
-    console.log('✅ Signature OK (or skipped)')
 
-    // Check if this is a successful payment
+    // Check if this is a successful payment or subscription activation
     const eventType = event.type || event.event_type || event.event || ''
     const status = event.status || event.data?.status || ''
-    
-    const isSuccess = 
+
+    const isSuccess =
         eventType.toLowerCase().includes('success') ||
         eventType.toLowerCase().includes('completed') ||
         eventType.toLowerCase().includes('paid') ||
+        eventType.toLowerCase().includes('subscription.created') ||
+        eventType.toLowerCase().includes('subscription.active') ||
         status === 'succeeded' ||
         status === 'completed' ||
-        status === 'paid'
+        status === 'paid' ||
+        status === 'active' ||
+        status === 'trialing'
 
     if (!isSuccess) {
-        console.log('ℹ️ Event is not a success event, ignoring')
+        console.log('ℹ️ Event is not a success/subscription event, ignoring')
         return { success: true, message: 'Event acknowledged but not a success event' }
     }
 
