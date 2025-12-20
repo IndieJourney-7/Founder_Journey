@@ -281,79 +281,136 @@ export default function BannerExportModal({ isOpen, onClose, mountainRef }) {
                                 <svg
                                     width={format.width}
                                     height={format.height}
-                                    style={{ position: 'absolute', bottom: 0, left: 0 }}
-                                    viewBox={`0 0 ${format.width} ${format.height}`}
-                                    preserveAspectRatio="xMidYMax slice"
+                                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, top: 0 }}
+                                    viewBox={`0 0 1440 900`}
+                                    preserveAspectRatio="xMidYMid meet"
                                 >
-                                    {/* Mountain Peaks */}
+                                    {/* Background Mountains - Layer 1 (Far) */}
                                     <path
-                                        d={`M 0,${format.height} L 0,${format.height * 0.6} L ${format.width * 0.3},${format.height * 0.3} L ${format.width * 0.5},${format.height * 0.5} L ${format.width * 0.7},${format.height * 0.2} L ${format.width},${format.height * 0.4} L ${format.width},${format.height} Z`}
+                                        d="M 0,900 L 0,450 Q 200,350 400,450 T 800,380 T 1200,500 L 1440,450 L 1440,900 Z"
                                         fill={theme.mountainColor}
-                                        opacity="0.6"
+                                        opacity="0.2"
                                     />
 
-                                    {/* Winding Path */}
+                                    {/* Mountains - Layer 2 (Mid) */}
                                     <path
-                                        d={`M 50,${format.height - 50} Q ${format.width * 0.25},${format.height * 0.7} ${format.width * 0.5},${format.height * 0.55} T ${format.width * 0.75},${format.height * 0.35}`}
-                                        stroke={theme.pathColor}
-                                        strokeWidth="8"
-                                        fill="none"
-                                        strokeDasharray={`${progress * 10} ${1000 - progress * 10}`}
-                                        strokeLinecap="round"
+                                        d="M 0,900 L 0,550 Q 300,400 600,500 Q 900,350 1200,450 L 1440,520 L 1440,900 Z"
+                                        fill={theme.mountainColor}
+                                        opacity="0.4"
                                     />
+
+                                    {/* Main Mountain - Layer 3 (Close) */}
+                                    <path
+                                        d="M 0,900 L 0,650 L 200,600 L 400,550 L 600,400 L 720,200 L 840,450 L 1000,500 L 1200,580 L 1440,650 L 1440,900 Z"
+                                        fill={theme.mountainColor}
+                                        opacity="0.7"
+                                    />
+
+                                    {/* Winding Path - Journey Trail */}
+                                    <defs>
+                                        <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor={theme.pathColor} stopOpacity="0.3" />
+                                            <stop offset={`${progress}%`} stopColor={theme.pathColor} stopOpacity="1" />
+                                            <stop offset={`${progress}%`} stopColor={theme.pathColor} stopOpacity="0.2" />
+                                            <stop offset="100%" stopColor={theme.pathColor} stopOpacity="0.1" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path
+                                        d="M 100,850 Q 200,750 300,700 Q 400,650 480,600 Q 560,550 640,480 Q 720,410 720,300 Q 720,400 800,450 Q 880,500 960,520 Q 1040,540 1120,560 Q 1200,580 1300,600"
+                                        stroke="url(#pathGradient)"
+                                        strokeWidth="12"
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+
+                                    {/* Progress Indicator on Path */}
+                                    {progress > 0 && (
+                                        <circle
+                                            cx={100 + (1200 * progress / 100)}
+                                            cy={850 - (550 * progress / 100)}
+                                            r="20"
+                                            fill={theme.pathColor}
+                                            opacity="0.8"
+                                        >
+                                            <animate
+                                                attributeName="opacity"
+                                                values="0.8;1;0.8"
+                                                dur="2s"
+                                                repeatCount="indefinite"
+                                            />
+                                        </circle>
+                                    )}
                                 </svg>
 
                                 {/* Content Overlay */}
-                                <div style={{ position: 'absolute', inset: 0, padding: format.width * 0.05 }}>
-                                    {/* Mission Title */}
-                                    <div style={{
-                                        fontSize: format.width * 0.04,
-                                        fontWeight: 'bold',
-                                        color: theme.textColor,
-                                        marginBottom: format.height * 0.02,
-                                        textShadow: '0 2px 8px rgba(0,0,0,0.5)'
-                                    }}>
-                                        {currentMountain?.title || 'My Journey'}
+                                <div style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    padding: `${format.height * 0.08}px ${format.width * 0.06}px`,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between'
+                                }}>
+                                    {/* Top Section - Title & Stats */}
+                                    <div>
+                                        {/* Mission Title */}
+                                        <div style={{
+                                            fontSize: Math.min(format.width * 0.045, 80),
+                                            fontWeight: 'bold',
+                                            color: theme.textColor,
+                                            marginBottom: format.height * 0.015,
+                                            textShadow: '0 3px 10px rgba(0,0,0,0.7)',
+                                            letterSpacing: '-0.02em',
+                                            lineHeight: 1.1
+                                        }}>
+                                            {currentMountain?.title || 'My Journey'}
+                                        </div>
+
+                                        {/* Progress Stats */}
+                                        <div style={{
+                                            fontSize: Math.min(format.width * 0.022, 40),
+                                            color: theme.textColor,
+                                            opacity: 0.85,
+                                            textShadow: '0 2px 6px rgba(0,0,0,0.6)',
+                                            fontWeight: '600'
+                                        }}>
+                                            {resolvedSteps}/{totalPlanned} Steps • {Math.round(progress)}% Complete
+                                        </div>
                                     </div>
 
-                                    {/* Progress Stats */}
-                                    <div style={{
-                                        fontSize: format.width * 0.025,
-                                        color: theme.textColor,
-                                        opacity: 0.8,
-                                        textShadow: '0 1px 4px rgba(0,0,0,0.5)'
-                                    }}>
-                                        {resolvedSteps}/{totalPlanned} Steps • {Math.round(progress)}% Complete
-                                    </div>
-
-                                    {/* Progress Highlight Text */}
+                                    {/* Center Section - Progress Highlight */}
                                     {progressText && (
                                         <div style={{
                                             position: 'absolute',
-                                            top: format.height * 0.35,
-                                            left: format.width * 0.5,
-                                            transform: 'translateX(-50%)',
-                                            fontSize: format.width * 0.06,
-                                            fontWeight: 'bold',
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            fontSize: Math.min(format.width * 0.08, 140),
+                                            fontWeight: '900',
                                             color: theme.pathColor,
-                                            textShadow: '0 4px 12px rgba(0,0,0,0.7)',
+                                            textShadow: `0 6px 20px rgba(0,0,0,0.9), 0 0 40px ${theme.pathColor}40`,
                                             textAlign: 'center',
-                                            whiteSpace: 'nowrap'
+                                            whiteSpace: 'nowrap',
+                                            letterSpacing: '-0.03em',
+                                            padding: '20px 40px',
+                                            background: 'rgba(0,0,0,0.3)',
+                                            borderRadius: '16px',
+                                            backdropFilter: 'blur(10px)'
                                         }}>
                                             {progressText}
                                         </div>
                                     )}
 
-                                    {/* Watermark */}
+                                    {/* Bottom Section - Watermark */}
                                     {showWatermark && (
                                         <div style={{
-                                            position: 'absolute',
-                                            bottom: format.height * 0.05,
-                                            right: format.width * 0.05,
-                                            fontSize: format.width * 0.015,
+                                            fontSize: Math.min(format.width * 0.018, 32),
                                             color: theme.textColor,
-                                            opacity: 0.4,
-                                            fontWeight: '500'
+                                            opacity: 0.5,
+                                            fontWeight: '600',
+                                            textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                                            textAlign: 'right'
                                         }}>
                                             Built with Mountain Journey
                                         </div>
