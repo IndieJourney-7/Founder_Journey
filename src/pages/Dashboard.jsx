@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { Plus, X, Share2 } from 'lucide-react'
+import { Plus, X, Share2, MessageSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMountain } from '../context/MountainContext'
@@ -11,6 +11,7 @@ import StepCard from '../components/StepCard'
 import ExportModal from '../components/sharing/ExportModal'
 import ReflectionModal from '../components/ReflectionModal'
 import NoteViewer from '../components/NoteViewer'
+import FeedbackModal from '../components/FeedbackModal'
 
 export default function Dashboard() {
     const { user } = useAuth()
@@ -41,6 +42,7 @@ export default function Dashboard() {
     const [editingStep, setEditingStep] = useState(null) // New state for editing
     const [newStep, setNewStep] = useState({ title: '', description: '', expected_outcome: '' })
     const [isExportOpen, setIsExportOpen] = useState(false)
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
     const mountainRef = useRef(null)
 
     // Reflection Modal State
@@ -228,6 +230,13 @@ export default function Dashboard() {
                         Upgrade
                     </Link>
                 )}
+                <button
+                    onClick={() => setIsFeedbackOpen(true)}
+                    className="p-2 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition-colors border border-white/10"
+                    title="Give Feedback"
+                >
+                    <MessageSquare size={18} className="sm:w-5 sm:h-5" />
+                </button>
                 <button
                     onClick={handleExportClick}
                     className={`p-2 backdrop-blur-md rounded-full transition-colors border ${!isPro ? 'bg-black/10 text-white/30 border-white/5 cursor-not-allowed' : 'bg-black/30 text-white hover:bg-white/10 border-white/10'}`}
@@ -428,6 +437,12 @@ export default function Dashboard() {
                 isOpen={isExportOpen}
                 onClose={() => setIsExportOpen(false)}
                 mountainRef={mountainRef}
+            />
+
+            {/* Feedback Modal */}
+            <FeedbackModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
             />
         </div>
     )
