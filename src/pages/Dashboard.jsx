@@ -8,7 +8,7 @@ import { useMountain } from '../context/MountainContext'
 import { usePlanLimits } from '../hooks/usePlanLimits'
 import MountainDashboard from '../components/mountain/MountainDashboard'
 import StepCard from '../components/StepCard'
-import ExportModal from '../components/sharing/ExportModal'
+import BannerExportModal from '../components/sharing/BannerExportModal'
 import ReflectionModal from '../components/ReflectionModal'
 import NoteViewer from '../components/NoteViewer'
 import FeedbackModal from '../components/FeedbackModal'
@@ -208,7 +208,7 @@ export default function Dashboard() {
 
     const handleExportClick = () => {
         if (!checkLimit('export')) {
-            alert("Upgrade to Pro to export your journey.")
+            alert("Upgrade to Pro to create custom banners for social media!")
             return
         }
         setIsExportOpen(true)
@@ -240,7 +240,7 @@ export default function Dashboard() {
                 <button
                     onClick={handleExportClick}
                     className={`p-2 backdrop-blur-md rounded-full transition-colors border ${!isPro ? 'bg-black/10 text-white/30 border-white/5 cursor-not-allowed' : 'bg-black/30 text-white hover:bg-white/10 border-white/10'}`}
-                    title={!isPro ? "Upgrade to Pro to export" : "Share Journey"}
+                    title={!isPro ? "Upgrade to Pro to create banners" : "Create Progress Banner"}
                 >
                     <Share2 size={18} className="sm:w-5 sm:h-5" />
                 </button>
@@ -432,8 +432,8 @@ export default function Dashboard() {
                 onDelete={handleDeleteNote}
             />
 
-            {/* Export Modal */}
-            <ExportModal
+            {/* Banner Export Modal */}
+            <BannerExportModal
                 isOpen={isExportOpen}
                 onClose={() => setIsExportOpen(false)}
                 mountainRef={mountainRef}
