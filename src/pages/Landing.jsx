@@ -191,13 +191,12 @@ const Landing = () => {
 
                                 {/* Visual */}
                                 <div className="order-1 lg:order-2 relative">
-                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
-                                        <img
-                                            src="/screenshots/goal-setup.png"
-                                            alt="Goal Setup"
-                                            className="w-full"
-                                            style={{ filter: 'brightness(1.1)' }}
-                                        />
+                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-gradient-to-br from-[#0a1529] to-[#0F1F3D] transform lg:hover:scale-105 transition-transform duration-500 aspect-video flex items-center justify-center">
+                                        <div className="text-center p-8">
+                                            <div className="text-6xl mb-4">🎯</div>
+                                            <div className="text-brand-gold text-2xl font-bold mb-2">Set Your Mission</div>
+                                            <div className="text-white/60 text-sm">Define goals and visualize your mountain</div>
+                                        </div>
                                         <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/20 to-transparent pointer-events-none" />
                                     </div>
                                     {/* Glow effect */}
@@ -231,13 +230,12 @@ const Landing = () => {
                             <div className="grid lg:grid-cols-2 gap-12 items-center">
                                 {/* Visual */}
                                 <div className="relative">
-                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
-                                        <img
-                                            src="/screenshots/add-steps.png"
-                                            alt="Add Steps"
-                                            className="w-full"
-                                            style={{ filter: 'brightness(1.1)' }}
-                                        />
+                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-gradient-to-br from-[#0a1529] to-[#0F1F3D] transform lg:hover:scale-105 transition-transform duration-500 aspect-video flex items-center justify-center">
+                                        <div className="text-center p-8">
+                                            <div className="text-6xl mb-4">📋</div>
+                                            <div className="text-brand-teal text-2xl font-bold mb-2">Map Your Strategy</div>
+                                            <div className="text-white/60 text-sm">Add actionable steps and track progress</div>
+                                        </div>
                                         <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/20 to-transparent pointer-events-none" />
                                     </div>
                                 </div>
@@ -360,7 +358,7 @@ const Landing = () => {
                                 <div className="relative">
                                     <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
                                         <img
-                                            src="/src/assets/img1.png"
+                                            src="/img1.png"
                                             alt="Share Journey - Export Banner Example"
                                             className="w-full"
                                             style={{ filter: 'brightness(1.1)' }}
