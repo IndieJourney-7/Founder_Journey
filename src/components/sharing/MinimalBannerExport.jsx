@@ -71,8 +71,8 @@ const THEMES = {
     }
 };
 
-// Simple mountain path - clean S-curve from bottom to peak
-const SIMPLE_MOUNTAIN_PATH = "M100 800 C 250 750, 300 650, 400 550 C 500 450, 550 350, 700 300 C 850 250, 950 230, 1100 200";
+// Professional S-curve mountain path
+const SIMPLE_MOUNTAIN_PATH = "M150 850 C 300 800, 400 700, 550 600 C 700 500, 850 400, 1000 300 C 1100 250, 1150 220, 1250 180";
 
 // Calculate point on path at given progress
 const getPointOnPath = (pathString, progress) => {
@@ -152,8 +152,8 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     // Calculate climber position on path
-    const climberPoint = progress > 0 ? getPointOnPath(SIMPLE_MOUNTAIN_PATH, Math.min(progress, 95)) : { x: 100, y: 800 };
-    const peakPoint = { x: 1100, y: 200 };
+    const climberPoint = progress > 0 ? getPointOnPath(SIMPLE_MOUNTAIN_PATH, Math.min(progress, 95)) : { x: 150, y: 850 };
+    const peakPoint = { x: 1250, y: 180 };
 
     return (
         <AnimatePresence>
@@ -369,41 +369,65 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     preserveAspectRatio="xMidYMid meet"
                                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                                 >
-                                    {/* Simple Mountain Shape */}
+                                    {/* Multi-layer Mountain for Depth */}
+                                    {/* Back layer */}
                                     <path
-                                        d="M0 900 L 0 700 L 400 500 L 700 600 L 1000 250 L 1300 400 L 1440 350 L 1440 900 Z"
+                                        d="M0 900 L 0 600 L 300 450 L 600 520 L 900 350 L 1200 450 L 1440 400 L 1440 900 Z"
+                                        fill={theme.mountainHighlight}
+                                        opacity="0.3"
+                                    />
+
+                                    {/* Mid layer */}
+                                    <path
+                                        d="M0 900 L 0 680 L 350 550 L 700 630 L 1050 400 L 1350 480 L 1440 450 L 1440 900 Z"
+                                        fill={theme.mountainHighlight}
+                                        opacity="0.5"
+                                    />
+
+                                    {/* Front Mountain Shape - Main */}
+                                    <path
+                                        d="M0 900 L 0 750 L 400 600 L 700 680 L 1050 300 L 1300 420 L 1440 380 L 1440 900 Z"
                                         fill={theme.mountainBase}
-                                        opacity="0.9"
+                                        opacity="0.95"
                                     />
 
                                     {/* Journey Path - Remaining (dotted) */}
                                     <path
                                         d={SIMPLE_MOUNTAIN_PATH}
-                                        stroke="rgba(255, 255, 255, 0.2)"
-                                        strokeWidth="3"
-                                        strokeDasharray="10 10"
+                                        stroke="rgba(255, 255, 255, 0.15)"
+                                        strokeWidth="4"
+                                        strokeDasharray="12 12"
                                         strokeLinecap="round"
                                         fill="none"
                                     />
 
-                                    {/* Journey Path - Completed (solid) */}
+                                    {/* Journey Path - Completed (solid glowing) */}
                                     <path
                                         d={SIMPLE_MOUNTAIN_PATH}
                                         stroke={theme.pathColor}
-                                        strokeWidth="5"
+                                        strokeWidth="6"
                                         strokeLinecap="round"
                                         fill="none"
-                                        strokeDasharray={`${progress * 15} ${1500 - progress * 15}`}
-                                        style={{ filter: `drop-shadow(0 0 8px ${theme.pathColor})` }}
+                                        strokeDasharray={`${progress * 16} ${1600 - progress * 16}`}
+                                        style={{ filter: `drop-shadow(0 0 12px ${theme.pathColor})` }}
                                     />
 
-                                    {/* Climber Dot */}
+                                    {/* Climber Dot with glow */}
                                     {progress > 0 && (
                                         <g>
+                                            {/* Outer glow */}
                                             <circle
                                                 cx={climberPoint.x}
                                                 cy={climberPoint.y}
-                                                r="16"
+                                                r="22"
+                                                fill={theme.pathColor}
+                                                opacity="0.3"
+                                            />
+                                            {/* Main dot */}
+                                            <circle
+                                                cx={climberPoint.x}
+                                                cy={climberPoint.y}
+                                                r="14"
                                                 fill={theme.pathColor}
                                                 stroke="#ffffff"
                                                 strokeWidth="3"
@@ -418,24 +442,26 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                             x1={peakPoint.x}
                                             y1={peakPoint.y}
                                             x2={peakPoint.x}
-                                            y2={peakPoint.y - 60}
+                                            y2={peakPoint.y - 70}
                                             stroke={theme.pathColor}
-                                            strokeWidth="4"
+                                            strokeWidth="5"
                                         />
                                         {/* Flag */}
                                         <path
-                                            d={`M ${peakPoint.x},${peakPoint.y - 60} L ${peakPoint.x + 50},${peakPoint.y - 42} L ${peakPoint.x},${peakPoint.y - 24} Z`}
+                                            d={`M ${peakPoint.x},${peakPoint.y - 70} L ${peakPoint.x + 60},${peakPoint.y - 50} L ${peakPoint.x},${peakPoint.y - 30} Z`}
                                             fill={theme.pathColor}
+                                            stroke="#ffffff"
+                                            strokeWidth="2"
                                         />
                                         {/* Goal text */}
                                         <text
                                             x={peakPoint.x}
-                                            y={peakPoint.y - 70}
+                                            y={peakPoint.y - 80}
                                             fill={theme.textColor}
-                                            fontSize="22"
+                                            fontSize="26"
                                             fontWeight="bold"
                                             textAnchor="middle"
-                                            style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.9))' }}
+                                            style={{ filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.9))' }}
                                         >
                                             {goalTarget}
                                         </text>
@@ -450,107 +476,157 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         left: 0,
                                         right: 0,
                                         bottom: 0,
-                                        padding: `${format.height * 0.08}px ${format.width * 0.06}px`,
+                                        padding: `${format.height * 0.06}px ${format.width * 0.05}px`,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         justifyContent: 'space-between',
                                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                                     }}
                                 >
-                                    {/* Top: Mission Name */}
-                                    <div style={{ textAlign: 'center' }}>
-                                        <h1
-                                            style={{
-                                                fontSize: `${Math.min(format.width * 0.04, 60)}px`,
-                                                fontWeight: 'bold',
-                                                color: theme.textColor,
-                                                marginBottom: '0px',
-                                                textShadow: '0 3px 10px rgba(0,0,0,0.8)',
-                                                letterSpacing: '0.5px'
-                                            }}
-                                        >
-                                            {missionName}
-                                        </h1>
-                                    </div>
-
-                                    {/* Center-Right: Day & Earnings Card */}
-                                    <div
-                                        style={{
-                                            position: 'absolute',
-                                            right: `${format.width * 0.1}px`,
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            padding: `${format.height * 0.05}px ${format.width * 0.04}px`,
-                                            background: 'rgba(0,0,0,0.6)',
-                                            borderRadius: '16px',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            textAlign: 'center',
-                                            minWidth: `${format.width * 0.2}px`
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
-                                                color: 'rgba(255,255,255,0.6)',
-                                                marginBottom: '8px',
-                                                fontWeight: '500'
-                                            }}
-                                        >
-                                            Day {currentDay}
+                                    {/* Top Section: Mission + Stats on LEFT, Quote on RIGHT */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '40px' }}>
+                                        {/* LEFT: Mission Name + Stats */}
+                                        <div style={{ flex: '0 0 auto', maxWidth: '50%' }}>
+                                            <h1
+                                                style={{
+                                                    fontSize: `${Math.min(format.width * 0.045, 68)}px`,
+                                                    fontWeight: 'bold',
+                                                    color: theme.textColor,
+                                                    marginBottom: '12px',
+                                                    textShadow: '0 4px 12px rgba(0,0,0,0.9)',
+                                                    letterSpacing: '0.5px',
+                                                    lineHeight: '1.1'
+                                                }}
+                                            >
+                                                {missionName}
+                                            </h1>
+                                            {/* Journey Stats */}
+                                            <div
+                                                style={{
+                                                    fontSize: `${Math.min(format.width * 0.018, 24)}px`,
+                                                    color: 'rgba(255,255,255,0.8)',
+                                                    fontWeight: '600',
+                                                    textShadow: '0 2px 6px rgba(0,0,0,0.8)',
+                                                    marginTop: '8px'
+                                                }}
+                                            >
+                                                {resolvedSteps}/{totalPlanned} Steps • {Math.round(progress)}% Complete
+                                            </div>
                                         </div>
-                                        <div
-                                            style={{
-                                                fontSize: `${Math.min(format.width * 0.06, 80)}px`,
-                                                fontWeight: '900',
-                                                color: theme.pathColor,
-                                                textShadow: `0 6px 20px rgba(0,0,0,0.9)`,
-                                                lineHeight: '1'
-                                            }}
-                                        >
-                                            {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' ? ` ${metricType}` : ''}
-                                        </div>
-                                    </div>
 
-                                    {/* Bottom Section */}
-                                    <div>
-                                        {/* Learning Quote */}
+                                        {/* RIGHT: Learning Quote - Single Line */}
                                         {learningQuote && (
                                             <div
                                                 style={{
-                                                    padding: '16px 24px',
+                                                    flex: '1 1 auto',
+                                                    padding: '14px 22px',
                                                     background: 'rgba(255,255,255,0.08)',
-                                                    borderRadius: '12px',
+                                                    borderRadius: '10px',
                                                     border: '1px solid rgba(255,255,255,0.15)',
-                                                    maxWidth: '60%',
-                                                    marginBottom: '20px'
+                                                    backdropFilter: 'blur(8px)',
+                                                    alignSelf: 'center'
                                                 }}
                                             >
                                                 <p
                                                     style={{
-                                                        fontSize: `${Math.min(format.width * 0.016, 22)}px`,
+                                                        fontSize: `${Math.min(format.width * 0.015, 20)}px`,
                                                         color: theme.textColor,
                                                         margin: 0,
-                                                        lineHeight: '1.5',
-                                                        fontStyle: 'italic'
+                                                        lineHeight: '1.4',
+                                                        fontStyle: 'italic',
+                                                        textShadow: '0 2px 4px rgba(0,0,0,0.6)',
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis'
                                                     }}
                                                 >
                                                     {learningQuote}
                                                 </p>
                                             </div>
                                         )}
+                                    </div>
 
-                                        {/* Branding */}
-                                        <div
-                                            style={{
-                                                fontSize: `${Math.min(format.width * 0.012, 16)}px`,
-                                                color: 'rgba(255,255,255,0.5)',
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                textShadow: '0 1px 3px rgba(0,0,0,0.5)'
-                                            }}
-                                        >
-                                            Made with Shift Journey • {customUrl}
+                                    {/* Floating: Day & Earnings - Small Compact Box */}
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            top: `${format.height * 0.4}px`,
+                                            left: `${format.width * 0.08}px`,
+                                            padding: '12px 20px',
+                                            background: 'rgba(0,0,0,0.75)',
+                                            borderRadius: '12px',
+                                            border: `2px solid ${theme.pathColor}`,
+                                            backdropFilter: 'blur(10px)',
+                                            display: 'inline-block',
+                                            boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 20px ${theme.pathColor}40`
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            {/* Day */}
+                                            <div style={{ textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.2)', paddingRight: '16px' }}>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
+                                                        color: 'rgba(255,255,255,0.6)',
+                                                        marginBottom: '2px',
+                                                        fontWeight: '500',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '1px'
+                                                    }}
+                                                >
+                                                    Day
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.028, 42)}px`,
+                                                        fontWeight: '900',
+                                                        color: theme.textColor,
+                                                        lineHeight: '1'
+                                                    }}
+                                                >
+                                                    {currentDay}
+                                                </div>
+                                            </div>
+                                            {/* Earnings */}
+                                            <div style={{ textAlign: 'center' }}>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
+                                                        color: 'rgba(255,255,255,0.6)',
+                                                        marginBottom: '2px',
+                                                        fontWeight: '500',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '1px'
+                                                    }}
+                                                >
+                                                    {metricType === 'Users' ? 'Users' : 'Earned'}
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.035, 52)}px`,
+                                                        fontWeight: '900',
+                                                        color: theme.pathColor,
+                                                        textShadow: `0 4px 12px rgba(0,0,0,0.9)`,
+                                                        lineHeight: '1'
+                                                    }}
+                                                >
+                                                    {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
+                                                </div>
+                                            </div>
                                         </div>
+                                    </div>
+
+                                    {/* Bottom: Branding */}
+                                    <div
+                                        style={{
+                                            fontSize: `${Math.min(format.width * 0.014, 18)}px`,
+                                            color: 'rgba(255,255,255,0.5)',
+                                            fontWeight: '500',
+                                            textAlign: 'center',
+                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+                                        }}
+                                    >
+                                        Made with Shift Journey • {customUrl}
                                     </div>
                                 </div>
                             </div>
