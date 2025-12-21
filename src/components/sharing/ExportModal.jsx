@@ -26,7 +26,7 @@ const ExportModal = ({ isOpen, onClose, mountainRef }) => {
                 watermarkDiv = document.createElement('div');
                 watermarkDiv.innerHTML = `
                     <div style="position: absolute; bottom: 20px; right: 20px; font-weight: bold; color: rgba(255,255,255,0.8); font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 9999;">
-                        Built with SFHT Ascent 🏔️
+                        Built with SHIFT Ascent 🏔️
                     </div>
                 `;
                 mountainRef.current.appendChild(watermarkDiv);
@@ -73,7 +73,7 @@ const ExportModal = ({ isOpen, onClose, mountainRef }) => {
             link.href = previewUrl;
             link.click();
         } else if (actionType === 'share') {
-            const shareText = `I'm conquering my goals on SFHT Ascent! 🏔️🚀 ${currentMountain?.title || 'My Journey'} \n\n#BuildInPublic #SaaS`;
+            const shareText = `I'm conquering my goals on SHIFT Ascent! 🏔️🚀 ${currentMountain?.title || 'My Journey'} \n\n#BuildInPublic #SaaS`;
 
             // Try Web Share API first (works great on mobile with images)
             if (navigator.share && navigator.canShare && previewUrl) {

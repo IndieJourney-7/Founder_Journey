@@ -1,5 +1,5 @@
 -- =====================================================
--- SFHT ASCENT - Supabase Schema (MVP)
+-- SHIFT ASCENT - Supabase Schema (MVP)
 -- =====================================================
 -- Run this in Supabase SQL Editor
 -- 

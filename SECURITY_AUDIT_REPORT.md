@@ -1,4 +1,4 @@
-# SFHT Ascent - Security & Quality Audit Report
+# SHIFT Ascent - Security & Quality Audit Report
 **Date:** 2025-12-17
 **Auditor:** Security Review
 **Status:** ⚠️ Issues Found - Action Required

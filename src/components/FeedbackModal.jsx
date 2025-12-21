@@ -104,7 +104,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
                             Quick Feedback
                         </h2>
                         <p className="text-white/60 text-sm text-center mb-6">
-                            Help us improve SFHT Ascent! Share your thoughts, ideas, or report issues.
+                            Help us improve SHIFT Ascent! Share your thoughts, ideas, or report issues.
                         </p>
 
                         {/* Success State */}

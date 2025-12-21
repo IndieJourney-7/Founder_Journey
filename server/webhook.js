@@ -1,5 +1,5 @@
 /**
- * SFHT Ascent - Webhook Server (Pure Node.js - ES Module)
+ * SHIFT Ascent - Webhook Server (Pure Node.js - ES Module)
  * Handles Dodo Payments webhooks for payment verification
  *
  * Usage:
@@ -509,7 +509,7 @@ const server = http.createServer(async (req, res) => {
 // Start server
 server.listen(PORT, () => {
     console.log('═══════════════════════════════════════════════')
-    console.log('  🚀 SFHT Ascent Webhook Server')
+    console.log('  🚀 SHIFT Ascent Webhook Server')
     console.log('═══════════════════════════════════════════════')
     console.log(`  Local:    http://localhost:${PORT}`)
     console.log(`  Webhook:  http://localhost:${PORT}/webhook/dodo`)

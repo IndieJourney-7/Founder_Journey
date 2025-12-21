@@ -1,4 +1,4 @@
-# 🏔️ SFHT ASCENT
+# 🏔️ SHIFT ASCENT
 
 **Success. Failure. Hope. Trust.**
 

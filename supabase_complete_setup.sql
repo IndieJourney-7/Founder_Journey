@@ -1,5 +1,5 @@
 -- =====================================================
--- SFHT ASCENT - Complete Supabase Setup
+-- SHIFT ASCENT - Complete Supabase Setup
 -- =====================================================
 -- Run this entire script in your Supabase SQL Editor
 -- URL: https://dqvcahhpkrhpvfatnzss.supabase.co/project/default/sql
@@ -267,7 +267,7 @@ create trigger update_sticky_notes_updated_at
 -- =====================================================
 -- SETUP COMPLETE!
 -- =====================================================
--- Your database is now ready for SFHT Ascent!
+-- Your database is now ready for SHIFT Ascent!
 --
 -- Tables created:
 --   ✓ mountains - User journey mountains

@@ -1,5 +1,5 @@
 /**
- * SFHT Ascent - Webhook Server
+ * SHIFT Ascent - Webhook Server
  * Handles Dodo Payments webhooks for payment verification
  */
 

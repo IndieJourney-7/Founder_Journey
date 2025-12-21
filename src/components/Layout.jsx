@@ -14,7 +14,7 @@ export default function Layout() {
             <nav className="p-4 border-b border-white/10 backdrop-blur-sm bg-brand-blue/80 sticky top-0 z-50">
                 <div className="flex justify-between items-center">
                     <Link to="/" className="text-xl sm:text-2xl font-bold text-brand-gold tracking-tighter">
-                        SFHT ASCENT
+                        SHIFT ASCENT
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -145,7 +145,7 @@ export default function Layout() {
                     {/* Bottom: Copyright */}
                     <div className="mt-6 pt-6 border-t border-white/5 text-center">
                         <p className="text-white/40 text-xs">
-                            © {new Date().getFullYear()} SFHT ASCENT. Empowering founders to reach new heights.
+                            © {new Date().getFullYear()} SHIFT ASCENT. Empowering founders to reach new heights.
                         </p>
                     </div>
                 </div>

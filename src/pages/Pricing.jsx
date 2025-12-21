@@ -232,7 +232,7 @@ function WaitlistSection() {
 
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Early Beta Access</h2>
             <p className="text-sm sm:text-base text-white/60 mb-6 sm:mb-8 max-w-lg mx-auto px-2">
-                We're building Pro features right now. Join the waitlist to get early access and shape the future of SFHT Ascent. No credit card required.
+                We're building Pro features right now. Join the waitlist to get early access and shape the future of SHIFT Ascent. No credit card required.
             </p>
 
             {status === 'success' ? (
