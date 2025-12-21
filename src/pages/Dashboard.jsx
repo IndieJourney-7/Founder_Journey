@@ -9,6 +9,7 @@ import { usePlanLimits } from '../hooks/usePlanLimits'
 import MountainDashboard from '../components/mountain/MountainDashboard'
 import StepCard from '../components/StepCard'
 import BannerExportModal from '../components/sharing/BannerExportModal'
+import MinimalBannerExport from '../components/sharing/MinimalBannerExport'
 import ReflectionModal from '../components/ReflectionModal'
 import NoteViewer from '../components/NoteViewer'
 import FeedbackModal from '../components/FeedbackModal'
@@ -42,6 +43,7 @@ export default function Dashboard() {
     const [editingStep, setEditingStep] = useState(null) // New state for editing
     const [newStep, setNewStep] = useState({ title: '', description: '', expected_outcome: '' })
     const [isExportOpen, setIsExportOpen] = useState(false)
+    const [isMinimalExportOpen, setIsMinimalExportOpen] = useState(false)
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
     const mountainRef = useRef(null)
 
@@ -211,7 +213,7 @@ export default function Dashboard() {
             alert("Upgrade to Pro to create custom banners for social media!")
             return
         }
-        setIsExportOpen(true)
+        setIsMinimalExportOpen(true)
     }
 
     return (
@@ -432,7 +434,13 @@ export default function Dashboard() {
                 onDelete={handleDeleteNote}
             />
 
-            {/* Banner Export Modal */}
+            {/* Minimal Banner Export Modal */}
+            <MinimalBannerExport
+                isOpen={isMinimalExportOpen}
+                onClose={() => setIsMinimalExportOpen(false)}
+            />
+
+            {/* Banner Export Modal (Original) */}
             <BannerExportModal
                 isOpen={isExportOpen}
                 onClose={() => setIsExportOpen(false)}
