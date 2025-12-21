@@ -241,10 +241,11 @@ export const MountainProvider = ({ children }) => {
     }, [user])
 
     // Computed values - Progress based on total_steps_planned
+    // Only count successful steps for progress (failures don't move the climber forward)
+    const successfulSteps = steps.filter(s => s.status === 'success').length
     const resolvedSteps = steps.filter(s => s.status === 'success' || s.status === 'failed').length
     const totalPlanned = currentMountain?.total_steps_planned || steps.length || 1
-    const progress = Math.min((resolvedSteps / totalPlanned) * 100, 100)
-    const successfulSteps = steps.filter(s => s.status === 'success').length
+    const progress = Math.min((successfulSteps / totalPlanned) * 100, 100)
     /**
      * Delete a step
      * @param {number} stepId 
