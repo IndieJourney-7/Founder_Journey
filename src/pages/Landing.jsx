@@ -191,12 +191,13 @@ const Landing = () => {
 
                                 {/* Visual */}
                                 <div className="order-1 lg:order-2 relative">
-                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-gradient-to-br from-[#0a1529] to-[#0F1F3D] transform lg:hover:scale-105 transition-transform duration-500 aspect-video flex items-center justify-center">
-                                        <div className="text-center p-8">
-                                            <div className="text-6xl mb-4">🎯</div>
-                                            <div className="text-brand-gold text-2xl font-bold mb-2">Set Your Mission</div>
-                                            <div className="text-white/60 text-sm">Define goals and visualize your mountain</div>
-                                        </div>
+                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
+                                        <img
+                                            src="/img2.png"
+                                            alt="Set Your Mission - Dashboard Example"
+                                            className="w-full"
+                                            style={{ filter: 'brightness(1.1)' }}
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/20 to-transparent pointer-events-none" />
                                     </div>
                                     {/* Glow effect */}
@@ -394,6 +395,68 @@ const Landing = () => {
                         </motion.div>
 
                     </div>
+
+                    {/* Video Demo Section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.8 }}
+                        className="mt-32 relative"
+                    >
+                        <div className="text-center mb-12">
+                            <h3 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                                See SHIFT Ascent in Action
+                            </h3>
+                            <p className="text-white/70 text-lg max-w-2xl mx-auto">
+                                Watch how our app transforms your founder journey into an epic mountain climb
+                            </p>
+                        </div>
+
+                        {/* Video Card */}
+                        <div className="max-w-5xl mx-auto relative group">
+                            {/* Glow effect */}
+                            <div className="absolute -inset-4 bg-gradient-to-r from-brand-gold/20 via-brand-teal/20 to-purple-500/20 rounded-3xl blur-2xl opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
+
+                            {/* Video Container */}
+                            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10 bg-black">
+                                <video
+                                    className="w-full"
+                                    controls
+                                    poster="/img1.png"
+                                    preload="metadata"
+                                >
+                                    <source src="/shift.mp4" type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+
+                            {/* Decorative corner accents */}
+                            <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2 border-brand-gold rounded-tl-lg" />
+                            <div className="absolute -top-2 -right-2 w-8 h-8 border-t-2 border-r-2 border-brand-teal rounded-tr-lg" />
+                            <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-2 border-l-2 border-brand-teal rounded-bl-lg" />
+                            <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2 border-brand-gold rounded-br-lg" />
+                        </div>
+
+                        {/* Features Highlight Under Video */}
+                        <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                            <div className="text-center p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <div className="text-3xl mb-3">🎯</div>
+                                <h4 className="text-brand-gold font-semibold mb-2">Visual Progress</h4>
+                                <p className="text-white/60 text-sm">Watch your climber ascend as you complete steps</p>
+                            </div>
+                            <div className="text-center p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <div className="text-3xl mb-3">📊</div>
+                                <h4 className="text-brand-teal font-semibold mb-2">Track Everything</h4>
+                                <p className="text-white/60 text-sm">Journal your wins, losses, and lessons learned</p>
+                            </div>
+                            <div className="text-center p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <div className="text-3xl mb-3">🏆</div>
+                                <h4 className="text-purple-400 font-semibold mb-2">Celebrate Wins</h4>
+                                <p className="text-white/60 text-sm">Milestone animations keep you motivated</p>
+                            </div>
+                        </div>
+                    </motion.div>
 
                     {/* CTA at the end */}
                     <motion.div

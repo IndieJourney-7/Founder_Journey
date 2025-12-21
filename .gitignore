@@ -27,3 +27,7 @@ dist-ssr
 .env
 .env.local
 .env.production
+
+# Large video files (too big for GitHub - host externally)
+public/*.mp4
+*.mp4
