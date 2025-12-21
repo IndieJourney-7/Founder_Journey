@@ -360,8 +360,8 @@ const Landing = () => {
                                 <div className="relative">
                                     <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
                                         <img
-                                            src="/screenshots/share-banner.png"
-                                            alt="Share Journey"
+                                            src="/src/assets/img1.png"
+                                            alt="Share Journey - Export Banner Example"
                                             className="w-full"
                                             style={{ filter: 'brightness(1.1)' }}
                                         />
