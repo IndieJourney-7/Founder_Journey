@@ -102,6 +102,54 @@ export default function Layout() {
             <main className="flex-1 relative overflow-hidden flex flex-col">
                 <Outlet />
             </main>
+
+            {/* Footer with Creator Bio */}
+            <footer className="bg-gradient-to-b from-brand-blue to-[#0a1529] border-t border-white/10 py-8 px-4">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        {/* Left: Creator Info */}
+                        <div className="text-center md:text-left">
+                            <h3 className="text-xl font-bold text-brand-gold mb-2">Built by Vamshi</h3>
+                            <p className="text-white/80 text-sm max-w-md leading-relaxed">
+                                On a mission of freedom. Life explorer building projects that matter.
+                                <span className="block mt-1 text-brand-teal font-medium">
+                                    Creating tools for ambitious founders who dare to climb.
+                                </span>
+                            </p>
+                        </div>
+
+                        {/* Right: Social Links */}
+                        <div className="flex items-center gap-4">
+                            <a
+                                href="https://x.com/12e6V"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-6 py-3 bg-black/40 hover:bg-black/60 rounded-full transition-all border border-white/10 hover:border-brand-gold/50 group"
+                                aria-label="Follow Vamshi on X (Twitter)"
+                            >
+                                <svg
+                                    className="w-5 h-5 text-white group-hover:text-brand-gold transition-colors"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                                <span className="text-sm font-semibold text-white group-hover:text-brand-gold transition-colors">
+                                    Follow @12e6V
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Bottom: Copyright */}
+                    <div className="mt-6 pt-6 border-t border-white/5 text-center">
+                        <p className="text-white/40 text-xs">
+                            © {new Date().getFullYear()} SFHT ASCENT. Empowering founders to reach new heights.
+                        </p>
+                    </div>
+                </div>
+            </footer>
         </div>
     )
 }
