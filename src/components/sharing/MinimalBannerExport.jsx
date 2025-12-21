@@ -484,68 +484,67 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                                     }}
                                 >
-                                    {/* Top Section: Mission + Stats on LEFT, Quote on RIGHT */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '40px' }}>
-                                        {/* LEFT: Mission Name + Stats */}
-                                        <div style={{ flex: '0 0 auto', maxWidth: '50%' }}>
-                                            <h1
-                                                style={{
-                                                    fontSize: `${Math.min(format.width * 0.045, 68)}px`,
-                                                    fontWeight: 'bold',
-                                                    color: theme.textColor,
-                                                    marginBottom: '12px',
-                                                    textShadow: '0 4px 12px rgba(0,0,0,0.9)',
-                                                    letterSpacing: '0.5px',
-                                                    lineHeight: '1.1'
-                                                }}
-                                            >
-                                                {missionName}
-                                            </h1>
-                                            {/* Journey Stats */}
-                                            <div
+                                    {/* Top Section: Mission Name + Stats on LEFT */}
+                                    <div style={{ maxWidth: '50%' }}>
+                                        <h1
+                                            style={{
+                                                fontSize: `${Math.min(format.width * 0.045, 68)}px`,
+                                                fontWeight: 'bold',
+                                                color: theme.textColor,
+                                                marginBottom: '12px',
+                                                textShadow: '0 4px 12px rgba(0,0,0,0.9)',
+                                                letterSpacing: '0.5px',
+                                                lineHeight: '1.1'
+                                            }}
+                                        >
+                                            {missionName}
+                                        </h1>
+                                        {/* Journey Stats */}
+                                        <div
+                                            style={{
+                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
+                                                color: 'rgba(255,255,255,0.8)',
+                                                fontWeight: '600',
+                                                textShadow: '0 2px 6px rgba(0,0,0,0.8)',
+                                                marginTop: '8px'
+                                            }}
+                                        >
+                                            {resolvedSteps || 0}/{totalPlanned || 0} Steps • {Math.round(progress || 0)}% Complete
+                                        </div>
+                                    </div>
+
+                                    {/* RIGHT SIDE: Learning Quote - Centered vertically on right */}
+                                    {learningQuote && (
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                right: `${format.width * 0.08}px`,
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                padding: '16px 26px',
+                                                background: 'rgba(0,0,0,0.7)',
+                                                borderRadius: '12px',
+                                                border: '2px solid rgba(255,255,255,0.2)',
+                                                backdropFilter: 'blur(12px)',
+                                                maxWidth: `${format.width * 0.35}px`,
+                                                boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+                                            }}
+                                        >
+                                            <p
                                                 style={{
                                                     fontSize: `${Math.min(format.width * 0.018, 24)}px`,
-                                                    color: 'rgba(255,255,255,0.8)',
-                                                    fontWeight: '600',
-                                                    textShadow: '0 2px 6px rgba(0,0,0,0.8)',
-                                                    marginTop: '8px'
+                                                    color: theme.textColor,
+                                                    margin: 0,
+                                                    lineHeight: '1.5',
+                                                    fontStyle: 'italic',
+                                                    textShadow: '0 2px 6px rgba(0,0,0,0.9)',
+                                                    fontWeight: '500'
                                                 }}
                                             >
-                                                {resolvedSteps || 0}/{totalPlanned || 0} Steps • {Math.round(progress || 0)}% Complete
-                                            </div>
+                                                {learningQuote}
+                                            </p>
                                         </div>
-
-                                        {/* RIGHT: Learning Quote - Single Line */}
-                                        {learningQuote && (
-                                            <div
-                                                style={{
-                                                    flex: '1 1 auto',
-                                                    padding: '14px 22px',
-                                                    background: 'rgba(255,255,255,0.08)',
-                                                    borderRadius: '10px',
-                                                    border: '1px solid rgba(255,255,255,0.15)',
-                                                    backdropFilter: 'blur(8px)',
-                                                    alignSelf: 'center'
-                                                }}
-                                            >
-                                                <p
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.015, 20)}px`,
-                                                        color: theme.textColor,
-                                                        margin: 0,
-                                                        lineHeight: '1.4',
-                                                        fontStyle: 'italic',
-                                                        textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-                                                        whiteSpace: 'nowrap',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis'
-                                                    }}
-                                                >
-                                                    {learningQuote}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
 
                                     {/* Floating: Day & Earnings - Small Compact Box */}
                                     <div
