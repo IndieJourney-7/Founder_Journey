@@ -127,8 +127,297 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Features (Existing) */}
-            <section className="py-16 sm:py-20 lg:py-24 bg-[#0F1F3D]">
+            {/* Features in Action - Step-by-Step Visual Flow */}
+            <section className="py-20 sm:py-32 bg-gradient-to-b from-[#0F1F3D] via-[#0a1529] to-[#0F1F3D] relative overflow-hidden">
+                {/* Background decorative elements */}
+                <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-gold/10 rounded-full blur-3xl" />
+                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-brand-teal/10 rounded-full blur-3xl" />
+                </div>
+
+                <div className="container mx-auto px-4 sm:px-6 relative z-10">
+                    {/* Section Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center max-w-3xl mx-auto mb-20"
+                    >
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">
+                                Features in Action
+                            </span>
+                        </h2>
+                        <p className="text-lg sm:text-xl text-slate-300 leading-relaxed">
+                            Your journey from idea to success, visualized like never before
+                        </p>
+                    </motion.div>
+
+                    {/* Step-by-Step Flow */}
+                    <div className="max-w-6xl mx-auto space-y-32">
+
+                        {/* Step 1: Set Your Mission */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6 }}
+                            className="relative"
+                        >
+                            <div className="grid lg:grid-cols-2 gap-12 items-center">
+                                {/* Text Content */}
+                                <div className="order-2 lg:order-1">
+                                    <div className="inline-block px-4 py-2 bg-brand-gold/10 border border-brand-gold/30 rounded-full mb-4">
+                                        <span className="text-brand-gold font-bold text-sm">STEP 1</span>
+                                    </div>
+                                    <h3 className="text-3xl sm:text-4xl font-bold mb-4 text-white">
+                                        Set Your Mission
+                                    </h3>
+                                    <p className="text-lg text-slate-300 mb-6 leading-relaxed">
+                                        Define your goal and visualize it as climbing a mountain. Whether it's launching a startup,
+                                        hitting revenue targets, or building in public - your mountain awaits.
+                                    </p>
+                                    <ul className="space-y-3">
+                                        {['Choose your mission name', 'Set ambitious targets', 'Pick your mountain theme'].map((item, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-slate-300">
+                                                <div className="w-6 h-6 rounded-full bg-brand-teal/20 flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-2 h-2 rounded-full bg-brand-teal" />
+                                                </div>
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Visual */}
+                                <div className="order-1 lg:order-2 relative">
+                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
+                                        <img
+                                            src="/screenshots/goal-setup.png"
+                                            alt="Goal Setup"
+                                            className="w-full"
+                                            style={{ filter: 'brightness(1.1)' }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/20 to-transparent pointer-events-none" />
+                                    </div>
+                                    {/* Glow effect */}
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-brand-gold/20 to-brand-teal/20 rounded-2xl blur-xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                            </div>
+
+                            {/* Connecting Line (dotted) */}
+                            <div className="hidden lg:block absolute left-1/2 bottom-0 transform translate-y-1/2 -mb-16">
+                                <motion.div
+                                    initial={{ scaleY: 0 }}
+                                    whileInView={{ scaleY: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8, delay: 0.5 }}
+                                    className="w-1 h-32 bg-gradient-to-b from-brand-gold via-brand-teal to-transparent origin-top"
+                                    style={{
+                                        backgroundImage: 'repeating-linear-gradient(0deg, #E7C778 0px, #E7C778 10px, transparent 10px, transparent 20px)',
+                                    }}
+                                />
+                            </div>
+                        </motion.div>
+
+                        {/* Step 2: Add Strategy Steps */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6 }}
+                            className="relative"
+                        >
+                            <div className="grid lg:grid-cols-2 gap-12 items-center">
+                                {/* Visual */}
+                                <div className="relative">
+                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
+                                        <img
+                                            src="/screenshots/add-steps.png"
+                                            alt="Add Steps"
+                                            className="w-full"
+                                            style={{ filter: 'brightness(1.1)' }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/20 to-transparent pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                {/* Text Content */}
+                                <div>
+                                    <div className="inline-block px-4 py-2 bg-brand-teal/10 border border-brand-teal/30 rounded-full mb-4">
+                                        <span className="text-brand-teal font-bold text-sm">STEP 2</span>
+                                    </div>
+                                    <h3 className="text-3xl sm:text-4xl font-bold mb-4 text-white">
+                                        Map Out Your Strategy
+                                    </h3>
+                                    <p className="text-lg text-slate-300 mb-6 leading-relaxed">
+                                        Break down your mission into actionable steps. Each strategy becomes a checkpoint
+                                        on your mountain climb. Plan, execute, and watch your progress unfold.
+                                    </p>
+                                    <ul className="space-y-3">
+                                        {['Add clear action steps', 'Track success & failures', 'See checkpoints on your path'].map((item, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-slate-300">
+                                                <div className="w-6 h-6 rounded-full bg-brand-gold/20 flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-2 h-2 rounded-full bg-brand-gold" />
+                                                </div>
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Connecting Line */}
+                            <div className="hidden lg:block absolute left-1/2 bottom-0 transform translate-y-1/2 -mb-16">
+                                <motion.div
+                                    initial={{ scaleY: 0 }}
+                                    whileInView={{ scaleY: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8, delay: 0.5 }}
+                                    className="w-1 h-32"
+                                    style={{
+                                        backgroundImage: 'repeating-linear-gradient(0deg, #1CC5A3 0px, #1CC5A3 10px, transparent 10px, transparent 20px)',
+                                    }}
+                                />
+                            </div>
+                        </motion.div>
+
+                        {/* Step 3: Watch Your Climb */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6 }}
+                            className="relative"
+                        >
+                            <div className="grid lg:grid-cols-2 gap-12 items-center">
+                                {/* Text Content */}
+                                <div className="order-2 lg:order-1">
+                                    <div className="inline-block px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full mb-4">
+                                        <span className="text-purple-400 font-bold text-sm">STEP 3</span>
+                                    </div>
+                                    <h3 className="text-3xl sm:text-4xl font-bold mb-4 text-white">
+                                        Watch Your Climb
+                                    </h3>
+                                    <p className="text-lg text-slate-300 mb-6 leading-relaxed">
+                                        See your avatar ascend the mountain in real-time. Every completed step moves you higher.
+                                        Celebrate milestones with confetti and visual rewards.
+                                    </p>
+                                    <ul className="space-y-3">
+                                        {['Real-time progress visualization', 'Animated climber avatar', 'Milestone celebrations'].map((item, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-slate-300">
+                                                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-2 h-2 rounded-full bg-purple-400" />
+                                                </div>
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Visual - MountainDashboard Live */}
+                                <div className="order-1 lg:order-2 relative">
+                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] aspect-square transform lg:hover:scale-105 transition-transform duration-500">
+                                        <MountainDashboard
+                                            steps={mockSteps}
+                                            stickyNotes={mockNotes}
+                                            progress={65}
+                                            missionName="Launch Startup"
+                                            goalTarget="$10k MRR"
+                                            titleSize="text-xl sm:text-2xl"
+                                            onStepClick={() => {}}
+                                            onAddStickyNote={() => {}}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Connecting Line */}
+                            <div className="hidden lg:block absolute left-1/2 bottom-0 transform translate-y-1/2 -mb-16">
+                                <motion.div
+                                    initial={{ scaleY: 0 }}
+                                    whileInView={{ scaleY: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8, delay: 0.5 }}
+                                    className="w-1 h-32"
+                                    style={{
+                                        backgroundImage: 'repeating-linear-gradient(0deg, #a855f7 0px, #a855f7 10px, transparent 10px, transparent 20px)',
+                                    }}
+                                />
+                            </div>
+                        </motion.div>
+
+                        {/* Step 4: Share Your Journey */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6 }}
+                            className="relative"
+                        >
+                            <div className="grid lg:grid-cols-2 gap-12 items-center">
+                                {/* Visual */}
+                                <div className="relative">
+                                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0a1529] transform lg:hover:scale-105 transition-transform duration-500">
+                                        <img
+                                            src="/screenshots/share-banner.png"
+                                            alt="Share Journey"
+                                            className="w-full"
+                                            style={{ filter: 'brightness(1.1)' }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/20 to-transparent pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                {/* Text Content */}
+                                <div>
+                                    <div className="inline-block px-4 py-2 bg-brand-gold/10 border border-brand-gold/30 rounded-full mb-4">
+                                        <span className="text-brand-gold font-bold text-sm">STEP 4</span>
+                                    </div>
+                                    <h3 className="text-3xl sm:text-4xl font-bold mb-4 text-white">
+                                        Share Your Journey
+                                    </h3>
+                                    <p className="text-lg text-slate-300 mb-6 leading-relaxed">
+                                        Export beautiful, HD banners for X, LinkedIn, and Instagram. Show the world your progress.
+                                        Build in public, inspire others, and grow your audience.
+                                    </p>
+                                    <ul className="space-y-3">
+                                        {['HD banner export (Twitter, LinkedIn)', 'Custom themes & branding', 'One-click download & share'].map((item, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-slate-300">
+                                                <div className="w-6 h-6 rounded-full bg-brand-gold/20 flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-2 h-2 rounded-full bg-brand-gold" />
+                                                </div>
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                    </div>
+
+                    {/* CTA at the end */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        className="text-center mt-24"
+                    >
+                        <Link
+                            to="/setup"
+                            className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-brand-gold to-yellow-400 text-brand-blue font-bold text-lg rounded-2xl hover:shadow-2xl hover:shadow-brand-gold/30 transition-all transform hover:-translate-y-1"
+                        >
+                            Start Climbing Today <ArrowRight size={24} />
+                        </Link>
+                        <p className="text-slate-400 mt-4">No credit card required • Free to start</p>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Quick Features Grid (Original simplified) */}
+            <section className="py-16 sm:py-20 bg-[#0F1F3D]">
                 <div className="container mx-auto px-4 sm:px-6">
                     <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
                         {[
