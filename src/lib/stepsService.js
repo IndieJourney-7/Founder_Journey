@@ -43,11 +43,16 @@ export const fetchSteps = async (mountainId) => {
  * @param {string} mountainId - UUID of the mountain
  * @param {object} stepData - { title, status? }
  * @param {number} orderIndex - Position in the list
+ * @param {string} userId - UUID of the user (required for RLS)
  * @returns {Promise<{step: object|null, error: object|null}>}
  */
-export const addStep = async (mountainId, stepData, orderIndex = 0) => {
+export const addStep = async (mountainId, stepData, orderIndex = 0, userId) => {
     if (!mountainId) {
         return { step: null, error: { message: 'Mountain ID required' } }
+    }
+
+    if (!userId) {
+        return { step: null, error: { message: 'User ID required' } }
     }
 
     // Integrity Check: Verify previous step is resolved
@@ -81,6 +86,7 @@ export const addStep = async (mountainId, stepData, orderIndex = 0) => {
     const { data, error } = await supabase
         .from('steps')
         .insert([{
+            user_id: userId,
             mountain_id: mountainId,
             title: stepData.title,
             status: stepData.status || 'pending',

@@ -118,10 +118,15 @@ export const MountainProvider = ({ children }) => {
             return { success: false, error: 'No mountain selected' }
         }
 
+        if (!user) {
+            return { success: false, error: 'Not authenticated' }
+        }
+
         const { step, error: addError } = await stepsService.addStep(
             currentMountain.id,
             stepData,
-            steps.length
+            steps.length,
+            user.id
         )
 
         if (addError) {
@@ -131,7 +136,7 @@ export const MountainProvider = ({ children }) => {
 
         setSteps(prev => [...prev, step])
         return { success: true, step }
-    }, [currentMountain, steps.length])
+    }, [currentMountain, steps.length, user])
 
     /**
      * Update a step's status
