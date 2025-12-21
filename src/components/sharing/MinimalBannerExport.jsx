@@ -91,7 +91,7 @@ const getPointOnPath = (pathString, progress) => {
 
 export default function MinimalBannerExport({ isOpen, onClose }) {
     const { isPro } = usePlanLimits();
-    const { currentMountain, progress } = useMountain();
+    const { currentMountain, progress, resolvedSteps, totalPlanned } = useMountain();
 
     // User inputs
     const [missionName, setMissionName] = useState(currentMountain?.title || 'Operation 1-1-12');
@@ -152,7 +152,8 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     // Calculate climber position on path
-    const climberPoint = progress > 0 ? getPointOnPath(SIMPLE_MOUNTAIN_PATH, Math.min(progress, 95)) : { x: 150, y: 850 };
+    const safeProgress = progress || 0;
+    const climberPoint = safeProgress > 0 ? getPointOnPath(SIMPLE_MOUNTAIN_PATH, Math.min(safeProgress, 95)) : { x: 150, y: 850 };
     const peakPoint = { x: 1250, y: 180 };
 
     return (
@@ -408,12 +409,12 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         strokeWidth="6"
                                         strokeLinecap="round"
                                         fill="none"
-                                        strokeDasharray={`${progress * 16} ${1600 - progress * 16}`}
+                                        strokeDasharray={`${safeProgress * 16} ${1600 - safeProgress * 16}`}
                                         style={{ filter: `drop-shadow(0 0 12px ${theme.pathColor})` }}
                                     />
 
                                     {/* Climber Dot with glow */}
-                                    {progress > 0 && (
+                                    {safeProgress > 0 && (
                                         <g>
                                             {/* Outer glow */}
                                             <circle
@@ -510,7 +511,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                                     marginTop: '8px'
                                                 }}
                                             >
-                                                {resolvedSteps}/{totalPlanned} Steps • {Math.round(progress)}% Complete
+                                                {resolvedSteps || 0}/{totalPlanned || 0} Steps • {Math.round(progress || 0)}% Complete
                                             </div>
                                         </div>
 
