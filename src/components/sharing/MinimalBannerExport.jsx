@@ -74,6 +74,18 @@ const THEMES = {
 // Professional S-curve mountain path
 const SIMPLE_MOUNTAIN_PATH = "M150 850 C 300 800, 400 700, 550 600 C 700 500, 850 400, 1000 300 C 1100 250, 1150 220, 1250 180";
 
+// Font options
+const FONT_OPTIONS = {
+    'System': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    'Roboto': 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    'Playfair': '"Playfair Display", Georgia, serif',
+    'Montserrat': 'Montserrat, -apple-system, BlinkMacSystemFont, sans-serif',
+    'Open Sans': '"Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+    'Lato': 'Lato, -apple-system, BlinkMacSystemFont, sans-serif',
+    'Merriweather': 'Merriweather, Georgia, serif',
+    'Poppins': 'Poppins, -apple-system, BlinkMacSystemFont, sans-serif'
+};
+
 // Calculate point on path at given progress
 const getPointOnPath = (pathString, progress) => {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -100,7 +112,9 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     const [currentEarnings, setCurrentEarnings] = useState('347');
     const [metricType, setMetricType] = useState('$');
     const [learningQuote, setLearningQuote] = useState('Patience and small steps are winning this week 🌱');
+    const [quoteFont, setQuoteFont] = useState('Roboto');
     const [customUrl, setCustomUrl] = useState('shift-journey.vercel.app');
+    const [urlFont, setUrlFont] = useState('System');
 
     // Export settings
     const [selectedFormat, setSelectedFormat] = useState('twitter');
@@ -144,7 +158,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
         if (isOpen && exportRef.current) {
             setTimeout(generatePreview, 500);
         }
-    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, customUrl]);
+    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, quoteFont, customUrl, urlFont]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -283,7 +297,18 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         placeholder="e.g., Learning: Patience and small steps are winning this week"
                                         className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none h-20 resize-none"
                                     />
-                                    <p className="text-xs text-white/40 mt-1">{learningQuote.length}/150</p>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <p className="text-xs text-white/40">{learningQuote.length}/150</p>
+                                        <select
+                                            value={quoteFont}
+                                            onChange={(e) => setQuoteFont(e.target.value)}
+                                            className="text-xs px-2 py-1 rounded bg-black/30 border border-white/10 text-white focus:border-brand-teal focus:outline-none"
+                                        >
+                                            {Object.keys(FONT_OPTIONS).map(font => (
+                                                <option key={font} value={font}>{font}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
 
                                 {/* Custom URL */}
@@ -296,6 +321,17 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         placeholder="shift-journey.vercel.app"
                                         className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
                                     />
+                                    <div className="flex items-center justify-end mt-1">
+                                        <select
+                                            value={urlFont}
+                                            onChange={(e) => setUrlFont(e.target.value)}
+                                            className="text-xs px-2 py-1 rounded bg-black/30 border border-white/10 text-white focus:border-brand-teal focus:outline-none"
+                                        >
+                                            {Object.keys(FONT_OPTIONS).map(font => (
+                                                <option key={font} value={font}>{font}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
 
                                 {/* Color Picker */}
@@ -590,7 +626,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                                     fontStyle: 'italic',
                                                     textShadow: '0 2px 6px rgba(0,0,0,0.9)',
                                                     fontWeight: '500',
-                                                    fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+                                                    fontFamily: FONT_OPTIONS[quoteFont]
                                                 }}
                                             >
                                                 {learningQuote}
@@ -675,7 +711,8 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                             color: 'rgba(255,255,255,0.5)',
                                             fontWeight: '500',
                                             textAlign: 'center',
-                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)',
+                                            fontFamily: FONT_OPTIONS[urlFont]
                                         }}
                                     >
                                         Made with Shift Journey • {customUrl}
