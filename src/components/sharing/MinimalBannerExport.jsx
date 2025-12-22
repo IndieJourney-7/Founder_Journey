@@ -488,13 +488,14 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     <div style={{ maxWidth: '50%' }}>
                                         <h1
                                             style={{
-                                                fontSize: `${Math.min(format.width * 0.045, 68)}px`,
-                                                fontWeight: 'bold',
+                                                fontSize: `${Math.min(format.width * 0.055, 80)}px`,
+                                                fontWeight: '800',
                                                 color: theme.textColor,
-                                                marginBottom: '12px',
-                                                textShadow: '0 4px 12px rgba(0,0,0,0.9)',
-                                                letterSpacing: '0.5px',
-                                                lineHeight: '1.1'
+                                                marginBottom: '16px',
+                                                textShadow: '0 4px 16px rgba(0,0,0,0.9)',
+                                                letterSpacing: '1px',
+                                                lineHeight: '1',
+                                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif'
                                             }}
                                         >
                                             {missionName}
@@ -502,14 +503,15 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         {/* Journey Stats */}
                                         <div
                                             style={{
-                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
-                                                color: 'rgba(255,255,255,0.8)',
-                                                fontWeight: '600',
-                                                textShadow: '0 2px 6px rgba(0,0,0,0.8)',
-                                                marginTop: '8px'
+                                                fontSize: `${Math.min(format.width * 0.016, 22)}px`,
+                                                color: 'rgba(255,255,255,0.9)',
+                                                fontWeight: '400',
+                                                textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                                                marginTop: '0px',
+                                                letterSpacing: '0.3px'
                                             }}
                                         >
-                                            {resolvedSteps || 0}/{totalPlanned || 0} Steps • {Math.round(progress || 0)}% Complete
+                                            {resolvedSteps || 0}/{totalPlanned || 0} Steps . {Math.round(progress || 0)}% Complete
                                         </div>
                                     </div>
 
@@ -546,72 +548,76 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         </div>
                                     )}
 
-                                    {/* Floating: Day & Earnings - Small Compact Box */}
+                                    {/* Floating: Day & Earnings - Split Box Design */}
                                     <div
                                         style={{
                                             position: 'absolute',
-                                            top: `${format.height * 0.4}px`,
-                                            left: `${format.width * 0.08}px`,
-                                            padding: '12px 20px',
-                                            background: 'rgba(0,0,0,0.75)',
-                                            borderRadius: '12px',
-                                            border: `2px solid ${theme.pathColor}`,
-                                            backdropFilter: 'blur(10px)',
-                                            display: 'inline-block',
-                                            boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 20px ${theme.pathColor}40`
+                                            top: `${format.height * 0.15}px`,
+                                            left: `${format.width * 0.04}px`,
+                                            background: 'rgba(0,0,0,0.9)',
+                                            borderRadius: '8px',
+                                            display: 'inline-flex',
+                                            overflow: 'hidden',
+                                            boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                            {/* Day */}
-                                            <div style={{ textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.2)', paddingRight: '16px' }}>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
-                                                        color: 'rgba(255,255,255,0.6)',
-                                                        marginBottom: '2px',
-                                                        fontWeight: '500',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '1px'
-                                                    }}
-                                                >
-                                                    Day
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.028, 42)}px`,
-                                                        fontWeight: '900',
-                                                        color: theme.textColor,
-                                                        lineHeight: '1'
-                                                    }}
-                                                >
-                                                    {currentDay}
-                                                </div>
+                                        {/* Day Section */}
+                                        <div style={{
+                                            padding: '20px 32px',
+                                            textAlign: 'center',
+                                            borderRight: `3px solid ${theme.pathColor}`
+                                        }}>
+                                            <div
+                                                style={{
+                                                    fontSize: `${Math.min(format.width * 0.01, 14)}px`,
+                                                    color: 'rgba(255,255,255,0.5)',
+                                                    marginBottom: '8px',
+                                                    fontWeight: '600',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '1.5px'
+                                                }}
+                                            >
+                                                DAY
                                             </div>
-                                            {/* Earnings */}
-                                            <div style={{ textAlign: 'center' }}>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
-                                                        color: 'rgba(255,255,255,0.6)',
-                                                        marginBottom: '2px',
-                                                        fontWeight: '500',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '1px'
-                                                    }}
-                                                >
-                                                    {metricType === 'Users' ? 'Users' : 'Earned'}
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.035, 52)}px`,
-                                                        fontWeight: '900',
-                                                        color: theme.pathColor,
-                                                        textShadow: `0 4px 12px rgba(0,0,0,0.9)`,
-                                                        lineHeight: '1'
-                                                    }}
-                                                >
-                                                    {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
-                                                </div>
+                                            <div
+                                                style={{
+                                                    fontSize: `${Math.min(format.width * 0.035, 50)}px`,
+                                                    fontWeight: '700',
+                                                    color: theme.textColor,
+                                                    lineHeight: '1',
+                                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+                                                }}
+                                            >
+                                                {currentDay}
+                                            </div>
+                                        </div>
+                                        {/* Earnings Section */}
+                                        <div style={{
+                                            padding: '20px 32px',
+                                            textAlign: 'center'
+                                        }}>
+                                            <div
+                                                style={{
+                                                    fontSize: `${Math.min(format.width * 0.01, 14)}px`,
+                                                    color: 'rgba(255,255,255,0.5)',
+                                                    marginBottom: '8px',
+                                                    fontWeight: '600',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '1.5px'
+                                                }}
+                                            >
+                                                {metricType === 'Users' ? 'USERS' : 'EARNED'}
+                                            </div>
+                                            <div
+                                                style={{
+                                                    fontSize: `${Math.min(format.width * 0.035, 50)}px`,
+                                                    fontWeight: '700',
+                                                    color: theme.pathColor,
+                                                    lineHeight: '1',
+                                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+                                                }}
+                                            >
+                                                {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
                                             </div>
                                         </div>
                                     </div>
