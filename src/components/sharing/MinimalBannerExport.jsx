@@ -540,28 +540,28 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
 
                                     {/* Goal Flag at Peak */}
                                     <g>
-                                        {/* Flag pole */}
+                                        {/* Flag pole - Taller */}
                                         <line
                                             x1={peakPoint.x}
                                             y1={peakPoint.y}
                                             x2={peakPoint.x}
-                                            y2={peakPoint.y - 70}
+                                            y2={peakPoint.y - 90}
                                             stroke={theme.pathColor}
-                                            strokeWidth="5"
+                                            strokeWidth="6"
                                         />
-                                        {/* Flag */}
+                                        {/* Flag - Bigger */}
                                         <path
-                                            d={`M ${peakPoint.x},${peakPoint.y - 70} L ${peakPoint.x + 60},${peakPoint.y - 50} L ${peakPoint.x},${peakPoint.y - 30} Z`}
+                                            d={`M ${peakPoint.x},${peakPoint.y - 90} L ${peakPoint.x + 75},${peakPoint.y - 65} L ${peakPoint.x},${peakPoint.y - 40} Z`}
                                             fill={theme.pathColor}
                                             stroke="#ffffff"
-                                            strokeWidth="2"
+                                            strokeWidth="2.5"
                                         />
-                                        {/* Goal text */}
+                                        {/* Goal text - Bigger */}
                                         <text
                                             x={peakPoint.x}
-                                            y={peakPoint.y - 80}
+                                            y={peakPoint.y - 100}
                                             fill={theme.textColor}
-                                            fontSize="26"
+                                            fontSize="32"
                                             fontWeight="bold"
                                             textAnchor="middle"
                                             style={{ filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.9))' }}
