@@ -605,7 +605,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     </g>
                                 </svg>
 
-                                {/* Text Overlays - 3 Column Grid Layout */}
+                                {/* Text Overlays - Clean Professional Layout */}
                                 <div
                                     style={{
                                         position: 'absolute',
@@ -614,92 +614,93 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         right: 0,
                                         bottom: 0,
                                         display: 'grid',
-                                        gridTemplateColumns: '20% 40% 40%',
+                                        gridTemplateColumns: '25% 35% 40%',
                                         gridTemplateRows: '1fr auto',
-                                        gap: `${format.width * 0.02}px`,
-                                        padding: `${format.height * 0.06}px ${format.width * 0.05}px`,
+                                        gap: `${format.width * 0.03}px`,
+                                        padding: `${format.height * 0.08}px ${format.width * 0.06}px`,
                                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                                     }}
                                 >
-                                    {/* LEFT SECTION: Identity & Status */}
+                                    {/* LEFT SECTION: Identity & Metrics */}
                                     <div style={{
                                         gridColumn: '1',
                                         gridRow: '1',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        gap: '24px',
-                                        justifyContent: 'center'
+                                        justifyContent: 'flex-start',
+                                        gap: `${format.height * 0.04}px`,
+                                        paddingTop: `${format.height * 0.02}px`
                                     }}>
-                                        {/* Mission Name - Single Line */}
+                                        {/* Mission Name - Visible with proper contrast */}
                                         <h1 style={{
-                                            fontSize: `${Math.min(format.width * 0.024, 36)}px`,
-                                            fontWeight: '600',
-                                            color: 'rgba(255,255,255,0.9)',
-                                            textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                                            lineHeight: '1',
+                                            fontSize: `${Math.min(format.width * 0.022, 32)}px`,
+                                            fontWeight: '700',
+                                            color: '#FFFFFF',
+                                            textShadow: '0 3px 12px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.8)',
+                                            lineHeight: '1.2',
                                             margin: 0,
-                                            letterSpacing: '-0.015em',
+                                            letterSpacing: '-0.01em',
                                             whiteSpace: 'nowrap',
                                             overflow: 'hidden',
-                                            textOverflow: 'ellipsis'
+                                            textOverflow: 'ellipsis',
+                                            maxWidth: '100%'
                                         }}>
                                             {missionName}
                                         </h1>
 
-                                        {/* Day Count - MASSIVE & DOMINANT */}
+                                        {/* Day Count - Balanced Size */}
                                         <div style={{
                                             display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '6px'
+                                            alignItems: 'baseline',
+                                            gap: '12px'
                                         }}>
                                             <div style={{
-                                                fontSize: `${Math.min(format.width * 0.11, 165)}px`,
+                                                fontSize: `${Math.min(format.width * 0.07, 105)}px`,
                                                 fontWeight: '900',
-                                                color: theme.textColor,
-                                                textShadow: '0 8px 32px rgba(0,0,0,0.95)',
-                                                lineHeight: '0.8',
-                                                letterSpacing: '-0.05em',
+                                                color: '#FFFFFF',
+                                                textShadow: '0 6px 24px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)',
+                                                lineHeight: '1',
+                                                letterSpacing: '-0.04em',
                                                 fontVariantNumeric: 'tabular-nums'
                                             }}>
                                                 {currentDay}
                                             </div>
                                             <div style={{
-                                                fontSize: `${Math.min(format.width * 0.012, 16)}px`,
+                                                fontSize: `${Math.min(format.width * 0.016, 22)}px`,
                                                 fontWeight: '600',
-                                                color: 'rgba(255,255,255,0.4)',
-                                                letterSpacing: '0.2em',
-                                                textTransform: 'uppercase'
+                                                color: 'rgba(255,255,255,0.6)',
+                                                letterSpacing: '0.1em',
+                                                textTransform: 'uppercase',
+                                                textShadow: '0 2px 6px rgba(0,0,0,0.7)'
                                             }}>
-                                                DAY
+                                                Days
                                             </div>
                                         </div>
 
-                                        {/* Earnings Display - Only when enabled */}
+                                        {/* Earnings Display - Clean & Compact */}
                                         {showEarnings && (
                                             <div style={{
                                                 display: 'flex',
                                                 flexDirection: 'column',
-                                                gap: '8px',
-                                                paddingTop: '16px',
-                                                borderTop: `1px solid rgba(255,255,255,0.1)`
+                                                gap: '6px'
                                             }}>
                                                 <div style={{
-                                                    fontSize: `${Math.min(format.width * 0.009, 12)}px`,
+                                                    fontSize: `${Math.min(format.width * 0.01, 14)}px`,
                                                     fontWeight: '600',
                                                     color: 'rgba(255,255,255,0.5)',
-                                                    letterSpacing: '0.12em',
+                                                    letterSpacing: '0.08em',
                                                     textTransform: 'uppercase',
-                                                    fontFamily: '"IBM Plex Mono", monospace'
+                                                    textShadow: '0 2px 6px rgba(0,0,0,0.7)'
                                                 }}>
                                                     {metricType === 'Users' ? 'Users' : 'Revenue'}
                                                 </div>
                                                 <div style={{
-                                                    fontSize: `${Math.min(format.width * 0.042, 63)}px`,
+                                                    fontSize: `${Math.min(format.width * 0.035, 52)}px`,
                                                     fontWeight: '800',
                                                     color: theme.pathColor,
-                                                    textShadow: `0 4px 20px ${theme.pathColor}70`,
+                                                    textShadow: `0 4px 16px ${theme.pathColor}90, 0 2px 6px rgba(0,0,0,0.8)`,
                                                     fontVariantNumeric: 'tabular-nums',
-                                                    letterSpacing: '-0.025em',
+                                                    letterSpacing: '-0.02em',
                                                     lineHeight: '1'
                                                 }}>
                                                     {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}
@@ -708,82 +709,64 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         )}
                                     </div>
 
-                                    {/* CENTER SECTION: Journey Path (handled by SVG above) */}
+                                    {/* CENTER SECTION: Journey Path (handled by SVG) */}
 
-                                    {/* RIGHT SECTION: Context & Proof */}
+                                    {/* RIGHT SECTION: Quote & Proof Image */}
                                     <div style={{
                                         gridColumn: '3',
                                         gridRow: '1',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        justifyContent: 'center',
-                                        gap: '20px',
-                                        paddingLeft: `${format.width * 0.02}px`
+                                        justifyContent: 'flex-start',
+                                        alignItems: 'flex-end',
+                                        gap: `${format.height * 0.03}px`,
+                                        paddingTop: `${format.height * 0.02}px`
                                     }}>
-                                        {/* Learning Quote */}
-                                        {learningQuote && (
-                                            <p style={{
-                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
-                                                color: theme.textColor,
-                                                margin: 0,
-                                                lineHeight: '1.5',
-                                                fontStyle: 'italic',
-                                                textShadow: '0 2px 6px rgba(0,0,0,0.9)',
-                                                fontWeight: '500',
-                                                fontFamily: FONT_OPTIONS[quoteFont],
-                                                wordWrap: 'break-word'
-                                            }}>
-                                                {learningQuote}
-                                            </p>
-                                        )}
-
-                                        {/* Proof Image (Optional) - Editorial Frame */}
+                                        {/* Proof Image First - No overlap with path */}
                                         {showEarnings && proofImageUrl && (
                                             <div style={{
                                                 position: 'relative',
                                                 width: '100%',
-                                                maxWidth: `${format.width * 0.32}px`,
-                                                aspectRatio: '16 / 9'
+                                                maxWidth: `${format.width * 0.3}px`,
+                                                aspectRatio: '16 / 9',
+                                                borderRadius: '6px',
+                                                overflow: 'hidden',
+                                                border: `2px solid ${theme.pathColor}`,
+                                                boxShadow: `0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)`
                                             }}>
-                                                {/* Corner accent - top right */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '-6px',
-                                                    right: '-6px',
-                                                    width: '24px',
-                                                    height: '24px',
-                                                    borderTop: `3px solid ${theme.pathColor}`,
-                                                    borderRight: `3px solid ${theme.pathColor}`,
-                                                    zIndex: 2
-                                                }}/>
-
-                                                <div style={{
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    borderRadius: '2px',
-                                                    overflow: 'hidden',
-                                                    border: `1px solid ${theme.pathColor}60`,
-                                                    boxShadow: `
-                                                        0 20px 60px rgba(0,0,0,0.5),
-                                                        inset 0 0 0 1px rgba(255,255,255,0.08)
-                                                    `
-                                                }}>
-                                                    <img
-                                                        src={proofImageUrl}
-                                                        alt="Proof of work"
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            objectFit: 'cover',
-                                                            filter: 'contrast(1.05) saturate(1.1)'
-                                                        }}
-                                                        crossOrigin="anonymous"
-                                                        onError={(e) => {
-                                                            e.target.style.display = 'none';
-                                                        }}
-                                                    />
-                                                </div>
+                                                <img
+                                                    src={proofImageUrl}
+                                                    alt="Proof of work"
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover'
+                                                    }}
+                                                    crossOrigin="anonymous"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                    }}
+                                                />
                                             </div>
+                                        )}
+
+                                        {/* Learning Quote - Below image, no overlap */}
+                                        {learningQuote && (
+                                            <p style={{
+                                                fontSize: `${Math.min(format.width * 0.016, 22)}px`,
+                                                color: '#FFFFFF',
+                                                margin: 0,
+                                                lineHeight: '1.6',
+                                                fontStyle: 'italic',
+                                                textShadow: '0 3px 10px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.7)',
+                                                fontWeight: '500',
+                                                fontFamily: FONT_OPTIONS[quoteFont],
+                                                wordWrap: 'break-word',
+                                                textAlign: 'right',
+                                                maxWidth: '100%'
+                                            }}>
+                                                {learningQuote}
+                                            </p>
                                         )}
                                     </div>
 
@@ -791,12 +774,13 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     <div style={{
                                         gridColumn: '1 / 4',
                                         gridRow: '2',
-                                        fontSize: `${Math.min(format.width * 0.014, 18)}px`,
-                                        color: 'rgba(255,255,255,0.5)',
+                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
+                                        color: 'rgba(255,255,255,0.6)',
                                         fontWeight: '500',
                                         textAlign: 'center',
-                                        textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-                                        fontFamily: FONT_OPTIONS[urlFont]
+                                        textShadow: '0 2px 6px rgba(0,0,0,0.8)',
+                                        fontFamily: FONT_OPTIONS[urlFont],
+                                        letterSpacing: '0.02em'
                                     }}>
                                         {customUrl}
                                     </div>
