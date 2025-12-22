@@ -40,12 +40,12 @@ export default function Pricing() {
                         transition={{ delay: 0.2 }}
                         className="text-base sm:text-lg md:text-xl text-white/60 px-4"
                     >
-                        No hidden fees. No confusing tiers. Just one free plan to start, and one pass to summit.
+                        Choose the plan that fits your journey. Start free, upgrade as you grow.
                     </motion.p>
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 w-full max-w-4xl mb-16 sm:mb-24">
+                <div className="grid sm:grid-cols-3 gap-6 sm:gap-6 w-full max-w-6xl mb-16 sm:mb-24">
                     {/* Base Camp (Free) */}
                     <PricingCard
                         title="Base Camp"
@@ -84,9 +84,32 @@ export default function Pricing() {
                         ]}
                         buttonText="Join Pro Waitlist"
                         isPro={true}
-                        isWaitlist={true} // Using waitlist form (payment disabled)
+                        isWaitlist={true}
                         delay={0.4}
                         mostPopular={true}
+                    />
+
+                    {/* Peak Performance ($19/mo) - NEW */}
+                    <PricingCard
+                        title="Peak Performance"
+                        price="$19"
+                        period="per month"
+                        description="For serial entrepreneurs managing multiple ventures."
+                        features={[
+                            "✨ UNLIMITED Mountains",
+                            "Unlimited steps per mountain",
+                            "Unlimited notes & lessons",
+                            "Unlimited Social Sharing",
+                            "No Watermark on shares",
+                            "HD Exports",
+                            "All Premium Themes",
+                            "Priority Support"
+                        ]}
+                        buttonText="Join Waitlist"
+                        isPro={true}
+                        isWaitlist={true}
+                        delay={0.5}
+                        isUltimate={true}
                     />
                 </div>
 
@@ -101,7 +124,7 @@ export default function Pricing() {
 // DODO PAYMENTS - TEST MODE
 const DODO_PAYMENT_LINK = 'https://test.checkout.dodopayments.com/buy/pdt_kbHpZ9UEYWvoGANoe2imB?quantity=1&redirect_url=https://sfht-ascent.vercel.app/payment-success&cancel_url=https://sfht-ascent.vercel.app/payment-cancel'
 
-function PricingCard({ title, price, period, description, features, buttonText, buttonLink, isPro, isWaitlist, delay, mostPopular }) {
+function PricingCard({ title, price, period, description, features, buttonText, buttonLink, isPro, isWaitlist, delay, mostPopular, isUltimate }) {
     const { user } = useAuth()
     const navigate = useNavigate()
 
@@ -124,7 +147,9 @@ function PricingCard({ title, price, period, description, features, buttonText, 
             transition={{ delay, duration: 0.6 }}
             className={`
                 relative p-6 sm:p-8 rounded-2xl sm:rounded-3xl border flex flex-col
-                ${isPro
+                ${isUltimate
+                    ? 'bg-gradient-to-br from-purple-900/20 to-[#0F1F3D] border-purple-500/40 shadow-[0_0_50px_rgba(168,85,247,0.15)]'
+                    : isPro
                     ? 'bg-[#0F1F3D] border-brand-gold/30 shadow-[0_0_40px_rgba(234,179,8,0.1)]'
                     : 'bg-white/5 border-white/10 hover:border-white/20 transition-colors'
                 }
@@ -136,8 +161,14 @@ function PricingCard({ title, price, period, description, features, buttonText, 
                 </div>
             )}
 
+            {isUltimate && (
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 px-3 sm:px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-lg">
+                    🚀 Best Value
+                </div>
+            )}
+
             <div className="mb-6 sm:mb-8">
-                <h3 className={`text-xl sm:text-2xl font-bold mb-2 ${isPro ? 'text-brand-gold' : 'text-white'}`}>{title}</h3>
+                <h3 className={`text-xl sm:text-2xl font-bold mb-2 ${isUltimate ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400' : isPro ? 'text-brand-gold' : 'text-white'}`}>{title}</h3>
                 <div className="flex items-baseline gap-1 mb-3 sm:mb-4">
                     <span className="text-3xl sm:text-4xl font-extrabold text-white">{price}</span>
                     <span className="text-white/50 text-xs sm:text-sm font-medium">{period}</span>
