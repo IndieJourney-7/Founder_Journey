@@ -555,7 +555,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     <div
                                         style={{
                                             position: 'absolute',
-                                            top: `${format.height * 0.15}px`,
+                                            top: `${format.height * 0.22}px`,
                                             left: `${format.width * 0.04}px`,
                                             background: 'rgba(0,0,0,0.9)',
                                             borderRadius: '8px',
