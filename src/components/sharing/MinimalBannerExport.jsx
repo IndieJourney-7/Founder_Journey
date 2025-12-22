@@ -109,6 +109,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     const [currentDay, setCurrentDay] = useState('17');
     const [currentEarnings, setCurrentEarnings] = useState('347');
     const [metricType, setMetricType] = useState('$');
+    const [buildMode, setBuildMode] = useState(false); // Building mode (hide earnings)
     const [learningQuote, setLearningQuote] = useState('Patience and small steps are winning this week 🌱');
     const [quoteFont, setQuoteFont] = useState('Editorial');
     const [customUrl, setCustomUrl] = useState('shift-journey.vercel.app');
@@ -155,7 +156,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
         if (isOpen && exportRef.current) {
             setTimeout(generatePreview, 500);
         }
-    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, quoteFont, customUrl, urlFont]);
+    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, buildMode, learningQuote, quoteFont, customUrl, urlFont]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -273,17 +274,50 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     </div>
                                 </div>
 
+                                {/* Build Mode Toggle */}
                                 <div>
-                                    <label className="block text-sm font-bold text-white mb-2">Current Value</label>
-                                    <input
-                                        type="text"
-                                        value={currentEarnings}
-                                        onChange={(e) => setCurrentEarnings(e.target.value)}
-                                        placeholder="347"
-                                        className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
-                                    />
-                                    <p className="text-xs text-white/40 mt-1">Honest numbers build trust (even $0)</p>
+                                    <label className="block text-sm font-bold text-white mb-2">Display Mode</label>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setBuildMode(true)}
+                                            className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                                                buildMode
+                                                    ? 'border-brand-teal bg-brand-teal/10 text-white'
+                                                    : 'border-white/10 text-white/50'
+                                            }`}
+                                        >
+                                            🔨 Building
+                                        </button>
+                                        <button
+                                            onClick={() => setBuildMode(false)}
+                                            className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                                                !buildMode
+                                                    ? 'border-brand-teal bg-brand-teal/10 text-white'
+                                                    : 'border-white/10 text-white/50'
+                                            }`}
+                                        >
+                                            💰 Show Revenue
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-white/40 mt-1">
+                                        Building: Day count only. Revenue: Show earnings beside day.
+                                    </p>
                                 </div>
+
+                                {/* Current Value - Only show when NOT in build mode */}
+                                {!buildMode && (
+                                    <div>
+                                        <label className="block text-sm font-bold text-white mb-2">Current Value</label>
+                                        <input
+                                            type="text"
+                                            value={currentEarnings}
+                                            onChange={(e) => setCurrentEarnings(e.target.value)}
+                                            placeholder="347"
+                                            className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
+                                        />
+                                        <p className="text-xs text-white/40 mt-1">Honest numbers build trust (even $0)</p>
+                                    </div>
+                                )}
 
                                 {/* Learning Quote */}
                                 <div>
@@ -452,7 +486,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     background: `linear-gradient(180deg, ${theme.skyGradient[0]} 0%, ${theme.skyGradient[1]} 100%)`
                                 }}
                             >
-                                {/* SVG Mountain Container */}
+                                {/* SVG Journey Path Container */}
                                 <svg
                                     width={format.width}
                                     height={format.height}
@@ -460,28 +494,6 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     preserveAspectRatio="xMidYMid meet"
                                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                                 >
-                                    {/* Multi-layer Mountain for Depth */}
-                                    {/* Back layer */}
-                                    <path
-                                        d="M0 900 L 0 600 L 300 450 L 600 520 L 900 350 L 1200 450 L 1440 400 L 1440 900 Z"
-                                        fill={theme.mountainHighlight}
-                                        opacity="0.3"
-                                    />
-
-                                    {/* Mid layer */}
-                                    <path
-                                        d="M0 900 L 0 680 L 350 550 L 700 630 L 1050 400 L 1350 480 L 1440 450 L 1440 900 Z"
-                                        fill={theme.mountainHighlight}
-                                        opacity="0.5"
-                                    />
-
-                                    {/* Front Mountain Shape - Main */}
-                                    <path
-                                        d="M0 900 L 0 750 L 400 600 L 700 680 L 1050 300 L 1300 420 L 1440 380 L 1440 900 Z"
-                                        fill={theme.mountainBase}
-                                        opacity="0.95"
-                                    />
-
                                     {/* Journey Path - Remaining (dotted) */}
                                     <path
                                         d={SIMPLE_MOUNTAIN_PATH}
@@ -603,41 +615,30 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         </div>
                                     </div>
 
-                                    {/* RIGHT SIDE: Learning Quote - Centered vertically on right */}
+                                    {/* RIGHT SIDE: Learning Quote - No shadow box */}
                                     {learningQuote && (
-                                        <div
+                                        <p
                                             style={{
                                                 position: 'absolute',
                                                 right: `${format.width * 0.08}px`,
                                                 top: '50%',
                                                 transform: 'translateY(-50%)',
-                                                padding: '16px 26px',
-                                                background: 'rgba(0,0,0,0.7)',
-                                                borderRadius: '12px',
-                                                border: '2px solid rgba(255,255,255,0.2)',
-                                                backdropFilter: 'blur(12px)',
                                                 maxWidth: `${format.width * 0.35}px`,
-                                                boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
+                                                color: theme.textColor,
+                                                margin: 0,
+                                                lineHeight: '1.5',
+                                                fontStyle: 'italic',
+                                                textShadow: '0 2px 6px rgba(0,0,0,0.9)',
+                                                fontWeight: '500',
+                                                fontFamily: FONT_OPTIONS[quoteFont]
                                             }}
                                         >
-                                            <p
-                                                style={{
-                                                    fontSize: `${Math.min(format.width * 0.018, 24)}px`,
-                                                    color: theme.textColor,
-                                                    margin: 0,
-                                                    lineHeight: '1.5',
-                                                    fontStyle: 'italic',
-                                                    textShadow: '0 2px 6px rgba(0,0,0,0.9)',
-                                                    fontWeight: '500',
-                                                    fontFamily: FONT_OPTIONS[quoteFont]
-                                                }}
-                                            >
-                                                {learningQuote}
-                                            </p>
-                                        </div>
+                                            {learningQuote}
+                                        </p>
                                     )}
 
-                                    {/* Floating: Day & Earnings - Small Compact Box */}
+                                    {/* Floating: Day & Earnings Box (or Day only in build mode) */}
                                     <div
                                         style={{
                                             position: 'absolute',
@@ -652,9 +653,9 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                             boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 20px ${theme.pathColor}40`
                                         }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: buildMode ? '0' : '16px' }}>
                                             {/* Day */}
-                                            <div style={{ textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.2)', paddingRight: '16px' }}>
+                                            <div style={{ textAlign: 'center', borderRight: buildMode ? 'none' : '1px solid rgba(255,255,255,0.2)', paddingRight: buildMode ? '0' : '16px' }}>
                                                 <div
                                                     style={{
                                                         fontSize: `${Math.min(format.width * 0.012, 16)}px`,
@@ -678,32 +679,34 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                                     {currentDay}
                                                 </div>
                                             </div>
-                                            {/* Earnings */}
-                                            <div style={{ textAlign: 'center' }}>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
-                                                        color: 'rgba(255,255,255,0.6)',
-                                                        marginBottom: '2px',
-                                                        fontWeight: '500',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '1px'
-                                                    }}
-                                                >
-                                                    {metricType === 'Users' ? 'Users' : 'Earned'}
+                                            {/* Earnings - Only show when NOT in build mode */}
+                                            {!buildMode && (
+                                                <div style={{ textAlign: 'center' }}>
+                                                    <div
+                                                        style={{
+                                                            fontSize: `${Math.min(format.width * 0.012, 16)}px`,
+                                                            color: 'rgba(255,255,255,0.6)',
+                                                            marginBottom: '2px',
+                                                            fontWeight: '500',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '1px'
+                                                        }}
+                                                    >
+                                                        {metricType === 'Users' ? 'Users' : 'Earned'}
+                                                    </div>
+                                                    <div
+                                                        style={{
+                                                            fontSize: `${Math.min(format.width * 0.035, 52)}px`,
+                                                            fontWeight: '900',
+                                                            color: theme.pathColor,
+                                                            textShadow: `0 4px 12px rgba(0,0,0,0.9)`,
+                                                            lineHeight: '1'
+                                                        }}
+                                                    >
+                                                        {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
+                                                    </div>
                                                 </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.035, 52)}px`,
-                                                        fontWeight: '900',
-                                                        color: theme.pathColor,
-                                                        textShadow: `0 4px 12px rgba(0,0,0,0.9)`,
-                                                        lineHeight: '1'
-                                                    }}
-                                                >
-                                                    {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
-                                                </div>
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
 
