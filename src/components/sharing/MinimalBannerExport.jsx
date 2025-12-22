@@ -111,6 +111,8 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     const [currentDay, setCurrentDay] = useState('17');
     const [currentEarnings, setCurrentEarnings] = useState('347');
     const [metricType, setMetricType] = useState('$');
+    const [showEarnings, setShowEarnings] = useState(true); // Building vs Proof mode
+    const [proofImageUrl, setProofImageUrl] = useState(''); // Optional proof image
     const [learningQuote, setLearningQuote] = useState('Patience and small steps are winning this week 🌱');
     const [quoteFont, setQuoteFont] = useState('Roboto');
     const [customUrl, setCustomUrl] = useState('shift-journey.vercel.app');
@@ -158,7 +160,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
         if (isOpen && exportRef.current) {
             setTimeout(generatePreview, 500);
         }
-    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, quoteFont, customUrl, urlFont]);
+    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, showEarnings, proofImageUrl, learningQuote, quoteFont, customUrl, urlFont]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -334,6 +336,53 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     </div>
                                 </div>
 
+                                {/* Mode Toggle */}
+                                <div>
+                                    <label className="block text-sm font-bold text-white mb-2">Display Mode</label>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setShowEarnings(false)}
+                                            className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                                                !showEarnings
+                                                    ? 'border-brand-teal bg-brand-teal/10 text-white'
+                                                    : 'border-white/10 text-white/50'
+                                            }`}
+                                        >
+                                            🔨 Building Mode
+                                        </button>
+                                        <button
+                                            onClick={() => setShowEarnings(true)}
+                                            className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                                                showEarnings
+                                                    ? 'border-brand-teal bg-brand-teal/10 text-white'
+                                                    : 'border-white/10 text-white/50'
+                                            }`}
+                                        >
+                                            📊 Proof Mode
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-white/40 mt-1">
+                                        Building: Hide earnings. Proof: Show earnings + optional image.
+                                    </p>
+                                </div>
+
+                                {/* Proof Image URL */}
+                                {showEarnings && (
+                                    <div>
+                                        <label className="block text-sm font-bold text-white mb-2">Proof Image URL (Optional)</label>
+                                        <input
+                                            type="url"
+                                            value={proofImageUrl}
+                                            onChange={(e) => setProofImageUrl(e.target.value)}
+                                            placeholder="https://example.com/screenshot.png"
+                                            className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
+                                        />
+                                        <p className="text-xs text-white/40 mt-1">
+                                            Show your work: product UI, analytics dashboard, code, etc.
+                                        </p>
+                                    </div>
+                                )}
+
                                 {/* Color Picker */}
                                 <div>
                                     <label className="block text-sm font-bold text-white mb-2">Custom Color</label>
@@ -455,7 +504,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     background: `linear-gradient(180deg, ${theme.skyGradient[0]} 0%, ${theme.skyGradient[1]} 100%)`
                                 }}
                             >
-                                {/* SVG Mountain Container */}
+                                {/* SVG Journey Path Container */}
                                 <svg
                                     width={format.width}
                                     height={format.height}
@@ -463,28 +512,6 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     preserveAspectRatio="xMidYMid meet"
                                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                                 >
-                                    {/* Multi-layer Mountain for Depth */}
-                                    {/* Back layer */}
-                                    <path
-                                        d="M0 900 L 0 600 L 300 450 L 600 520 L 900 350 L 1200 450 L 1440 400 L 1440 900 Z"
-                                        fill={theme.mountainHighlight}
-                                        opacity="0.3"
-                                    />
-
-                                    {/* Mid layer */}
-                                    <path
-                                        d="M0 900 L 0 680 L 350 550 L 700 630 L 1050 400 L 1350 480 L 1440 450 L 1440 900 Z"
-                                        fill={theme.mountainHighlight}
-                                        opacity="0.5"
-                                    />
-
-                                    {/* Front Mountain Shape - Main */}
-                                    <path
-                                        d="M0 900 L 0 750 L 400 600 L 700 680 L 1050 300 L 1300 420 L 1440 380 L 1440 900 Z"
-                                        fill={theme.mountainBase}
-                                        opacity="0.95"
-                                    />
-
                                     {/* Journey Path - Remaining (dotted) */}
                                     <path
                                         d={SIMPLE_MOUNTAIN_PATH}
@@ -562,7 +589,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     </g>
                                 </svg>
 
-                                {/* Text Overlays */}
+                                {/* Text Overlays - 3 Column Grid Layout */}
                                 <div
                                     style={{
                                         position: 'absolute',
@@ -570,152 +597,146 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         left: 0,
                                         right: 0,
                                         bottom: 0,
+                                        display: 'grid',
+                                        gridTemplateColumns: '20% 40% 40%',
+                                        gridTemplateRows: '1fr auto',
+                                        gap: `${format.width * 0.02}px`,
                                         padding: `${format.height * 0.06}px ${format.width * 0.05}px`,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'space-between',
                                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                                     }}
                                 >
-                                    {/* Top Section: Mission Name + Stats on LEFT */}
-                                    <div style={{ maxWidth: '50%' }}>
-                                        <h1
-                                            style={{
-                                                fontSize: `${Math.min(format.width * 0.045, 68)}px`,
-                                                fontWeight: 'bold',
-                                                color: theme.textColor,
-                                                marginBottom: '12px',
-                                                textShadow: '0 4px 12px rgba(0,0,0,0.9)',
-                                                letterSpacing: '0.5px',
-                                                lineHeight: '1.1'
-                                            }}
-                                        >
+                                    {/* LEFT SECTION: Identity & Status */}
+                                    <div style={{
+                                        gridColumn: '1',
+                                        gridRow: '1',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '12px'
+                                    }}>
+                                        {/* Mission Name */}
+                                        <h1 style={{
+                                            fontSize: `${Math.min(format.width * 0.035, 52)}px`,
+                                            fontWeight: '700',
+                                            color: theme.textColor,
+                                            marginBottom: '8px',
+                                            textShadow: '0 4px 12px rgba(0,0,0,0.9)',
+                                            lineHeight: '1.1',
+                                            wordWrap: 'break-word',
+                                            margin: 0
+                                        }}>
                                             {missionName}
                                         </h1>
-                                        {/* Journey Stats */}
-                                        <div
-                                            style={{
-                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
-                                                color: 'rgba(255,255,255,0.8)',
-                                                fontWeight: '600',
-                                                textShadow: '0 2px 6px rgba(0,0,0,0.8)',
-                                                marginTop: '8px'
-                                            }}
-                                        >
-                                            {resolvedSteps || 0}/{totalPlanned || 0} Steps • {Math.round(progress || 0)}% Complete
+
+                                        {/* Day Count */}
+                                        <div style={{
+                                            fontSize: `${Math.min(format.width * 0.045, 68)}px`,
+                                            fontWeight: '900',
+                                            color: theme.textColor,
+                                            textShadow: '0 4px 16px rgba(0,0,0,0.9)'
+                                        }}>
+                                            Day {currentDay}
                                         </div>
+
+                                        {/* Mode Badge */}
+                                        <div style={{
+                                            display: 'inline-block',
+                                            padding: '8px 16px',
+                                            background: 'rgba(0,0,0,0.6)',
+                                            borderRadius: '20px',
+                                            border: `2px solid ${showEarnings ? theme.pathColor : 'rgba(255,255,255,0.3)'}`,
+                                            fontSize: `${Math.min(format.width * 0.014, 18)}px`,
+                                            fontWeight: '600',
+                                            color: showEarnings ? theme.pathColor : 'rgba(255,255,255,0.8)',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '1px',
+                                            width: 'fit-content'
+                                        }}>
+                                            {showEarnings ? '📊 Proof Mode' : '🔨 Building Mode'}
+                                        </div>
+
+                                        {/* Earnings Display (Proof Mode Only) */}
+                                        {showEarnings && (
+                                            <div style={{
+                                                fontSize: `${Math.min(format.width * 0.038, 56)}px`,
+                                                fontWeight: '900',
+                                                color: theme.pathColor,
+                                                textShadow: `0 4px 16px ${theme.pathColor}80`,
+                                                marginTop: '8px'
+                                            }}>
+                                                {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* RIGHT SIDE: Learning Quote - Centered vertically on right */}
-                                    {learningQuote && (
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                right: `${format.width * 0.08}px`,
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                maxWidth: `${format.width * 0.35}px`
-                                            }}
-                                        >
-                                            <p
-                                                style={{
-                                                    fontSize: `${Math.min(format.width * 0.018, 24)}px`,
-                                                    color: theme.textColor,
-                                                    margin: 0,
-                                                    lineHeight: '1.5',
-                                                    fontStyle: 'italic',
-                                                    textShadow: '0 2px 6px rgba(0,0,0,0.9)',
-                                                    fontWeight: '500',
-                                                    fontFamily: FONT_OPTIONS[quoteFont]
-                                                }}
-                                            >
+                                    {/* CENTER SECTION: Journey Path (handled by SVG above) */}
+
+                                    {/* RIGHT SECTION: Context & Proof */}
+                                    <div style={{
+                                        gridColumn: '3',
+                                        gridRow: '1',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'center',
+                                        gap: '20px',
+                                        paddingLeft: `${format.width * 0.02}px`
+                                    }}>
+                                        {/* Learning Quote */}
+                                        {learningQuote && (
+                                            <p style={{
+                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
+                                                color: theme.textColor,
+                                                margin: 0,
+                                                lineHeight: '1.5',
+                                                fontStyle: 'italic',
+                                                textShadow: '0 2px 6px rgba(0,0,0,0.9)',
+                                                fontWeight: '500',
+                                                fontFamily: FONT_OPTIONS[quoteFont],
+                                                wordWrap: 'break-word'
+                                            }}>
                                                 {learningQuote}
                                             </p>
-                                        </div>
-                                    )}
+                                        )}
 
-                                    {/* Floating: Day & Earnings - Small Compact Box */}
-                                    <div
-                                        style={{
-                                            position: 'absolute',
-                                            top: `${format.height * 0.4}px`,
-                                            left: `${format.width * 0.08}px`,
-                                            padding: '12px 20px',
-                                            background: 'rgba(0,0,0,0.75)',
-                                            borderRadius: '12px',
-                                            border: `2px solid ${theme.pathColor}`,
-                                            backdropFilter: 'blur(10px)',
-                                            display: 'inline-block',
-                                            boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 20px ${theme.pathColor}40`
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                            {/* Day */}
-                                            <div style={{ textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.2)', paddingRight: '16px' }}>
-                                                <div
+                                        {/* Proof Image (Optional) */}
+                                        {showEarnings && proofImageUrl && (
+                                            <div style={{
+                                                width: '100%',
+                                                maxWidth: `${format.width * 0.28}px`,
+                                                aspectRatio: '16 / 9',
+                                                borderRadius: '12px',
+                                                overflow: 'hidden',
+                                                border: `3px solid ${theme.pathColor}`,
+                                                boxShadow: `0 8px 24px rgba(0,0,0,0.6), 0 0 20px ${theme.pathColor}40`
+                                            }}>
+                                                <img
+                                                    src={proofImageUrl}
+                                                    alt="Proof of work"
                                                     style={{
-                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
-                                                        color: 'rgba(255,255,255,0.6)',
-                                                        marginBottom: '2px',
-                                                        fontWeight: '500',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '1px'
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover'
                                                     }}
-                                                >
-                                                    Day
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.028, 42)}px`,
-                                                        fontWeight: '900',
-                                                        color: theme.textColor,
-                                                        lineHeight: '1'
+                                                    crossOrigin="anonymous"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
                                                     }}
-                                                >
-                                                    {currentDay}
-                                                </div>
+                                                />
                                             </div>
-                                            {/* Earnings */}
-                                            <div style={{ textAlign: 'center' }}>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
-                                                        color: 'rgba(255,255,255,0.6)',
-                                                        marginBottom: '2px',
-                                                        fontWeight: '500',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '1px'
-                                                    }}
-                                                >
-                                                    {metricType === 'Users' ? 'Users' : 'Earned'}
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: `${Math.min(format.width * 0.035, 52)}px`,
-                                                        fontWeight: '900',
-                                                        color: theme.pathColor,
-                                                        textShadow: `0 4px 12px rgba(0,0,0,0.9)`,
-                                                        lineHeight: '1'
-                                                    }}
-                                                >
-                                                    {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
 
-                                    {/* Bottom: Branding */}
-                                    <div
-                                        style={{
-                                            fontSize: `${Math.min(format.width * 0.014, 18)}px`,
-                                            color: 'rgba(255,255,255,0.5)',
-                                            fontWeight: '500',
-                                            textAlign: 'center',
-                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-                                            fontFamily: FONT_OPTIONS[urlFont]
-                                        }}
-                                    >
-                                        Made with Shift Journey • {customUrl}
+                                    {/* BOTTOM: URL Footer */}
+                                    <div style={{
+                                        gridColumn: '1 / 4',
+                                        gridRow: '2',
+                                        fontSize: `${Math.min(format.width * 0.014, 18)}px`,
+                                        color: 'rgba(255,255,255,0.5)',
+                                        fontWeight: '500',
+                                        textAlign: 'center',
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.6)',
+                                        fontFamily: FONT_OPTIONS[urlFont]
+                                    }}>
+                                        {customUrl}
                                     </div>
                                 </div>
                             </div>
