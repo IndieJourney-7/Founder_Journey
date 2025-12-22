@@ -521,13 +521,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                                 right: `${format.width * 0.08}px`,
                                                 top: '50%',
                                                 transform: 'translateY(-50%)',
-                                                padding: '16px 26px',
-                                                background: 'rgba(0,0,0,0.7)',
-                                                borderRadius: '12px',
-                                                border: '2px solid rgba(255,255,255,0.2)',
-                                                backdropFilter: 'blur(12px)',
-                                                maxWidth: `${format.width * 0.35}px`,
-                                                boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+                                                maxWidth: `${format.width * 0.35}px`
                                             }}
                                         >
                                             <p
@@ -538,7 +532,8 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                                     lineHeight: '1.5',
                                                     fontStyle: 'italic',
                                                     textShadow: '0 2px 6px rgba(0,0,0,0.9)',
-                                                    fontWeight: '500'
+                                                    fontWeight: '500',
+                                                    fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                                                 }}
                                             >
                                                 {learningQuote}
