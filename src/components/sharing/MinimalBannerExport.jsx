@@ -105,20 +105,46 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     // Export settings
     const [selectedFormat, setSelectedFormat] = useState('twitter');
     const [selectedTheme, setSelectedTheme] = useState('startup');
+    const [customColor, setCustomColor] = useState('#4E6ED0'); // Primary color for custom theme
+    const [useCustomTheme, setUseCustomTheme] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
 
     const exportRef = useRef(null);
 
     const format = EXPORT_FORMATS[selectedFormat];
-    const theme = THEMES[selectedTheme];
+
+    // Generate custom theme based on selected color
+    const generateCustomTheme = (primaryColor) => {
+        // Convert hex to darker shade for mountain
+        const darkenColor = (hex) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            const factor = 0.15;
+            return `#${Math.floor(r * factor).toString(16).padStart(2, '0')}${Math.floor(g * factor).toString(16).padStart(2, '0')}${Math.floor(b * factor).toString(16).padStart(2, '0')}`;
+        };
+
+        const darkBase = darkenColor(primaryColor);
+
+        return {
+            name: 'Custom',
+            skyGradient: [primaryColor, darkBase],
+            mountainBase: darkBase,
+            mountainHighlight: primaryColor,
+            pathColor: '#E7C778',
+            textColor: '#ffffff'
+        };
+    };
+
+    const theme = useCustomTheme ? generateCustomTheme(customColor) : THEMES[selectedTheme];
 
     // Generate preview when settings change
     useEffect(() => {
         if (isOpen && exportRef.current) {
             setTimeout(generatePreview, 500);
         }
-    }, [isOpen, selectedFormat, selectedTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, customUrl]);
+    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, customUrl]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -272,16 +298,47 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     />
                                 </div>
 
-                                {/* Theme Selector */}
+                                {/* Color Picker */}
                                 <div>
-                                    <label className="block text-sm font-bold text-white mb-2">Theme</label>
+                                    <label className="block text-sm font-bold text-white mb-2">Custom Color</label>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="color"
+                                            value={customColor}
+                                            onChange={(e) => {
+                                                setCustomColor(e.target.value);
+                                                setUseCustomTheme(true);
+                                            }}
+                                            className="w-16 h-10 rounded-lg border-2 border-white/10 bg-transparent cursor-pointer"
+                                        />
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                value={customColor}
+                                                onChange={(e) => {
+                                                    setCustomColor(e.target.value);
+                                                    setUseCustomTheme(true);
+                                                }}
+                                                className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white uppercase focus:border-brand-teal focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-white/40 mt-1">Pick any color for your banner background</p>
+                                </div>
+
+                                {/* Gradient Theme Presets */}
+                                <div>
+                                    <label className="block text-sm font-bold text-white mb-2">Gradient Themes</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         {Object.entries(THEMES).map(([key, thm]) => (
                                             <button
                                                 key={key}
-                                                onClick={() => setSelectedTheme(key)}
+                                                onClick={() => {
+                                                    setSelectedTheme(key);
+                                                    setUseCustomTheme(false);
+                                                }}
                                                 className={`p-2 rounded-lg border-2 transition-all ${
-                                                    selectedTheme === key ? 'border-brand-teal' : 'border-white/10'
+                                                    !useCustomTheme && selectedTheme === key ? 'border-brand-teal' : 'border-white/10'
                                                 }`}
                                             >
                                                 <div
