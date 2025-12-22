@@ -627,101 +627,79 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         gridRow: '1',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        gap: '16px',
-                                        justifyContent: 'flex-start'
+                                        gap: '24px',
+                                        justifyContent: 'center'
                                     }}>
-                                        {/* Mission Name */}
+                                        {/* Mission Name - Single Line */}
                                         <h1 style={{
-                                            fontSize: `${Math.min(format.width * 0.028, 42)}px`,
+                                            fontSize: `${Math.min(format.width * 0.024, 36)}px`,
                                             fontWeight: '600',
-                                            color: 'rgba(255,255,255,0.95)',
+                                            color: 'rgba(255,255,255,0.9)',
                                             textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                                            lineHeight: '1.2',
-                                            wordWrap: 'break-word',
+                                            lineHeight: '1',
                                             margin: 0,
-                                            letterSpacing: '-0.01em'
+                                            letterSpacing: '-0.015em',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
                                         }}>
                                             {missionName}
                                         </h1>
 
-                                        {/* Day Count - DOMINANT */}
+                                        {/* Day Count - MASSIVE & DOMINANT */}
                                         <div style={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '4px',
-                                            marginTop: '8px'
+                                            gap: '6px'
                                         }}>
                                             <div style={{
-                                                fontSize: `${Math.min(format.width * 0.08, 120)}px`,
+                                                fontSize: `${Math.min(format.width * 0.11, 165)}px`,
                                                 fontWeight: '900',
                                                 color: theme.textColor,
-                                                textShadow: '0 6px 24px rgba(0,0,0,0.95)',
-                                                lineHeight: '0.85',
-                                                letterSpacing: '-0.04em',
+                                                textShadow: '0 8px 32px rgba(0,0,0,0.95)',
+                                                lineHeight: '0.8',
+                                                letterSpacing: '-0.05em',
                                                 fontVariantNumeric: 'tabular-nums'
                                             }}>
                                                 {currentDay}
                                             </div>
                                             <div style={{
-                                                fontSize: `${Math.min(format.width * 0.011, 15)}px`,
+                                                fontSize: `${Math.min(format.width * 0.012, 16)}px`,
                                                 fontWeight: '600',
-                                                color: 'rgba(255,255,255,0.35)',
-                                                letterSpacing: '0.15em',
-                                                textTransform: 'uppercase',
-                                                marginTop: '-4px'
+                                                color: 'rgba(255,255,255,0.4)',
+                                                letterSpacing: '0.2em',
+                                                textTransform: 'uppercase'
                                             }}>
-                                                Day
+                                                DAY
                                             </div>
                                         </div>
 
-                                        {/* Mode Badge - Angular Brutalist */}
-                                        <div style={{
-                                            display: 'inline-block',
-                                            padding: '6px 12px 5px',
-                                            background: showEarnings
-                                                ? `linear-gradient(135deg, ${theme.pathColor}18, ${theme.pathColor}08)`
-                                                : 'rgba(255,255,255,0.04)',
-                                            border: showEarnings
-                                                ? `2px solid ${theme.pathColor}`
-                                                : '2px solid rgba(255,255,255,0.12)',
-                                            clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)',
-                                            fontSize: `${Math.min(format.width * 0.0095, 13)}px`,
-                                            fontWeight: '700',
-                                            color: showEarnings ? theme.pathColor : 'rgba(255,255,255,0.65)',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.12em',
-                                            fontFamily: '"IBM Plex Mono", monospace',
-                                            width: 'fit-content'
-                                        }}>
-                                            {showEarnings ? 'PROOF_MODE' : 'BUILDING'}
-                                        </div>
-
-                                        {/* Earnings Display (Proof Mode Only) - Dashboard Style */}
+                                        {/* Earnings Display - Only when enabled */}
                                         {showEarnings && (
                                             <div style={{
-                                                marginTop: '8px',
-                                                padding: '12px 0',
-                                                borderTop: `1px solid ${theme.pathColor}40`,
-                                                borderBottom: `1px solid ${theme.pathColor}40`
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '8px',
+                                                paddingTop: '16px',
+                                                borderTop: `1px solid rgba(255,255,255,0.1)`
                                             }}>
                                                 <div style={{
-                                                    fontSize: `${Math.min(format.width * 0.009, 11)}px`,
+                                                    fontSize: `${Math.min(format.width * 0.009, 12)}px`,
                                                     fontWeight: '600',
-                                                    color: `${theme.pathColor}cc`,
-                                                    letterSpacing: '0.1em',
+                                                    color: 'rgba(255,255,255,0.5)',
+                                                    letterSpacing: '0.12em',
                                                     textTransform: 'uppercase',
-                                                    fontFamily: '"IBM Plex Mono", monospace',
-                                                    marginBottom: '6px'
+                                                    fontFamily: '"IBM Plex Mono", monospace'
                                                 }}>
                                                     {metricType === 'Users' ? 'Users' : 'Revenue'}
                                                 </div>
                                                 <div style={{
-                                                    fontSize: `${Math.min(format.width * 0.048, 72)}px`,
-                                                    fontWeight: '900',
+                                                    fontSize: `${Math.min(format.width * 0.042, 63)}px`,
+                                                    fontWeight: '800',
                                                     color: theme.pathColor,
-                                                    textShadow: `0 4px 16px ${theme.pathColor}60`,
+                                                    textShadow: `0 4px 20px ${theme.pathColor}70`,
                                                     fontVariantNumeric: 'tabular-nums',
-                                                    letterSpacing: '-0.02em',
+                                                    letterSpacing: '-0.025em',
                                                     lineHeight: '1'
                                                 }}>
                                                     {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}
