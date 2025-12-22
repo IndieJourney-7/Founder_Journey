@@ -74,16 +74,14 @@ const THEMES = {
 // Professional S-curve mountain path
 const SIMPLE_MOUNTAIN_PATH = "M150 850 C 300 800, 400 700, 550 600 C 700 500, 850 400, 1000 300 C 1100 250, 1150 220, 1250 180";
 
-// Font options
+// Font options - Distinctive typography for founder aesthetic
 const FONT_OPTIONS = {
-    'System': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    'Roboto': 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    'Playfair': '"Playfair Display", Georgia, serif',
-    'Montserrat': 'Montserrat, -apple-system, BlinkMacSystemFont, sans-serif',
-    'Open Sans': '"Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
-    'Lato': 'Lato, -apple-system, BlinkMacSystemFont, sans-serif',
-    'Merriweather': 'Merriweather, Georgia, serif',
-    'Poppins': 'Poppins, -apple-system, BlinkMacSystemFont, sans-serif'
+    'Editorial': '"Crimson Pro", "Libre Baskerville", Georgia, serif',
+    'Technical': '"IBM Plex Mono", "Courier Prime", "Courier New", monospace',
+    'Geometric': '"DM Sans", "Work Sans", system-ui, sans-serif',
+    'Grotesque': '"Darker Grotesque", "Archivo", -apple-system, sans-serif',
+    'Display': '"Fraunces", "Playfair Display", Georgia, serif',
+    'Modern': '"Manrope", "Inter", system-ui, sans-serif'
 };
 
 // Calculate point on path at given progress
@@ -114,9 +112,9 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     const [showEarnings, setShowEarnings] = useState(true); // Building vs Proof mode
     const [proofImageUrl, setProofImageUrl] = useState(''); // Optional proof image
     const [learningQuote, setLearningQuote] = useState('Patience and small steps are winning this week 🌱');
-    const [quoteFont, setQuoteFont] = useState('Roboto');
+    const [quoteFont, setQuoteFont] = useState('Editorial');
     const [customUrl, setCustomUrl] = useState('shift-journey.vercel.app');
-    const [urlFont, setUrlFont] = useState('System');
+    const [urlFont, setUrlFont] = useState('Technical');
 
     // Export settings
     const [selectedFormat, setSelectedFormat] = useState('twitter');
@@ -501,7 +499,12 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     height: `${format.height}px`,
                                     position: 'relative',
                                     overflow: 'hidden',
-                                    background: `linear-gradient(180deg, ${theme.skyGradient[0]} 0%, ${theme.skyGradient[1]} 100%)`
+                                    background: `
+                                        radial-gradient(circle at 15% 80%, ${theme.skyGradient[0]}35 0%, transparent 50%),
+                                        radial-gradient(circle at 85% 15%, ${theme.pathColor}12 0%, transparent 40%),
+                                        linear-gradient(180deg, ${theme.skyGradient[0]} 0%, ${theme.skyGradient[1]} 100%)
+                                    `,
+                                    backgroundBlendMode: 'normal, normal, normal'
                                 }}
                             >
                                 {/* SVG Journey Path Container */}
@@ -512,25 +515,38 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     preserveAspectRatio="xMidYMid meet"
                                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                                 >
-                                    {/* Journey Path - Remaining (dotted) */}
+                                    {/* Background path glow - atmospheric depth */}
                                     <path
                                         d={SIMPLE_MOUNTAIN_PATH}
-                                        stroke="rgba(255, 255, 255, 0.15)"
-                                        strokeWidth="4"
-                                        strokeDasharray="12 12"
+                                        stroke={theme.pathColor}
+                                        strokeWidth="24"
+                                        strokeLinecap="round"
+                                        fill="none"
+                                        opacity="0.08"
+                                        style={{ filter: 'blur(20px)' }}
+                                    />
+
+                                    {/* Journey Path - Remaining (subtle) */}
+                                    <path
+                                        d={SIMPLE_MOUNTAIN_PATH}
+                                        stroke="rgba(255, 255, 255, 0.06)"
+                                        strokeWidth="8"
                                         strokeLinecap="round"
                                         fill="none"
                                     />
 
-                                    {/* Journey Path - Completed (solid glowing) */}
+                                    {/* Journey Path - Completed (vibrant with double glow) */}
                                     <path
                                         d={SIMPLE_MOUNTAIN_PATH}
                                         stroke={theme.pathColor}
-                                        strokeWidth="6"
+                                        strokeWidth="10"
                                         strokeLinecap="round"
                                         fill="none"
                                         strokeDasharray={`${safeProgress * 16} ${1600 - safeProgress * 16}`}
-                                        style={{ filter: `drop-shadow(0 0 12px ${theme.pathColor})` }}
+                                        style={{
+                                            filter: `drop-shadow(0 0 8px ${theme.pathColor}) drop-shadow(0 0 20px ${theme.pathColor}80)`,
+                                            mixBlendMode: 'screen'
+                                        }}
                                     />
 
                                     {/* Climber Dot with glow */}
@@ -611,59 +627,105 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         gridRow: '1',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        gap: '12px'
+                                        gap: '16px',
+                                        justifyContent: 'flex-start'
                                     }}>
                                         {/* Mission Name */}
                                         <h1 style={{
-                                            fontSize: `${Math.min(format.width * 0.035, 52)}px`,
-                                            fontWeight: '700',
-                                            color: theme.textColor,
-                                            marginBottom: '8px',
-                                            textShadow: '0 4px 12px rgba(0,0,0,0.9)',
-                                            lineHeight: '1.1',
+                                            fontSize: `${Math.min(format.width * 0.028, 42)}px`,
+                                            fontWeight: '600',
+                                            color: 'rgba(255,255,255,0.95)',
+                                            textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                                            lineHeight: '1.2',
                                             wordWrap: 'break-word',
-                                            margin: 0
+                                            margin: 0,
+                                            letterSpacing: '-0.01em'
                                         }}>
                                             {missionName}
                                         </h1>
 
-                                        {/* Day Count */}
+                                        {/* Day Count - DOMINANT */}
                                         <div style={{
-                                            fontSize: `${Math.min(format.width * 0.045, 68)}px`,
-                                            fontWeight: '900',
-                                            color: theme.textColor,
-                                            textShadow: '0 4px 16px rgba(0,0,0,0.9)'
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '4px',
+                                            marginTop: '8px'
                                         }}>
-                                            Day {currentDay}
+                                            <div style={{
+                                                fontSize: `${Math.min(format.width * 0.08, 120)}px`,
+                                                fontWeight: '900',
+                                                color: theme.textColor,
+                                                textShadow: '0 6px 24px rgba(0,0,0,0.95)',
+                                                lineHeight: '0.85',
+                                                letterSpacing: '-0.04em',
+                                                fontVariantNumeric: 'tabular-nums'
+                                            }}>
+                                                {currentDay}
+                                            </div>
+                                            <div style={{
+                                                fontSize: `${Math.min(format.width * 0.011, 15)}px`,
+                                                fontWeight: '600',
+                                                color: 'rgba(255,255,255,0.35)',
+                                                letterSpacing: '0.15em',
+                                                textTransform: 'uppercase',
+                                                marginTop: '-4px'
+                                            }}>
+                                                Day
+                                            </div>
                                         </div>
 
-                                        {/* Mode Badge */}
+                                        {/* Mode Badge - Angular Brutalist */}
                                         <div style={{
                                             display: 'inline-block',
-                                            padding: '8px 16px',
-                                            background: 'rgba(0,0,0,0.6)',
-                                            borderRadius: '20px',
-                                            border: `2px solid ${showEarnings ? theme.pathColor : 'rgba(255,255,255,0.3)'}`,
-                                            fontSize: `${Math.min(format.width * 0.014, 18)}px`,
-                                            fontWeight: '600',
-                                            color: showEarnings ? theme.pathColor : 'rgba(255,255,255,0.8)',
+                                            padding: '6px 12px 5px',
+                                            background: showEarnings
+                                                ? `linear-gradient(135deg, ${theme.pathColor}18, ${theme.pathColor}08)`
+                                                : 'rgba(255,255,255,0.04)',
+                                            border: showEarnings
+                                                ? `2px solid ${theme.pathColor}`
+                                                : '2px solid rgba(255,255,255,0.12)',
+                                            clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)',
+                                            fontSize: `${Math.min(format.width * 0.0095, 13)}px`,
+                                            fontWeight: '700',
+                                            color: showEarnings ? theme.pathColor : 'rgba(255,255,255,0.65)',
                                             textTransform: 'uppercase',
-                                            letterSpacing: '1px',
+                                            letterSpacing: '0.12em',
+                                            fontFamily: '"IBM Plex Mono", monospace',
                                             width: 'fit-content'
                                         }}>
-                                            {showEarnings ? '📊 Proof Mode' : '🔨 Building Mode'}
+                                            {showEarnings ? 'PROOF_MODE' : 'BUILDING'}
                                         </div>
 
-                                        {/* Earnings Display (Proof Mode Only) */}
+                                        {/* Earnings Display (Proof Mode Only) - Dashboard Style */}
                                         {showEarnings && (
                                             <div style={{
-                                                fontSize: `${Math.min(format.width * 0.038, 56)}px`,
-                                                fontWeight: '900',
-                                                color: theme.pathColor,
-                                                textShadow: `0 4px 16px ${theme.pathColor}80`,
-                                                marginTop: '8px'
+                                                marginTop: '8px',
+                                                padding: '12px 0',
+                                                borderTop: `1px solid ${theme.pathColor}40`,
+                                                borderBottom: `1px solid ${theme.pathColor}40`
                                             }}>
-                                                {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
+                                                <div style={{
+                                                    fontSize: `${Math.min(format.width * 0.009, 11)}px`,
+                                                    fontWeight: '600',
+                                                    color: `${theme.pathColor}cc`,
+                                                    letterSpacing: '0.1em',
+                                                    textTransform: 'uppercase',
+                                                    fontFamily: '"IBM Plex Mono", monospace',
+                                                    marginBottom: '6px'
+                                                }}>
+                                                    {metricType === 'Users' ? 'Users' : 'Revenue'}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: `${Math.min(format.width * 0.048, 72)}px`,
+                                                    fontWeight: '900',
+                                                    color: theme.pathColor,
+                                                    textShadow: `0 4px 16px ${theme.pathColor}60`,
+                                                    fontVariantNumeric: 'tabular-nums',
+                                                    letterSpacing: '-0.02em',
+                                                    lineHeight: '1'
+                                                }}>
+                                                    {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -697,30 +759,52 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                             </p>
                                         )}
 
-                                        {/* Proof Image (Optional) */}
+                                        {/* Proof Image (Optional) - Editorial Frame */}
                                         {showEarnings && proofImageUrl && (
                                             <div style={{
+                                                position: 'relative',
                                                 width: '100%',
-                                                maxWidth: `${format.width * 0.28}px`,
-                                                aspectRatio: '16 / 9',
-                                                borderRadius: '12px',
-                                                overflow: 'hidden',
-                                                border: `3px solid ${theme.pathColor}`,
-                                                boxShadow: `0 8px 24px rgba(0,0,0,0.6), 0 0 20px ${theme.pathColor}40`
+                                                maxWidth: `${format.width * 0.32}px`,
+                                                aspectRatio: '16 / 9'
                                             }}>
-                                                <img
-                                                    src={proofImageUrl}
-                                                    alt="Proof of work"
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'cover'
-                                                    }}
-                                                    crossOrigin="anonymous"
-                                                    onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                    }}
-                                                />
+                                                {/* Corner accent - top right */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '-6px',
+                                                    right: '-6px',
+                                                    width: '24px',
+                                                    height: '24px',
+                                                    borderTop: `3px solid ${theme.pathColor}`,
+                                                    borderRight: `3px solid ${theme.pathColor}`,
+                                                    zIndex: 2
+                                                }}/>
+
+                                                <div style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    borderRadius: '2px',
+                                                    overflow: 'hidden',
+                                                    border: `1px solid ${theme.pathColor}60`,
+                                                    boxShadow: `
+                                                        0 20px 60px rgba(0,0,0,0.5),
+                                                        inset 0 0 0 1px rgba(255,255,255,0.08)
+                                                    `
+                                                }}>
+                                                    <img
+                                                        src={proofImageUrl}
+                                                        alt="Proof of work"
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            objectFit: 'cover',
+                                                            filter: 'contrast(1.05) saturate(1.1)'
+                                                        }}
+                                                        crossOrigin="anonymous"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         )}
                                     </div>
