@@ -74,16 +74,6 @@ const THEMES = {
 // Professional S-curve mountain path
 const SIMPLE_MOUNTAIN_PATH = "M150 850 C 300 800, 400 700, 550 600 C 700 500, 850 400, 1000 300 C 1100 250, 1150 220, 1250 180";
 
-// Font options - Distinctive typography for founder aesthetic
-const FONT_OPTIONS = {
-    'Editorial': '"Crimson Pro", "Libre Baskerville", Georgia, serif',
-    'Technical': '"IBM Plex Mono", "Courier Prime", "Courier New", monospace',
-    'Geometric': '"DM Sans", "Work Sans", system-ui, sans-serif',
-    'Grotesque': '"Darker Grotesque", "Archivo", -apple-system, sans-serif',
-    'Display': '"Fraunces", "Playfair Display", Georgia, serif',
-    'Modern': '"Manrope", "Inter", system-ui, sans-serif'
-};
-
 // Calculate point on path at given progress
 const getPointOnPath = (pathString, progress) => {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -109,56 +99,26 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     const [currentDay, setCurrentDay] = useState('17');
     const [currentEarnings, setCurrentEarnings] = useState('347');
     const [metricType, setMetricType] = useState('$');
-    const [showEarnings, setShowEarnings] = useState(true); // Building vs Proof mode
-    const [proofImageUrl, setProofImageUrl] = useState(''); // Optional proof image
     const [learningQuote, setLearningQuote] = useState('Patience and small steps are winning this week 🌱');
-    const [quoteFont, setQuoteFont] = useState('Editorial');
     const [customUrl, setCustomUrl] = useState('shift-journey.vercel.app');
-    const [urlFont, setUrlFont] = useState('Technical');
 
     // Export settings
     const [selectedFormat, setSelectedFormat] = useState('twitter');
     const [selectedTheme, setSelectedTheme] = useState('startup');
-    const [customColor, setCustomColor] = useState('#4E6ED0'); // Primary color for custom theme
-    const [useCustomTheme, setUseCustomTheme] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
 
     const exportRef = useRef(null);
 
     const format = EXPORT_FORMATS[selectedFormat];
-
-    // Generate custom theme based on selected color
-    const generateCustomTheme = (primaryColor) => {
-        // Convert hex to darker shade for mountain
-        const darkenColor = (hex) => {
-            const r = parseInt(hex.slice(1, 3), 16);
-            const g = parseInt(hex.slice(3, 5), 16);
-            const b = parseInt(hex.slice(5, 7), 16);
-            const factor = 0.15;
-            return `#${Math.floor(r * factor).toString(16).padStart(2, '0')}${Math.floor(g * factor).toString(16).padStart(2, '0')}${Math.floor(b * factor).toString(16).padStart(2, '0')}`;
-        };
-
-        const darkBase = darkenColor(primaryColor);
-
-        return {
-            name: 'Custom',
-            skyGradient: [primaryColor, darkBase],
-            mountainBase: darkBase,
-            mountainHighlight: primaryColor,
-            pathColor: '#E7C778',
-            textColor: '#ffffff'
-        };
-    };
-
-    const theme = useCustomTheme ? generateCustomTheme(customColor) : THEMES[selectedTheme];
+    const theme = THEMES[selectedTheme];
 
     // Generate preview when settings change
     useEffect(() => {
         if (isOpen && exportRef.current) {
             setTimeout(generatePreview, 500);
         }
-    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, showEarnings, proofImageUrl, learningQuote, quoteFont, customUrl, urlFont]);
+    }, [isOpen, selectedFormat, selectedTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, customUrl]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -297,18 +257,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         placeholder="e.g., Learning: Patience and small steps are winning this week"
                                         className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none h-20 resize-none"
                                     />
-                                    <div className="flex items-center justify-between mt-1">
-                                        <p className="text-xs text-white/40">{learningQuote.length}/150</p>
-                                        <select
-                                            value={quoteFont}
-                                            onChange={(e) => setQuoteFont(e.target.value)}
-                                            className="text-xs px-2 py-1 rounded bg-black/30 border border-white/10 text-white focus:border-brand-teal focus:outline-none"
-                                        >
-                                            {Object.keys(FONT_OPTIONS).map(font => (
-                                                <option key={font} value={font}>{font}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <p className="text-xs text-white/40 mt-1">{learningQuote.length}/150</p>
                                 </div>
 
                                 {/* Custom URL */}
@@ -321,107 +270,18 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         placeholder="shift-journey.vercel.app"
                                         className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
                                     />
-                                    <div className="flex items-center justify-end mt-1">
-                                        <select
-                                            value={urlFont}
-                                            onChange={(e) => setUrlFont(e.target.value)}
-                                            className="text-xs px-2 py-1 rounded bg-black/30 border border-white/10 text-white focus:border-brand-teal focus:outline-none"
-                                        >
-                                            {Object.keys(FONT_OPTIONS).map(font => (
-                                                <option key={font} value={font}>{font}</option>
-                                            ))}
-                                        </select>
-                                    </div>
                                 </div>
 
-                                {/* Mode Toggle */}
+                                {/* Theme Selector */}
                                 <div>
-                                    <label className="block text-sm font-bold text-white mb-2">Display Mode</label>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => setShowEarnings(false)}
-                                            className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
-                                                !showEarnings
-                                                    ? 'border-brand-teal bg-brand-teal/10 text-white'
-                                                    : 'border-white/10 text-white/50'
-                                            }`}
-                                        >
-                                            🔨 Building Mode
-                                        </button>
-                                        <button
-                                            onClick={() => setShowEarnings(true)}
-                                            className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
-                                                showEarnings
-                                                    ? 'border-brand-teal bg-brand-teal/10 text-white'
-                                                    : 'border-white/10 text-white/50'
-                                            }`}
-                                        >
-                                            📊 Proof Mode
-                                        </button>
-                                    </div>
-                                    <p className="text-xs text-white/40 mt-1">
-                                        Building: Hide earnings. Proof: Show earnings + optional image.
-                                    </p>
-                                </div>
-
-                                {/* Proof Image URL */}
-                                {showEarnings && (
-                                    <div>
-                                        <label className="block text-sm font-bold text-white mb-2">Proof Image URL (Optional)</label>
-                                        <input
-                                            type="url"
-                                            value={proofImageUrl}
-                                            onChange={(e) => setProofImageUrl(e.target.value)}
-                                            placeholder="https://example.com/screenshot.png"
-                                            className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
-                                        />
-                                        <p className="text-xs text-white/40 mt-1">
-                                            Show your work: product UI, analytics dashboard, code, etc.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Color Picker */}
-                                <div>
-                                    <label className="block text-sm font-bold text-white mb-2">Custom Color</label>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="color"
-                                            value={customColor}
-                                            onChange={(e) => {
-                                                setCustomColor(e.target.value);
-                                                setUseCustomTheme(true);
-                                            }}
-                                            className="w-16 h-10 rounded-lg border-2 border-white/10 bg-transparent cursor-pointer"
-                                        />
-                                        <div className="flex-1">
-                                            <input
-                                                type="text"
-                                                value={customColor}
-                                                onChange={(e) => {
-                                                    setCustomColor(e.target.value);
-                                                    setUseCustomTheme(true);
-                                                }}
-                                                className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white uppercase focus:border-brand-teal focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-white/40 mt-1">Pick any color for your banner background</p>
-                                </div>
-
-                                {/* Gradient Theme Presets */}
-                                <div>
-                                    <label className="block text-sm font-bold text-white mb-2">Gradient Themes</label>
+                                    <label className="block text-sm font-bold text-white mb-2">Theme</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         {Object.entries(THEMES).map(([key, thm]) => (
                                             <button
                                                 key={key}
-                                                onClick={() => {
-                                                    setSelectedTheme(key);
-                                                    setUseCustomTheme(false);
-                                                }}
+                                                onClick={() => setSelectedTheme(key)}
                                                 className={`p-2 rounded-lg border-2 transition-all ${
-                                                    !useCustomTheme && selectedTheme === key ? 'border-brand-teal' : 'border-white/10'
+                                                    selectedTheme === key ? 'border-brand-teal' : 'border-white/10'
                                                 }`}
                                             >
                                                 <div
@@ -499,15 +359,10 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     height: `${format.height}px`,
                                     position: 'relative',
                                     overflow: 'hidden',
-                                    background: `
-                                        radial-gradient(circle at 15% 80%, ${theme.skyGradient[0]}35 0%, transparent 50%),
-                                        radial-gradient(circle at 85% 15%, ${theme.pathColor}12 0%, transparent 40%),
-                                        linear-gradient(180deg, ${theme.skyGradient[0]} 0%, ${theme.skyGradient[1]} 100%)
-                                    `,
-                                    backgroundBlendMode: 'normal, normal, normal'
+                                    background: `linear-gradient(180deg, ${theme.skyGradient[0]} 0%, ${theme.skyGradient[1]} 100%)`
                                 }}
                             >
-                                {/* SVG Journey Path Container */}
+                                {/* SVG Mountain Container */}
                                 <svg
                                     width={format.width}
                                     height={format.height}
@@ -515,38 +370,47 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     preserveAspectRatio="xMidYMid meet"
                                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                                 >
-                                    {/* Background path glow - atmospheric depth */}
+                                    {/* Multi-layer Mountain for Depth */}
+                                    {/* Back layer */}
+                                    <path
+                                        d="M0 900 L 0 600 L 300 450 L 600 520 L 900 350 L 1200 450 L 1440 400 L 1440 900 Z"
+                                        fill={theme.mountainHighlight}
+                                        opacity="0.3"
+                                    />
+
+                                    {/* Mid layer */}
+                                    <path
+                                        d="M0 900 L 0 680 L 350 550 L 700 630 L 1050 400 L 1350 480 L 1440 450 L 1440 900 Z"
+                                        fill={theme.mountainHighlight}
+                                        opacity="0.5"
+                                    />
+
+                                    {/* Front Mountain Shape - Main */}
+                                    <path
+                                        d="M0 900 L 0 750 L 400 600 L 700 680 L 1050 300 L 1300 420 L 1440 380 L 1440 900 Z"
+                                        fill={theme.mountainBase}
+                                        opacity="0.95"
+                                    />
+
+                                    {/* Journey Path - Remaining (dotted) */}
+                                    <path
+                                        d={SIMPLE_MOUNTAIN_PATH}
+                                        stroke="rgba(255, 255, 255, 0.15)"
+                                        strokeWidth="4"
+                                        strokeDasharray="12 12"
+                                        strokeLinecap="round"
+                                        fill="none"
+                                    />
+
+                                    {/* Journey Path - Completed (solid glowing) */}
                                     <path
                                         d={SIMPLE_MOUNTAIN_PATH}
                                         stroke={theme.pathColor}
-                                        strokeWidth="24"
-                                        strokeLinecap="round"
-                                        fill="none"
-                                        opacity="0.08"
-                                        style={{ filter: 'blur(20px)' }}
-                                    />
-
-                                    {/* Journey Path - Remaining (subtle) */}
-                                    <path
-                                        d={SIMPLE_MOUNTAIN_PATH}
-                                        stroke="rgba(255, 255, 255, 0.06)"
-                                        strokeWidth="8"
-                                        strokeLinecap="round"
-                                        fill="none"
-                                    />
-
-                                    {/* Journey Path - Completed (vibrant with double glow) */}
-                                    <path
-                                        d={SIMPLE_MOUNTAIN_PATH}
-                                        stroke={theme.pathColor}
-                                        strokeWidth="10"
+                                        strokeWidth="6"
                                         strokeLinecap="round"
                                         fill="none"
                                         strokeDasharray={`${safeProgress * 16} ${1600 - safeProgress * 16}`}
-                                        style={{
-                                            filter: `drop-shadow(0 0 8px ${theme.pathColor}) drop-shadow(0 0 20px ${theme.pathColor}80)`,
-                                            mixBlendMode: 'screen'
-                                        }}
+                                        style={{ filter: `drop-shadow(0 0 12px ${theme.pathColor})` }}
                                     />
 
                                     {/* Climber Dot with glow */}
@@ -605,7 +469,7 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     </g>
                                 </svg>
 
-                                {/* Text Overlays - Clean Professional Layout */}
+                                {/* Text Overlays */}
                                 <div
                                     style={{
                                         position: 'absolute',
@@ -613,176 +477,156 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         left: 0,
                                         right: 0,
                                         bottom: 0,
-                                        display: 'grid',
-                                        gridTemplateColumns: '25% 35% 40%',
-                                        gridTemplateRows: '1fr auto',
-                                        gap: `${format.width * 0.03}px`,
-                                        padding: `${format.height * 0.08}px ${format.width * 0.06}px`,
+                                        padding: `${format.height * 0.06}px ${format.width * 0.05}px`,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
                                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
                                     }}
                                 >
-                                    {/* LEFT SECTION: Identity & Metrics */}
-                                    <div style={{
-                                        gridColumn: '1',
-                                        gridRow: '1',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'flex-start',
-                                        gap: `${format.height * 0.04}px`,
-                                        paddingTop: `${format.height * 0.02}px`
-                                    }}>
-                                        {/* Mission Name - Visible with proper contrast */}
-                                        <h1 style={{
-                                            fontSize: `${Math.min(format.width * 0.022, 32)}px`,
-                                            fontWeight: '700',
-                                            color: '#FFFFFF',
-                                            textShadow: '0 3px 12px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.8)',
-                                            lineHeight: '1.2',
-                                            margin: 0,
-                                            letterSpacing: '-0.01em',
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            maxWidth: '100%'
-                                        }}>
+                                    {/* Top Section: Mission Name + Stats on LEFT */}
+                                    <div style={{ maxWidth: '50%' }}>
+                                        <h1
+                                            style={{
+                                                fontSize: `${Math.min(format.width * 0.045, 68)}px`,
+                                                fontWeight: 'bold',
+                                                color: theme.textColor,
+                                                marginBottom: '12px',
+                                                textShadow: '0 4px 12px rgba(0,0,0,0.9)',
+                                                letterSpacing: '0.5px',
+                                                lineHeight: '1.1'
+                                            }}
+                                        >
                                             {missionName}
                                         </h1>
-
-                                        {/* Day Count - Balanced Size */}
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'baseline',
-                                            gap: '12px'
-                                        }}>
-                                            <div style={{
-                                                fontSize: `${Math.min(format.width * 0.07, 105)}px`,
-                                                fontWeight: '900',
-                                                color: '#FFFFFF',
-                                                textShadow: '0 6px 24px rgba(0,0,0,0.9), 0 2px 8px rgba(0,0,0,0.6)',
-                                                lineHeight: '1',
-                                                letterSpacing: '-0.04em',
-                                                fontVariantNumeric: 'tabular-nums'
-                                            }}>
-                                                {currentDay}
-                                            </div>
-                                            <div style={{
-                                                fontSize: `${Math.min(format.width * 0.016, 22)}px`,
+                                        {/* Journey Stats */}
+                                        <div
+                                            style={{
+                                                fontSize: `${Math.min(format.width * 0.018, 24)}px`,
+                                                color: 'rgba(255,255,255,0.8)',
                                                 fontWeight: '600',
-                                                color: 'rgba(255,255,255,0.6)',
-                                                letterSpacing: '0.1em',
-                                                textTransform: 'uppercase',
-                                                textShadow: '0 2px 6px rgba(0,0,0,0.7)'
-                                            }}>
-                                                Days
-                                            </div>
+                                                textShadow: '0 2px 6px rgba(0,0,0,0.8)',
+                                                marginTop: '8px'
+                                            }}
+                                        >
+                                            {resolvedSteps || 0}/{totalPlanned || 0} Steps • {Math.round(progress || 0)}% Complete
                                         </div>
-
-                                        {/* Earnings Display - Clean & Compact */}
-                                        {showEarnings && (
-                                            <div style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '6px'
-                                            }}>
-                                                <div style={{
-                                                    fontSize: `${Math.min(format.width * 0.01, 14)}px`,
-                                                    fontWeight: '600',
-                                                    color: 'rgba(255,255,255,0.5)',
-                                                    letterSpacing: '0.08em',
-                                                    textTransform: 'uppercase',
-                                                    textShadow: '0 2px 6px rgba(0,0,0,0.7)'
-                                                }}>
-                                                    {metricType === 'Users' ? 'Users' : 'Revenue'}
-                                                </div>
-                                                <div style={{
-                                                    fontSize: `${Math.min(format.width * 0.035, 52)}px`,
-                                                    fontWeight: '800',
-                                                    color: theme.pathColor,
-                                                    textShadow: `0 4px 16px ${theme.pathColor}90, 0 2px 6px rgba(0,0,0,0.8)`,
-                                                    fontVariantNumeric: 'tabular-nums',
-                                                    letterSpacing: '-0.02em',
-                                                    lineHeight: '1'
-                                                }}>
-                                                    {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {/* CENTER SECTION: Journey Path (handled by SVG) */}
-
-                                    {/* RIGHT SECTION: Quote & Proof Image */}
-                                    <div style={{
-                                        gridColumn: '3',
-                                        gridRow: '1',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'flex-start',
-                                        alignItems: 'flex-end',
-                                        gap: `${format.height * 0.03}px`,
-                                        paddingTop: `${format.height * 0.02}px`
-                                    }}>
-                                        {/* Proof Image First - No overlap with path */}
-                                        {showEarnings && proofImageUrl && (
-                                            <div style={{
-                                                position: 'relative',
-                                                width: '100%',
-                                                maxWidth: `${format.width * 0.3}px`,
-                                                aspectRatio: '16 / 9',
-                                                borderRadius: '6px',
-                                                overflow: 'hidden',
-                                                border: `2px solid ${theme.pathColor}`,
-                                                boxShadow: `0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)`
-                                            }}>
-                                                <img
-                                                    src={proofImageUrl}
-                                                    alt="Proof of work"
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'cover'
-                                                    }}
-                                                    crossOrigin="anonymous"
-                                                    onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Learning Quote - Below image, no overlap */}
-                                        {learningQuote && (
-                                            <p style={{
-                                                fontSize: `${Math.min(format.width * 0.016, 22)}px`,
-                                                color: '#FFFFFF',
-                                                margin: 0,
-                                                lineHeight: '1.6',
-                                                fontStyle: 'italic',
-                                                textShadow: '0 3px 10px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.7)',
-                                                fontWeight: '500',
-                                                fontFamily: FONT_OPTIONS[quoteFont],
-                                                wordWrap: 'break-word',
-                                                textAlign: 'right',
-                                                maxWidth: '100%'
-                                            }}>
+                                    {/* RIGHT SIDE: Learning Quote - Centered vertically on right */}
+                                    {learningQuote && (
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                right: `${format.width * 0.08}px`,
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                padding: '16px 26px',
+                                                background: 'rgba(0,0,0,0.7)',
+                                                borderRadius: '12px',
+                                                border: '2px solid rgba(255,255,255,0.2)',
+                                                backdropFilter: 'blur(12px)',
+                                                maxWidth: `${format.width * 0.35}px`,
+                                                boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+                                            }}
+                                        >
+                                            <p
+                                                style={{
+                                                    fontSize: `${Math.min(format.width * 0.018, 24)}px`,
+                                                    color: theme.textColor,
+                                                    margin: 0,
+                                                    lineHeight: '1.5',
+                                                    fontStyle: 'italic',
+                                                    textShadow: '0 2px 6px rgba(0,0,0,0.9)',
+                                                    fontWeight: '500'
+                                                }}
+                                            >
                                                 {learningQuote}
                                             </p>
-                                        )}
+                                        </div>
+                                    )}
+
+                                    {/* Floating: Day & Earnings - Small Compact Box */}
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            top: `${format.height * 0.4}px`,
+                                            left: `${format.width * 0.08}px`,
+                                            padding: '12px 20px',
+                                            background: 'rgba(0,0,0,0.75)',
+                                            borderRadius: '12px',
+                                            border: `2px solid ${theme.pathColor}`,
+                                            backdropFilter: 'blur(10px)',
+                                            display: 'inline-block',
+                                            boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 20px ${theme.pathColor}40`
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            {/* Day */}
+                                            <div style={{ textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.2)', paddingRight: '16px' }}>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
+                                                        color: 'rgba(255,255,255,0.6)',
+                                                        marginBottom: '2px',
+                                                        fontWeight: '500',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '1px'
+                                                    }}
+                                                >
+                                                    Day
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.028, 42)}px`,
+                                                        fontWeight: '900',
+                                                        color: theme.textColor,
+                                                        lineHeight: '1'
+                                                    }}
+                                                >
+                                                    {currentDay}
+                                                </div>
+                                            </div>
+                                            {/* Earnings */}
+                                            <div style={{ textAlign: 'center' }}>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
+                                                        color: 'rgba(255,255,255,0.6)',
+                                                        marginBottom: '2px',
+                                                        fontWeight: '500',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '1px'
+                                                    }}
+                                                >
+                                                    {metricType === 'Users' ? 'Users' : 'Earned'}
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontSize: `${Math.min(format.width * 0.035, 52)}px`,
+                                                        fontWeight: '900',
+                                                        color: theme.pathColor,
+                                                        textShadow: `0 4px 12px rgba(0,0,0,0.9)`,
+                                                        lineHeight: '1'
+                                                    }}
+                                                >
+                                                    {metricType === '$' || metricType === 'Revenue' ? '$' : ''}{currentEarnings}{metricType !== '$' && metricType !== 'Revenue' && metricType !== 'Users' ? ` ${metricType}` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* BOTTOM: URL Footer */}
-                                    <div style={{
-                                        gridColumn: '1 / 4',
-                                        gridRow: '2',
-                                        fontSize: `${Math.min(format.width * 0.012, 16)}px`,
-                                        color: 'rgba(255,255,255,0.6)',
-                                        fontWeight: '500',
-                                        textAlign: 'center',
-                                        textShadow: '0 2px 6px rgba(0,0,0,0.8)',
-                                        fontFamily: FONT_OPTIONS[urlFont],
-                                        letterSpacing: '0.02em'
-                                    }}>
-                                        {customUrl}
+                                    {/* Bottom: Branding */}
+                                    <div
+                                        style={{
+                                            fontSize: `${Math.min(format.width * 0.014, 18)}px`,
+                                            color: 'rgba(255,255,255,0.5)',
+                                            fontWeight: '500',
+                                            textAlign: 'center',
+                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+                                        }}
+                                    >
+                                        Made with Shift Journey • {customUrl}
                                     </div>
                                 </div>
                             </div>
