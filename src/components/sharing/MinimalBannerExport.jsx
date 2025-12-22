@@ -485,17 +485,20 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     }}
                                 >
                                     {/* Top Section: Mission Name + Stats on LEFT */}
-                                    <div style={{ maxWidth: '50%' }}>
+                                    <div style={{ maxWidth: '60%', whiteSpace: 'nowrap' }}>
                                         <h1
                                             style={{
-                                                fontSize: `${Math.min(format.width * 0.055, 80)}px`,
-                                                fontWeight: '800',
+                                                fontSize: `${Math.min(format.width * 0.052, 75)}px`,
+                                                fontWeight: '700',
                                                 color: theme.textColor,
-                                                marginBottom: '16px',
+                                                marginBottom: '10px',
                                                 textShadow: '0 4px 16px rgba(0,0,0,0.9)',
-                                                letterSpacing: '1px',
-                                                lineHeight: '1',
-                                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif'
+                                                letterSpacing: '0.5px',
+                                                lineHeight: '1.1',
+                                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif',
+                                                whiteSpace: 'normal',
+                                                wordWrap: 'break-word',
+                                                overflow: 'visible'
                                             }}
                                         >
                                             {missionName}
@@ -503,12 +506,12 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         {/* Journey Stats */}
                                         <div
                                             style={{
-                                                fontSize: `${Math.min(format.width * 0.016, 22)}px`,
-                                                color: 'rgba(255,255,255,0.9)',
+                                                fontSize: `${Math.min(format.width * 0.015, 20)}px`,
+                                                color: 'rgba(255,255,255,0.85)',
                                                 fontWeight: '400',
                                                 textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                                                marginTop: '0px',
-                                                letterSpacing: '0.3px'
+                                                marginTop: '6px',
+                                                letterSpacing: '0.5px'
                                             }}
                                         >
                                             {resolvedSteps || 0}/{totalPlanned || 0} Steps . {Math.round(progress || 0)}% Complete
