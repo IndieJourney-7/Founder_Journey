@@ -74,6 +74,16 @@ const THEMES = {
 // Professional S-curve mountain path
 const SIMPLE_MOUNTAIN_PATH = "M150 850 C 300 800, 400 700, 550 600 C 700 500, 850 400, 1000 300 C 1100 250, 1150 220, 1250 180";
 
+// Font options - Distinctive typography
+const FONT_OPTIONS = {
+    'Editorial': '"Crimson Pro", "Libre Baskerville", Georgia, serif',
+    'Technical': '"IBM Plex Mono", "Courier Prime", "Courier New", monospace',
+    'Geometric': '"DM Sans", "Work Sans", system-ui, sans-serif',
+    'Grotesque': '"Darker Grotesque", "Archivo", -apple-system, sans-serif',
+    'Display': '"Fraunces", "Playfair Display", Georgia, serif',
+    'Modern': '"Manrope", "Inter", system-ui, sans-serif'
+};
+
 // Calculate point on path at given progress
 const getPointOnPath = (pathString, progress) => {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -100,25 +110,52 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     const [currentEarnings, setCurrentEarnings] = useState('347');
     const [metricType, setMetricType] = useState('$');
     const [learningQuote, setLearningQuote] = useState('Patience and small steps are winning this week 🌱');
+    const [quoteFont, setQuoteFont] = useState('Editorial');
     const [customUrl, setCustomUrl] = useState('shift-journey.vercel.app');
+    const [urlFont, setUrlFont] = useState('Technical');
 
     // Export settings
     const [selectedFormat, setSelectedFormat] = useState('twitter');
     const [selectedTheme, setSelectedTheme] = useState('startup');
+    const [customColor, setCustomColor] = useState('#4E6ED0');
+    const [useCustomTheme, setUseCustomTheme] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
 
     const exportRef = useRef(null);
 
     const format = EXPORT_FORMATS[selectedFormat];
-    const theme = THEMES[selectedTheme];
+
+    // Generate custom theme based on selected color
+    const generateCustomTheme = (primaryColor) => {
+        const darkenColor = (hex) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            const factor = 0.15;
+            return `#${Math.floor(r * factor).toString(16).padStart(2, '0')}${Math.floor(g * factor).toString(16).padStart(2, '0')}${Math.floor(b * factor).toString(16).padStart(2, '0')}`;
+        };
+
+        const darkBase = darkenColor(primaryColor);
+
+        return {
+            name: 'Custom',
+            skyGradient: [primaryColor, darkBase],
+            mountainBase: darkBase,
+            mountainHighlight: primaryColor,
+            pathColor: '#E7C778',
+            textColor: '#ffffff'
+        };
+    };
+
+    const theme = useCustomTheme ? generateCustomTheme(customColor) : THEMES[selectedTheme];
 
     // Generate preview when settings change
     useEffect(() => {
         if (isOpen && exportRef.current) {
             setTimeout(generatePreview, 500);
         }
-    }, [isOpen, selectedFormat, selectedTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, customUrl]);
+    }, [isOpen, selectedFormat, selectedTheme, customColor, useCustomTheme, missionName, goalTarget, currentDay, currentEarnings, metricType, learningQuote, quoteFont, customUrl, urlFont]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -257,7 +294,18 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         placeholder="e.g., Learning: Patience and small steps are winning this week"
                                         className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none h-20 resize-none"
                                     />
-                                    <p className="text-xs text-white/40 mt-1">{learningQuote.length}/150</p>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <p className="text-xs text-white/40">{learningQuote.length}/150</p>
+                                        <select
+                                            value={quoteFont}
+                                            onChange={(e) => setQuoteFont(e.target.value)}
+                                            className="text-xs px-2 py-1 rounded bg-black/30 border border-white/10 text-white focus:border-brand-teal focus:outline-none"
+                                        >
+                                            {Object.keys(FONT_OPTIONS).map(font => (
+                                                <option key={font} value={font}>{font}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
 
                                 {/* Custom URL */}
@@ -270,18 +318,60 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                         placeholder="shift-journey.vercel.app"
                                         className="w-full px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
                                     />
+                                    <div className="flex items-center justify-end mt-1">
+                                        <select
+                                            value={urlFont}
+                                            onChange={(e) => setUrlFont(e.target.value)}
+                                            className="text-xs px-2 py-1 rounded bg-black/30 border border-white/10 text-white focus:border-brand-teal focus:outline-none"
+                                        >
+                                            {Object.keys(FONT_OPTIONS).map(font => (
+                                                <option key={font} value={font}>{font}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
 
-                                {/* Theme Selector */}
+                                {/* Color Picker */}
                                 <div>
-                                    <label className="block text-sm font-bold text-white mb-2">Theme</label>
+                                    <label className="block text-sm font-bold text-white mb-2">Custom Color</label>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="color"
+                                            value={customColor}
+                                            onChange={(e) => {
+                                                setCustomColor(e.target.value);
+                                                setUseCustomTheme(true);
+                                            }}
+                                            className="w-16 h-10 rounded-lg border-2 border-white/10 bg-transparent cursor-pointer"
+                                        />
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                value={customColor}
+                                                onChange={(e) => {
+                                                    setCustomColor(e.target.value);
+                                                    setUseCustomTheme(true);
+                                                }}
+                                                className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white uppercase focus:border-brand-teal focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-white/40 mt-1">Pick any color for your banner background</p>
+                                </div>
+
+                                {/* Gradient Theme Presets */}
+                                <div>
+                                    <label className="block text-sm font-bold text-white mb-2">Gradient Themes</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         {Object.entries(THEMES).map(([key, thm]) => (
                                             <button
                                                 key={key}
-                                                onClick={() => setSelectedTheme(key)}
+                                                onClick={() => {
+                                                    setSelectedTheme(key);
+                                                    setUseCustomTheme(false);
+                                                }}
                                                 className={`p-2 rounded-lg border-2 transition-all ${
-                                                    selectedTheme === key ? 'border-brand-teal' : 'border-white/10'
+                                                    !useCustomTheme && selectedTheme === key ? 'border-brand-teal' : 'border-white/10'
                                                 }`}
                                             >
                                                 <div
@@ -538,7 +628,8 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                                     lineHeight: '1.5',
                                                     fontStyle: 'italic',
                                                     textShadow: '0 2px 6px rgba(0,0,0,0.9)',
-                                                    fontWeight: '500'
+                                                    fontWeight: '500',
+                                                    fontFamily: FONT_OPTIONS[quoteFont]
                                                 }}
                                             >
                                                 {learningQuote}
@@ -623,7 +714,8 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                             color: 'rgba(255,255,255,0.5)',
                                             fontWeight: '500',
                                             textAlign: 'center',
-                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)',
+                                            fontFamily: FONT_OPTIONS[urlFont]
                                         }}
                                     >
                                         Made with Shift Journey • {customUrl}
