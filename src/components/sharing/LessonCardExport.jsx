@@ -410,11 +410,11 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                     flexDirection: 'column',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    padding: selectedFormat === 'instagram_story' ? '120px 80px' : '80px',
+                                    padding: selectedFormat === 'instagram_story' ? '100px 60px' : '60px',
                                     textAlign: 'center'
                                 }}>
                                     {/* Icon */}
-                                    <div style={{ color: theme.accentColor, marginBottom: '40px', opacity: 0.9 }}>
+                                    <div style={{ color: theme.accentColor, marginBottom: '24px', opacity: 0.9 }}>
                                         {theme.icon}
                                     </div>
 
@@ -422,12 +422,13 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                     {title && (
                                         <h2 style={{
                                             fontFamily: FONT_OPTIONS[titleFont],
-                                            fontSize: selectedFormat === 'instagram_story' ? '64px' : '48px',
+                                            fontSize: selectedFormat === 'instagram_story' ? '52px' : '40px',
                                             fontWeight: 'bold',
                                             color: theme.textColor,
-                                            marginBottom: '40px',
+                                            marginBottom: '28px',
                                             lineHeight: '1.2',
-                                            maxWidth: '90%'
+                                            maxWidth: '85%',
+                                            textAlign: 'center'
                                         }}>
                                             {title}
                                         </h2>
@@ -437,12 +438,12 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                     {lessonText && (
                                         <blockquote style={{
                                             fontFamily: FONT_OPTIONS[quoteFont],
-                                            fontSize: selectedFormat === 'instagram_story' ? '36px' : '28px',
+                                            fontSize: selectedFormat === 'instagram_story' ? '30px' : '24px',
                                             fontStyle: 'italic',
                                             color: theme.textColor,
-                                            marginBottom: showContext && context ? '30px' : '60px',
-                                            lineHeight: '1.6',
-                                            maxWidth: '85%',
+                                            marginBottom: showContext && context ? '24px' : '40px',
+                                            lineHeight: '1.5',
+                                            maxWidth: '80%',
                                             opacity: 0.95,
                                             textAlign: 'center'
                                         }}>
@@ -454,11 +455,11 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                     {showContext && context && (
                                         <p style={{
                                             fontFamily: FONT_OPTIONS[quoteFont],
-                                            fontSize: selectedFormat === 'instagram_story' ? '24px' : '18px',
+                                            fontSize: selectedFormat === 'instagram_story' ? '20px' : '16px',
                                             color: theme.textColor,
-                                            marginBottom: '60px',
-                                            lineHeight: '1.5',
-                                            maxWidth: '80%',
+                                            marginBottom: '40px',
+                                            lineHeight: '1.4',
+                                            maxWidth: '75%',
                                             opacity: 0.7,
                                             textAlign: 'center'
                                         }}>
@@ -473,18 +474,19 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
-                                        gap: '20px'
+                                        gap: '12px'
                                     }}>
                                         {/* Step Title & Date */}
                                         <div style={{
                                             display: 'flex',
-                                            gap: '20px',
-                                            fontSize: selectedFormat === 'instagram_story' ? '20px' : '16px',
+                                            gap: '12px',
+                                            fontSize: selectedFormat === 'instagram_story' ? '16px' : '13px',
                                             color: theme.textColor,
-                                            opacity: 0.6
+                                            opacity: 0.6,
+                                            textAlign: 'center'
                                         }}>
                                             {showStepTitle && stepTitle && <span>From: {stepTitle}</span>}
-                                            {showDate && <span>•</span>}
+                                            {showDate && showStepTitle && stepTitle && <span>•</span>}
                                             {showDate && <span>{new Date(lesson.created_at).toLocaleDateString()}</span>}
                                         </div>
 
@@ -492,11 +494,11 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                         {customTag && (
                                             <div style={{
                                                 display: 'inline-block',
-                                                padding: '8px 20px',
+                                                padding: '6px 16px',
                                                 background: `${theme.accentColor}30`,
                                                 border: `2px solid ${theme.accentColor}`,
-                                                borderRadius: '20px',
-                                                fontSize: selectedFormat === 'instagram_story' ? '18px' : '14px',
+                                                borderRadius: '16px',
+                                                fontSize: selectedFormat === 'instagram_story' ? '15px' : '12px',
                                                 fontWeight: 'bold',
                                                 color: theme.textColor
                                             }}>
@@ -507,10 +509,11 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                         {/* URL */}
                                         {customUrl && (
                                             <div style={{
-                                                fontSize: selectedFormat === 'instagram_story' ? '18px' : '14px',
+                                                fontSize: selectedFormat === 'instagram_story' ? '15px' : '12px',
                                                 color: theme.accentColor,
                                                 fontWeight: 'bold',
-                                                opacity: 0.9
+                                                opacity: 0.9,
+                                                textAlign: 'center'
                                             }}>
                                                 {customUrl}
                                             </div>
