@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download } from 'lucide-react';
+import { X, Download, Copy } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { usePlanLimits } from '../../hooks/usePlanLimits';
 import { useMountain } from '../../context/MountainContext';
@@ -187,6 +187,66 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
         link.download = `shift-journey-${formatName}-${Date.now()}.png`;
         link.href = previewUrl;
         link.click();
+    };
+
+    const handleCopyImage = async () => {
+        if (!previewUrl) return;
+
+        try {
+            // Convert base64 to blob
+            const blob = await (await fetch(previewUrl)).blob();
+
+            // Copy to clipboard using Clipboard API
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    [blob.type]: blob
+                })
+            ]);
+
+            alert('✅ Image copied to clipboard! You can now paste it directly into X or LinkedIn.');
+        } catch (error) {
+            console.error('Failed to copy image:', error);
+            alert('❌ Failed to copy image. Please download and upload manually.');
+        }
+    };
+
+    const handleShareToX = async () => {
+        if (!previewUrl) return;
+
+        // Auto-download the image first
+        handleDownload();
+
+        // Show helpful message
+        setTimeout(() => {
+            alert('📥 Image downloaded!\n\n✨ Tip: The image is in your downloads folder. Attach it to your post on X!');
+        }, 500);
+
+        // Create a text for the tweet and open X
+        const tweetText = `🏔️ ${missionName}\n\n${learningQuote}\n\n${customUrl}`;
+        const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+
+        setTimeout(() => {
+            window.open(tweetUrl, '_blank', 'width=550,height=420');
+        }, 1000);
+    };
+
+    const handleShareToLinkedIn = async () => {
+        if (!previewUrl) return;
+
+        // Auto-download the image first
+        handleDownload();
+
+        // Show helpful message
+        setTimeout(() => {
+            alert('📥 Image downloaded!\n\n✨ Tip: The image is in your downloads folder. Attach it to your LinkedIn post!');
+        }, 500);
+
+        // Open LinkedIn share dialog
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(customUrl || 'https://shift-journey.vercel.app')}`;
+
+        setTimeout(() => {
+            window.open(linkedInUrl, '_blank', 'width=550,height=420');
+        }, 1000);
     };
 
     // Calculate climber position on path
@@ -450,6 +510,40 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                                     <Download size={20} />
                                     Download HD Banner
                                 </button>
+
+                                {/* Copy to Clipboard Button */}
+                                <button
+                                    onClick={handleCopyImage}
+                                    disabled={isGenerating || !previewUrl}
+                                    className="w-full py-2.5 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    <Copy size={18} />
+                                    Copy Image to Clipboard
+                                </button>
+
+                                {/* Social Share Buttons */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={handleShareToX}
+                                        disabled={isGenerating || !previewUrl}
+                                        className="py-2.5 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                        </svg>
+                                        Share to X
+                                    </button>
+                                    <button
+                                        onClick={handleShareToLinkedIn}
+                                        disabled={isGenerating || !previewUrl}
+                                        className="py-2.5 bg-[#0A66C2] text-white font-bold rounded-lg hover:bg-[#004182] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                        </svg>
+                                        Share to LinkedIn
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Right: Preview */}
