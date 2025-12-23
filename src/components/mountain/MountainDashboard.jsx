@@ -5,24 +5,18 @@ import WindingPath from './WindingPath';
 import StepMarker from './StepMarker';
 import ClimberAvatar from './ClimberAvatar';
 import StickyNote from './StickyNote';
+import StepDetailModal from './StepDetailModal';
 import LessonModal from '../lessons/LessonModal';
 import confetti from 'canvas-confetti';
 
-const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepClick, onAddStickyNote, missionName, goalTarget, titleSize = "text-6xl md:text-7xl" }) => {
-    // ... items ...
-
-    // ... render return ...
-    {/* Mission Name (Center Top) */ }
-    <div className="absolute top-10 left-1/2 transform -translate-x-1/2 z-40 text-center pointer-events-none w-full px-4">
-        <h1 className={`${titleSize} font-extrabold text-white mb-2 tracking-tight`} style={{ textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 2px 5px rgba(0,0,0,1)' }}>
-            {missionName || 'Your Ascent'}
-        </h1>
-        <div className="h-1.5 w-32 bg-brand-gold mx-auto rounded-full shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
-    </div>
-    // const [lessons, setLessons] = useState([]); // Removed local state
+const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepClick, onAddStickyNote, onRefreshNotes, missionName, goalTarget, titleSize = "text-6xl md:text-7xl" }) => {
     const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
     const [currentStepForLesson, setCurrentStepForLesson] = useState(null);
     const [avatarNudge, setAvatarNudge] = useState(0);
+
+    // State for StepDetailModal
+    const [selectedStep, setSelectedStep] = useState(null);
+    const [stepModalOpen, setStepModalOpen] = useState(false);
 
     // Path points for markers (Approximate positions along the bezier curve)
     // Path points for markers (Aligns with SVG ViewBox 0 0 1440 900)
@@ -130,20 +124,21 @@ const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepC
                     />
                 ))}
 
-                {/* Sticky Notes - Pamphlet style on journey path */}
-                {stickyNotes.map((note) => {
-                    const stepIndex = steps.findIndex(s => s.id === note.step_id);
-                    if (stepIndex === -1) return null;
-                    const step = steps[stepIndex];
+                {/* Sticky Notes - Pamphlet style on journey path (grouped by step) */}
+                {steps.map((step, stepIndex) => {
+                    // Group all lessons for this step
+                    const lessonsForStep = stickyNotes.filter(note => note.step_id === step.id);
+                    if (lessonsForStep.length === 0) return null;
 
                     return (
                         <StickyNote
-                            key={note.id}
-                            note={note}
+                            key={step.id}
+                            lessons={lessonsForStep}
                             step={step}
                             position={markerPositions[stepIndex] || markerPositions[markerPositions.length - 1]}
-                            onClick={(clickedStep, clickedNote) => {
-                                onStepClick(clickedStep);
+                            onClick={(clickedStep, clickedLessons) => {
+                                setSelectedStep(clickedStep);
+                                setStepModalOpen(true);
                             }}
                         />
                     );
@@ -192,6 +187,19 @@ const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepC
                     onSave={handleSaveLesson}
                     stepTitle={currentStepForLesson?.title}
                     initialData={stickyNotes.find(l => l.step_id === currentStepForLesson?.id) || {}}
+                />
+
+                {/* Step Detail Modal - Manage all lessons for a step */}
+                <StepDetailModal
+                    step={selectedStep}
+                    isOpen={stepModalOpen}
+                    onClose={() => setStepModalOpen(false)}
+                    onUpdate={() => {
+                        // Trigger parent to reload all notes from database
+                        if (onRefreshNotes) {
+                            onRefreshNotes();
+                        }
+                    }}
                 />
 
             </div>

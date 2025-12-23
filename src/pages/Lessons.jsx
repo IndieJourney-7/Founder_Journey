@@ -3,33 +3,59 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { useMountain } from '../context/MountainContext'
-import { ArrowLeft, CheckCircle, XCircle, Calendar, MapPin, Lightbulb, BookOpen } from 'lucide-react'
+import { ArrowLeft, CheckCircle, XCircle, Calendar, MapPin, Lightbulb, BookOpen, Share2, ChevronDown, ChevronUp } from 'lucide-react'
+import LessonCardExport from '../components/sharing/LessonCardExport'
 
 export default function Lessons() {
     const { journeyNotes, steps } = useMountain()
     const navigate = useNavigate()
-    const [filter, setFilter] = useState('all') // all, success, failed
+    const [filter, setFilter] = useState('all') // all, success, failure
+    const [expandedSteps, setExpandedSteps] = useState({}) // Track which steps are expanded
+    const [shareModalOpen, setShareModalOpen] = useState(false)
+    const [selectedLesson, setSelectedLesson] = useState(null)
+    const [selectedStepTitle, setSelectedStepTitle] = useState('')
 
-    // Merge notes with step data
-    const lessons = journeyNotes.map(note => {
-        const step = steps.find(s => s.id === note.step_id)
-        return {
-            ...note,
-            stepTitle: step?.title || 'Unknown Step',
-            stepId: step?.id,
-            stepStatus: step?.status
-        }
-    })
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .filter(lesson => {
-            if (filter === 'all') return true
-            return lesson.result === filter // result stores 'success' or 'failed' (or 'failure' if normalized differently, let's assume result matches)
+    // Group lessons by step
+    const stepGroups = steps
+        .map(step => {
+            const lessonsForStep = journeyNotes
+                .filter(note => note.step_id === step.id)
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+
+            return {
+                step,
+                lessons: lessonsForStep,
+                hasSuccess: lessonsForStep.some(l => l.result === 'success'),
+                hasFailure: lessonsForStep.some(l => l.result === 'failure' || l.result === 'failed')
+            }
         })
+        .filter(group => {
+            // Only show steps with lessons
+            if (group.lessons.length === 0) return false
+
+            // Apply filter
+            if (filter === 'all') return true
+            if (filter === 'success') return group.hasSuccess
+            if (filter === 'failure') return group.hasFailure
+            return true
+        })
+        .sort((a, b) => a.step.order_index - b.step.order_index)
+
+    const toggleStep = (stepId) => {
+        setExpandedSteps(prev => ({
+            ...prev,
+            [stepId]: !prev[stepId]
+        }))
+    }
 
     const handleViewInJourney = (stepId) => {
         navigate('/dashboard')
-        // In a real app we might pass state to scroll to the step, 
-        // but for now navigation is the primary goal.
+    }
+
+    const handleShare = (lesson, stepTitle) => {
+        setSelectedLesson(lesson)
+        setSelectedStepTitle(stepTitle)
+        setShareModalOpen(true)
     }
 
     return (
@@ -52,19 +78,19 @@ export default function Lessons() {
                 {/* Filters */}
                 <div className="flex gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
                     <FilterButton active={filter === 'all'} onClick={() => setFilter('all')}>
-                        All
+                        All ({stepGroups.length})
                     </FilterButton>
                     <FilterButton active={filter === 'success'} onClick={() => setFilter('success')}>
                         Wins
                     </FilterButton>
-                    <FilterButton active={filter === 'failed'} onClick={() => setFilter('failed')}>
+                    <FilterButton active={filter === 'failure'} onClick={() => setFilter('failure')}>
                         Learnings
                     </FilterButton>
                 </div>
             </div>
 
-            {/* Gallery Grid */}
-            {lessons.length === 0 ? (
+            {/* Step Groups */}
+            {stepGroups.length === 0 ? (
                 <div className="text-center py-20 border-2 border-dashed border-white/10 rounded-2xl">
                     <div className="text-6xl mb-4">🏔️</div>
                     <h3 className="text-xl font-bold mb-2">The trail is empty yet</h3>
@@ -74,16 +100,27 @@ export default function Lessons() {
                     </Link>
                 </div>
             ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {lessons.map(lesson => (
-                        <LessonCard
-                            key={lesson.id}
-                            lesson={lesson}
-                            onView={() => handleViewInJourney(lesson.stepId)}
+                <div className="space-y-6">
+                    {stepGroups.map(group => (
+                        <StepGroupCard
+                            key={group.step.id}
+                            group={group}
+                            isExpanded={expandedSteps[group.step.id]}
+                            onToggle={() => toggleStep(group.step.id)}
+                            onViewInJourney={handleViewInJourney}
+                            onShare={handleShare}
                         />
                     ))}
                 </div>
             )}
+
+            {/* Lesson Card Export Modal */}
+            <LessonCardExport
+                isOpen={shareModalOpen}
+                onClose={() => setShareModalOpen(false)}
+                lesson={selectedLesson}
+                stepTitle={selectedStepTitle}
+            />
         </div>
     )
 }
@@ -102,32 +139,101 @@ function FilterButton({ children, active, onClick }) {
     )
 }
 
-function LessonCard({ lesson, onView }) {
-    const isSuccess = lesson.result === 'success'
+function StepGroupCard({ group, isExpanded, onToggle, onViewInJourney, onShare }) {
+    const { step, lessons, hasSuccess, hasFailure } = group
+    const lessonCount = lessons.length
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="border border-white/10 rounded-2xl bg-white/5 overflow-hidden backdrop-blur-sm"
+        >
+            {/* Step Header - Collapsible */}
+            <button
+                onClick={onToggle}
+                className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+                <div className="flex items-center gap-4">
+                    {/* Step Status Icons */}
+                    <div className="flex gap-1">
+                        {hasSuccess && <CheckCircle className="text-emerald-400" size={20} />}
+                        {hasFailure && <XCircle className="text-amber-400" size={20} />}
+                    </div>
+
+                    {/* Step Info */}
+                    <div className="text-left">
+                        <h3 className="text-xl font-bold text-white mb-1">{step.title}</h3>
+                        <p className="text-sm text-white/50">
+                            Step {step.order_index + 1} • {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Expand Icon */}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onViewInJourney(step.id)
+                        }}
+                        className="px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 rounded-lg text-white/70 hover:text-white transition-colors flex items-center gap-1.5"
+                    >
+                        <MapPin size={14} />
+                        View on Mountain
+                    </button>
+                    {isExpanded ? <ChevronUp size={24} className="text-white/50" /> : <ChevronDown size={24} className="text-white/50" />}
+                </div>
+            </button>
+
+            {/* Lessons List - Expandable */}
+            {isExpanded && (
+                <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="border-t border-white/10"
+                >
+                    <div className="p-6 space-y-4">
+                        {lessons.map(lesson => (
+                            <LessonCard
+                                key={lesson.id}
+                                lesson={lesson}
+                                stepTitle={step.title}
+                                onShare={() => onShare(lesson, step.title)}
+                            />
+                        ))}
+                    </div>
+                </motion.div>
+            )}
+        </motion.div>
+    )
+}
+
+function LessonCard({ lesson, onShare }) {
+    const isSuccess = lesson.result === 'success'
+
+    return (
+        <div
             className={`
                 group relative flex flex-col
-                p-6 rounded-2xl border transition-all duration-300
+                p-4 rounded-xl border transition-all duration-300
                 ${isSuccess
-                    ? 'bg-gradient-to-br from-emerald-900/20 to-brand-blue border-emerald-500/20 hover:border-emerald-500/40'
-                    : 'bg-gradient-to-br from-amber-900/20 to-brand-blue border-amber-500/20 hover:border-amber-500/40'
+                    ? 'bg-gradient-to-br from-emerald-900/10 to-transparent border-emerald-500/20'
+                    : 'bg-gradient-to-br from-amber-900/10 to-transparent border-amber-500/20'
                 }
             `}
         >
             {/* Header */}
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-3">
                 <div className={`
-                    px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border
+                    px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide
                     ${isSuccess
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        ? 'bg-emerald-500/10 text-emerald-400'
+                        : 'bg-amber-500/10 text-amber-400'
                     }
                 `}>
-                    {isSuccess ? 'Success' : 'Learning'}
+                    {isSuccess ? '✓ Success' : '✗ Learning'}
                 </div>
                 <div className="text-white/30 text-xs flex items-center gap-1">
                     <Calendar size={12} />
@@ -135,39 +241,43 @@ function LessonCard({ lesson, onView }) {
                 </div>
             </div>
 
-            {/* Step Title */}
-            <h3 className="text-lg font-bold mb-3 text-white/90 line-clamp-1 group-hover:text-white transition-colors">
-                {lesson.stepTitle}
-            </h3>
+            {/* Lesson Title (NEW!) */}
+            {lesson.title && (
+                <h4 className="text-lg font-bold mb-2 text-white/90">
+                    {lesson.title}
+                </h4>
+            )}
 
             {/* Lesson Content - The Core */}
-            <div className="flex-1 mb-6">
-                <div className="flex gap-2">
-                    <Lightbulb
-                        className={`flex-shrink-0 mt-1 ${isSuccess ? 'text-emerald-400' : 'text-amber-400'}`}
-                        size={18}
-                    />
-                    <p className="text-white/80 leading-relaxed italic">
-                        "{lesson.lesson_learned || lesson.notes}"
-                    </p>
-                </div>
+            <div className="flex-1 mb-4">
+                {lesson.lesson_learned && (
+                    <div className="flex gap-2 mb-3">
+                        <Lightbulb
+                            className={`flex-shrink-0 mt-1 ${isSuccess ? 'text-emerald-400' : 'text-amber-400'}`}
+                            size={16}
+                        />
+                        <p className="text-white/80 leading-relaxed italic text-sm">
+                            "{lesson.lesson_learned}"
+                        </p>
+                    </div>
+                )}
                 {lesson.reflection_text && (
-                    <p className="text-white/40 text-sm mt-4 pl-7 line-clamp-2 border-l-2 border-white/10">
+                    <p className="text-white/50 text-sm pl-6 border-l-2 border-white/10">
                         {lesson.reflection_text}
                     </p>
                 )}
             </div>
 
-            {/* Footer Action */}
-            <div className="pt-4 border-t border-white/10 mt-auto">
+            {/* Footer Action - Share Button */}
+            <div className="pt-3 border-t border-white/10 mt-auto">
                 <button
-                    onClick={onView}
-                    className="flex items-center gap-2 text-sm font-medium text-white/50 hover:text-brand-gold transition-colors w-full"
+                    onClick={onShare}
+                    className="flex items-center gap-2 text-sm font-medium text-brand-teal hover:text-teal-300 transition-colors w-full group/share"
                 >
-                    <MapPin size={16} />
-                    View on Mountain
+                    <Share2 size={14} className="group-hover/share:scale-110 transition-transform" />
+                    Share this lesson
                 </button>
             </div>
-        </motion.div>
+        </div>
     )
 }

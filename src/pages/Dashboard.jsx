@@ -28,7 +28,8 @@ export default function Dashboard() {
         editStep,
         progress,
         resolvedSteps,
-        totalPlanned
+        totalPlanned,
+        refresh
     } = useMountain()
     const { checkLimit, isPro } = usePlanLimits()
 
@@ -277,7 +278,7 @@ export default function Dashboard() {
                         // Payload: { step_id, summary (content), lesson_learned (details), ... }
                         // Dashboard Expects: (stepId, { reflection_text, lesson_learned }, result)
 
-                        // We assume 'success' if added via this modal for now, or we need to know result. 
+                        // We assume 'success' if added via this modal for now, or we need to know result.
                         // LessonModal is generic. Let's assume Success for "Lessons Learned".
 
                         await saveJourneyNote(notePayload.step_id, {
@@ -288,6 +289,7 @@ export default function Dashboard() {
                         // Refresh/Update status handled by context usually
                         await updateStepStatus(notePayload.step_id, 'success')
                     }}
+                    onRefreshNotes={refresh}
                 />
             </div>
 

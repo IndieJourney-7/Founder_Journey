@@ -1,18 +1,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Lightbulb } from 'lucide-react';
+import { CheckCircle, XCircle, Lightbulb, BookOpen } from 'lucide-react';
 
 /**
  * StickyNote - Pamphlet style note displayed on journey path
- * Shows the lesson learned from each step
+ * Shows lessons count and latest lesson from a step
+ * Now supports MULTIPLE lessons per step
  */
-const StickyNote = ({ note, step, position, onClick }) => {
-    if (!note || !step) return null;
+const StickyNote = ({ lessons = [], step, position, onClick }) => {
+    if (!lessons || lessons.length === 0 || !step) return null;
 
-    const isSuccess = note.result === 'success';
+    // Get latest lesson to display
+    const latestLesson = lessons[lessons.length - 1];
+    const lessonCount = lessons.length;
 
-    // Lesson content to display
-    const lessonText = note.lesson_learned || note.reflection_text || note.notes || 'No lesson recorded';
+    // Determine overall success (if any lesson is success, show green)
+    const hasSuccess = lessons.some(l => l.result === 'success');
+    const isSuccess = hasSuccess;
+
+    // Lesson content to display (from latest lesson)
+    const lessonText = latestLesson.title || latestLesson.lesson_learned || latestLesson.reflection_text || 'No lesson recorded';
 
     return (
         <motion.div
@@ -33,7 +40,7 @@ const StickyNote = ({ note, step, position, onClick }) => {
                 zIndex: 60,
                 transition: { duration: 0.2 }
             }}
-            onClick={() => onClick(step, note)}
+            onClick={() => onClick(step, lessons)}
         >
             {/* Paper/Pamphlet Container */}
             <div className={`
@@ -81,11 +88,21 @@ const StickyNote = ({ note, step, position, onClick }) => {
                     `}>
                         <div className="flex items-start gap-0.5 sm:gap-1">
                             <Lightbulb size={8} className={`sm:w-2.5 sm:h-2.5 mt-0.5 flex-shrink-0 ${isSuccess ? 'text-emerald-600' : 'text-amber-600'}`} />
-                            <p className={`text-[7px] sm:text-[9px] leading-tight line-clamp-3 font-medium ${isSuccess ? 'text-emerald-800' : 'text-amber-800'}`}>
+                            <p className={`text-[7px] sm:text-[9px] leading-tight line-clamp-2 font-medium ${isSuccess ? 'text-emerald-800' : 'text-amber-800'}`}>
                                 {lessonText}
                             </p>
                         </div>
                     </div>
+
+                    {/* Lesson Count Badge (if multiple) */}
+                    {lessonCount > 1 && (
+                        <div className="flex items-center justify-center gap-0.5 mt-1.5">
+                            <BookOpen size={8} className={`sm:w-2.5 sm:h-2.5 ${isSuccess ? 'text-emerald-600' : 'text-amber-600'}`} />
+                            <span className={`text-[7px] sm:text-[8px] font-bold ${isSuccess ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                {lessonCount} lessons →
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Corner fold effect - paper look */}

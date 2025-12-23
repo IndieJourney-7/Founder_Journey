@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Edit2, Trash2, Share2, CheckCircle2, XCircle } from 'lucide-react';
 import * as notesService from '../../lib/notesService';
+import LessonCardExport from '../sharing/LessonCardExport';
 
 /**
  * StepDetailModal
@@ -19,6 +20,8 @@ export default function StepDetailModal({ step, isOpen, onClose, onUpdate }) {
     const [loading, setLoading] = useState(true);
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingLessonId, setEditingLessonId] = useState(null);
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [selectedLesson, setSelectedLesson] = useState(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -232,7 +235,10 @@ export default function StepDetailModal({ step, isOpen, onClose, onUpdate }) {
                                                 lesson={lesson}
                                                 onEdit={() => startEditing(lesson)}
                                                 onDelete={() => handleDeleteLesson(lesson.id)}
-                                                onShare={() => {/* TODO: Phase 5 */}}
+                                                onShare={() => {
+                                                    setSelectedLesson(lesson);
+                                                    setShareModalOpen(true);
+                                                }}
                                             />
                                         )}
                                     </div>
@@ -265,6 +271,14 @@ export default function StepDetailModal({ step, isOpen, onClose, onUpdate }) {
                             Add Another Lesson
                         </button>
                     )}
+
+                    {/* Lesson Card Export Modal */}
+                    <LessonCardExport
+                        isOpen={shareModalOpen}
+                        onClose={() => setShareModalOpen(false)}
+                        lesson={selectedLesson}
+                        stepTitle={step?.title}
+                    />
                 </motion.div>
             </motion.div>
         </AnimatePresence>
