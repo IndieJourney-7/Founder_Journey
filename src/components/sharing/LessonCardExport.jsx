@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Lightbulb, CheckCircle, XCircle } from 'lucide-react';
+import { X, Download, Lightbulb, CheckCircle, XCircle, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 // Export format configurations for social media
@@ -151,6 +151,27 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
         link.download = `lesson-${title.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
         link.href = previewUrl;
         link.click();
+    };
+
+    const handleShareToX = async () => {
+        if (!previewUrl) return;
+
+        // Create a text for the tweet
+        const tweetText = `${title}\n\n"${lessonText}"\n\n${customUrl ? customUrl : ''}`;
+        const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+
+        // Open Twitter share dialog
+        window.open(tweetUrl, '_blank', 'width=550,height=420');
+    };
+
+    const handleShareToLinkedIn = async () => {
+        if (!previewUrl) return;
+
+        // LinkedIn share URL - opens share dialog
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(customUrl || 'https://shift-journey.vercel.app')}`;
+
+        // Open LinkedIn share dialog
+        window.open(linkedInUrl, '_blank', 'width=550,height=420');
     };
 
     return (
@@ -359,6 +380,30 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                     <Download size={20} />
                                     {isGenerating ? 'Generating...' : 'Download Image'}
                                 </button>
+
+                                {/* Social Share Buttons */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={handleShareToX}
+                                        disabled={!previewUrl || isGenerating}
+                                        className="py-2.5 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                        </svg>
+                                        Share to X
+                                    </button>
+                                    <button
+                                        onClick={handleShareToLinkedIn}
+                                        disabled={!previewUrl || isGenerating}
+                                        className="py-2.5 bg-[#0A66C2] text-white font-bold rounded-lg hover:bg-[#004182] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                        </svg>
+                                        Share to LinkedIn
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Right: Preview */}
