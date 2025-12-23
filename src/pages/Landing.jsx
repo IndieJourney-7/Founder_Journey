@@ -53,13 +53,14 @@ const Landing = () => {
                         className="text-left max-w-2xl"
                     >
                         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 tracking-tight leading-tight sm:leading-none text-white">
-                            Track your<br />
+                            One day.<br />
+                            One lesson.<br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">
-                                Long Journey.
+                                One share.
                             </span>
                         </h1>
                         <p className="text-lg sm:text-xl md:text-2xl text-slate-300 mb-8 sm:mb-10 leading-relaxed max-w-lg">
-                            Share what you learn along the way. Turn your grind into a visual ascent.
+                            From lesson to X or LinkedIn in 60 seconds.
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 sm:gap-4">
