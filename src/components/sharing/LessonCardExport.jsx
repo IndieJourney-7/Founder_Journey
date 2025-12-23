@@ -443,7 +443,8 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                             marginBottom: showContext && context ? '30px' : '60px',
                                             lineHeight: '1.6',
                                             maxWidth: '85%',
-                                            opacity: 0.95
+                                            opacity: 0.95,
+                                            textAlign: 'center'
                                         }}>
                                             "{lessonText}"
                                         </blockquote>
@@ -458,7 +459,8 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                                             marginBottom: '60px',
                                             lineHeight: '1.5',
                                             maxWidth: '80%',
-                                            opacity: 0.7
+                                            opacity: 0.7,
+                                            textAlign: 'center'
                                         }}>
                                             {context}
                                         </p>
