@@ -63,11 +63,13 @@ function SetupRoute({ children }) {
 }
 
 /**
- * Dashboard Route - Redirects to setup if user has no mountain
+ * Dashboard Route - Allows demo mode OR authenticated users with mountain
+ * Demo users (no auth) can access directly
+ * Authenticated users without mountain are redirected to setup
  */
 function DashboardRoute({ children }) {
     const { user, loading: authLoading } = useAuth()
-    const { hasMountain, loading: mountainLoading } = useMountain()
+    const { hasMountain, loading: mountainLoading, isDemoMode } = useMountain()
 
     if (authLoading || mountainLoading) {
         return (
@@ -77,11 +79,12 @@ function DashboardRoute({ children }) {
         )
     }
 
+    // DEMO MODE: Allow anonymous users (they'll get demo mountain auto-created)
     if (!user) {
-        return <Navigate to="/auth" replace />
+        return children
     }
 
-    // If user has no mountain, go to setup
+    // AUTHENTICATED MODE: If user has no mountain, go to setup
     if (!hasMountain) {
         return <Navigate to="/setup" replace />
     }
@@ -113,11 +116,7 @@ export default function App() {
                                     <Profile />
                                 </ProtectedRoute>
                             } />
-                            <Route path="lessons" element={
-                                <ProtectedRoute>
-                                    <Lessons />
-                                </ProtectedRoute>
-                            } />
+                            <Route path="lessons" element={<Lessons />} />
                             <Route path="pricing" element={<Pricing />} />
                             <Route path="payment-success" element={
                                 <ProtectedRoute>

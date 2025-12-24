@@ -65,18 +65,22 @@ const Landing = () => {
 
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 sm:gap-4">
                             <Link
-                                to="/setup"
+                                to="/dashboard"
                                 className="px-6 sm:px-8 py-3 sm:py-4 bg-brand-gold text-brand-blue font-bold text-base sm:text-lg rounded-xl hover:bg-yellow-400 transition-all transform hover:-translate-y-1 shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-2"
                             >
-                                Start Your Ascent <ArrowRight size={20} />
+                                Try Free Demo <ArrowRight size={20} />
                             </Link>
                             <Link
-                                to="/pricing"
+                                to="/auth?mode=signup"
                                 className="px-6 sm:px-8 py-3 sm:py-4 bg-white/5 border border-white/10 text-white font-bold text-base sm:text-lg rounded-xl hover:bg-white/10 transition-all text-center"
                             >
-                                View Pricing
+                                Sign Up Free
                             </Link>
                         </div>
+
+                        <p className="mt-4 text-xs sm:text-sm text-slate-400">
+                            🎨 No credit card • Try full app instantly • Sign up later to save permanently
+                        </p>
 
                         <div className="mt-8 sm:mt-12 flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-slate-400">
                             <div className="flex -space-x-2">
