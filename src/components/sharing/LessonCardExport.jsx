@@ -149,13 +149,13 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleDownload = () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE downloading
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
-
-        if (!previewUrl) return;
         const link = document.createElement('a');
         const formatName = format.name.replace(/[^a-zA-Z0-9]/g, '-');
         link.download = `lesson-${title.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.png`;
@@ -164,13 +164,13 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleCopyImage = async () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE copying
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
-
-        if (!previewUrl) return;
 
         try {
             // Convert base64 to blob
@@ -191,13 +191,13 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleShareToX = async () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE sharing
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
-
-        if (!previewUrl) return;
 
         // Auto-download the image first
         handleDownload();
@@ -217,13 +217,13 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleShareToLinkedIn = async () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE sharing
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
-
-        if (!previewUrl) return;
 
         // Auto-download the image first
         handleDownload();

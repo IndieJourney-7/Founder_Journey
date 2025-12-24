@@ -183,13 +183,14 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleDownload = () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE downloading
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
 
-        if (!previewUrl) return;
         const link = document.createElement('a');
         const formatName = format.name.replace(/[^a-zA-Z0-9]/g, '-');
         link.download = `shift-journey-${formatName}-${Date.now()}.png`;
@@ -198,13 +199,13 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleCopyImage = async () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE copying
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
-
-        if (!previewUrl) return;
 
         try {
             // Convert base64 to blob
@@ -225,13 +226,13 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleShareToX = async () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE sharing
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
-
-        if (!previewUrl) return;
 
         // Auto-download the image first
         handleDownload();
@@ -251,13 +252,13 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleShareToLinkedIn = async () => {
-        // Gate for demo mode
+        if (!previewUrl) return;
+
+        // Gate for demo mode - show signup prompt BEFORE sharing
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
-
-        if (!previewUrl) return;
 
         // Auto-download the image first
         handleDownload();

@@ -153,10 +153,7 @@ export default function Dashboard() {
 
     // Open reflection modal when clicking Success/Fail
     const handleStepAction = (stepId, result) => {
-        if (!user) {
-            alert("Sign up to track your progress!")
-            return
-        }
+        // DEMO MODE: Allow adding notes locally
         const step = steps.find(s => s.id === stepId)
         setReflectionModal({
             isOpen: true,
