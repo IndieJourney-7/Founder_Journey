@@ -4,6 +4,7 @@ import { X, Download, Copy } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { usePlanLimits } from '../../hooks/usePlanLimits';
 import { useMountain } from '../../context/MountainContext';
+import SignupPromptModal from '../SignupPromptModal';
 
 // Export format configurations
 const EXPORT_FORMATS = {
@@ -101,7 +102,8 @@ const getPointOnPath = (pathString, progress) => {
 
 export default function MinimalBannerExport({ isOpen, onClose }) {
     const { isPro } = usePlanLimits();
-    const { currentMountain, progress, resolvedSteps, totalPlanned } = useMountain();
+    const { currentMountain, progress, resolvedSteps, totalPlanned, isDemoMode } = useMountain();
+    const [showSignupPrompt, setShowSignupPrompt] = useState(false);
 
     // User inputs
     const [missionName, setMissionName] = useState(currentMountain?.title || 'Operation 1-1-12');
@@ -181,6 +183,12 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleDownload = () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
         const link = document.createElement('a');
         const formatName = format.name.replace(/[^a-zA-Z0-9]/g, '-');
@@ -190,6 +198,12 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleCopyImage = async () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
 
         try {
@@ -211,6 +225,12 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleShareToX = async () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
 
         // Auto-download the image first
@@ -231,6 +251,12 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
     };
 
     const handleShareToLinkedIn = async () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
 
         // Auto-download the image first
@@ -823,6 +849,13 @@ export default function MinimalBannerExport({ isOpen, onClose }) {
                     </motion.div>
                 </motion.div>
             )}
+
+            {/* Signup Prompt Modal */}
+            <SignupPromptModal
+                isOpen={showSignupPrompt}
+                onClose={() => setShowSignupPrompt(false)}
+                promptType="download"
+            />
         </AnimatePresence>
     );
 }

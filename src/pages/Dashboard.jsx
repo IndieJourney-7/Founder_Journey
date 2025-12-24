@@ -13,6 +13,7 @@ import MinimalBannerExport from '../components/sharing/MinimalBannerExport'
 import ReflectionModal from '../components/ReflectionModal'
 import NoteViewer from '../components/NoteViewer'
 import FeedbackModal from '../components/FeedbackModal'
+import SignupPromptModal from '../components/SignupPromptModal'
 
 export default function Dashboard() {
     const { user } = useAuth()
@@ -29,7 +30,8 @@ export default function Dashboard() {
         progress,
         resolvedSteps,
         totalPlanned,
-        refresh
+        refresh,
+        isDemoMode
     } = useMountain()
     const { checkLimit, isPro } = usePlanLimits()
 
@@ -46,6 +48,8 @@ export default function Dashboard() {
     const [isExportOpen, setIsExportOpen] = useState(false)
     const [isMinimalExportOpen, setIsMinimalExportOpen] = useState(false)
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
+    const [showSignupPrompt, setShowSignupPrompt] = useState(false)
+    const [signupPromptType, setSignupPromptType] = useState('stepLimit')
     const mountainRef = useRef(null)
 
     // Reflection Modal State
@@ -117,25 +121,29 @@ export default function Dashboard() {
             return
         }
 
-        if (user) {
-            if (editingStep) {
-                // Edit mode
-                await editStep(editingStep.id, {
-                    title: newStep.title,
-                    description: newStep.description,
-                    expected_outcome: newStep.expected_outcome
-                })
-            } else {
-                // Add mode
-                await addStep({
-                    title: newStep.title,
-                    description: newStep.description,
-                    expected_outcome: newStep.expected_outcome,
-                    status: 'pending'
-                })
-            }
+        // Add or edit step
+        if (editingStep) {
+            // Edit mode
+            await editStep(editingStep.id, {
+                title: newStep.title,
+                description: newStep.description,
+                expected_outcome: newStep.expected_outcome
+            })
         } else {
-            alert("Sign up to add steps!")
+            // Add mode
+            const result = await addStep({
+                title: newStep.title,
+                description: newStep.description,
+                expected_outcome: newStep.expected_outcome,
+                status: 'pending'
+            })
+
+            // Check if demo mode hit step limit
+            if (result && result.limitReached) {
+                setSignupPromptType('stepLimit')
+                setShowSignupPrompt(true)
+                return
+            }
         }
 
         setIsAddingStep(false)
@@ -220,14 +228,21 @@ export default function Dashboard() {
     return (
         <div className="flex-1 flex flex-col relative">
             {/* Demo Mode Banner */}
-            {!user && (
-                <div className="absolute top-0 left-0 right-0 bg-brand-gold/20 text-brand-gold px-4 py-2 text-center text-sm font-medium z-50 border-b border-brand-gold/30">
-                    🎨 Demo Mode - <a href="/auth" className="underline ml-2">Sign up to save your progress</a>
+            {isDemoMode && (
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-brand-gold/20 to-yellow-500/20 text-brand-gold px-4 py-3 text-center text-sm font-medium z-50 border-b border-brand-gold/40 backdrop-blur-sm">
+                    <span className="mr-2">🎨</span>
+                    <span className="font-bold">Demo Mode</span>
+                    <span className="mx-2 text-white/40">•</span>
+                    <span className="text-white/80">Your data is saved locally</span>
+                    <span className="mx-2 text-white/40">•</span>
+                    <a href="/auth?mode=signup&from=demo" className="underline hover:text-white transition-colors font-semibold">
+                        Sign up free to save permanently
+                    </a>
                 </div>
             )}
 
             {/* Header Actions */}
-            <div className={`absolute ${!user ? 'top-14' : 'top-4'} right-2 sm:right-4 z-40 flex flex-col sm:flex-row gap-2`}>
+            <div className={`absolute ${isDemoMode ? 'top-16' : 'top-4'} right-2 sm:right-4 z-40 flex flex-col sm:flex-row gap-2`}>
                 {!isPro && (
                     <Link to="/pricing" className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-brand-gold to-yellow-500 rounded-lg text-brand-blue font-bold hover:shadow-lg transition-all text-xs sm:text-sm whitespace-nowrap">
                         Upgrade
@@ -250,7 +265,7 @@ export default function Dashboard() {
             </div>
 
             {/* Progress Display */}
-            <div className={`absolute ${!user ? 'top-14' : 'top-4'} left-2 sm:left-4 z-40`}>
+            <div className={`absolute ${isDemoMode ? 'top-16' : 'top-4'} left-2 sm:left-4 z-40`}>
                 <div className="bg-black/30 backdrop-blur-md rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 border border-white/10">
                     <div className="text-[10px] sm:text-xs text-white/60">Progress</div>
                     <div className="text-xl sm:text-2xl font-bold text-brand-gold">{Math.round(progress)}%</div>
@@ -453,6 +468,13 @@ export default function Dashboard() {
             <FeedbackModal
                 isOpen={isFeedbackOpen}
                 onClose={() => setIsFeedbackOpen(false)}
+            />
+
+            {/* Signup Prompt Modal */}
+            <SignupPromptModal
+                isOpen={showSignupPrompt}
+                onClose={() => setShowSignupPrompt(false)}
+                promptType={signupPromptType}
             />
         </div>
     )

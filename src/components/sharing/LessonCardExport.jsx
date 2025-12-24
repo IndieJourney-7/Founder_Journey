@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Lightbulb, CheckCircle, XCircle, Share2, Copy } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { useMountain } from '../../context/MountainContext';
+import SignupPromptModal from '../SignupPromptModal';
 
 // Export format configurations for social media
 const EXPORT_FORMATS = {
@@ -90,6 +92,8 @@ const FONT_OPTIONS = {
 export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle }) {
     if (!lesson) return null;
 
+    const { isDemoMode } = useMountain();
+    const [showSignupPrompt, setShowSignupPrompt] = useState(false);
     const isSuccess = lesson.result === 'success';
 
     // User inputs
@@ -145,6 +149,12 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleDownload = () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
         const link = document.createElement('a');
         const formatName = format.name.replace(/[^a-zA-Z0-9]/g, '-');
@@ -154,6 +164,12 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleCopyImage = async () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
 
         try {
@@ -175,6 +191,12 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleShareToX = async () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
 
         // Auto-download the image first
@@ -195,6 +217,12 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
     };
 
     const handleShareToLinkedIn = async () => {
+        // Gate for demo mode
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
         if (!previewUrl) return;
 
         // Auto-download the image first
@@ -619,6 +647,13 @@ export default function LessonCardExport({ isOpen, onClose, lesson, stepTitle })
                     </motion.div>
                 </motion.div>
             )}
+
+            {/* Signup Prompt Modal */}
+            <SignupPromptModal
+                isOpen={showSignupPrompt}
+                onClose={() => setShowSignupPrompt(false)}
+                promptType="share"
+            />
         </AnimatePresence>
     );
 }

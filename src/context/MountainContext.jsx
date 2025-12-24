@@ -1,18 +1,21 @@
 /**
  * Mountain Context
- * 
+ *
  * Manages the user's mountain journey state.
+ * Supports BOTH authenticated (Supabase) and demo mode (localStorage).
+ *
  * Aligned with actual Supabase schema:
  * - mountains (id uuid, user_id uuid, title, target)
  * - steps (id bigint, mountain_id uuid, title, status, order_index)
  * - journey_notes (id bigint, step_id bigint, notes)
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useAuth } from './AuthContext'
 import * as mountainService from '../lib/mountainService'
 import * as stepsService from '../lib/stepsService'
 import * as notesService from '../lib/notesService'
+import * as demoStorage from '../lib/demoModeStorage'
 
 const MountainContext = createContext()
 
@@ -27,19 +30,28 @@ export const MountainProvider = ({ children }) => {
     const [journeyNotes, setJourneyNotes] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [isDemoMode, setIsDemoMode] = useState(false)
 
     /**
-     * Fetch user's mountain on login
+     * Fetch user's mountain (Supabase) OR load demo data (localStorage)
      */
     useEffect(() => {
+        // DEMO MODE: User not logged in
         if (!user) {
-            setCurrentMountain(null)
-            setSteps([])
-            setJourneyNotes([])
+            setIsDemoMode(true)
+            const demoMountain = demoStorage.getDemoMountain() || demoStorage.initializeDemoMountain()
+            const demoSteps = demoStorage.getDemoSteps()
+            const demoNotes = demoStorage.getDemoNotes()
+
+            setCurrentMountain(demoMountain)
+            setSteps(demoSteps)
+            setJourneyNotes(demoNotes)
             setLoading(false)
             return
         }
 
+        // AUTHENTICATED MODE: Load from Supabase
+        setIsDemoMode(false)
         const loadMountain = async () => {
             setLoading(true)
             setError(null)
@@ -118,10 +130,20 @@ export const MountainProvider = ({ children }) => {
             return { success: false, error: 'No mountain selected' }
         }
 
+        // DEMO MODE: Use localStorage
         if (!user) {
-            return { success: false, error: 'Not authenticated' }
+            const result = demoStorage.addDemoStep(stepData)
+            if (result.limitReached) {
+                // Caller should show signup prompt for step limit
+                return result
+            }
+            if (result.success) {
+                setSteps(demoStorage.getDemoSteps())
+            }
+            return result
         }
 
+        // AUTHENTICATED MODE: Use Supabase
         const { step, error: addError } = await stepsService.addStep(
             currentMountain.id,
             stepData,
@@ -142,6 +164,16 @@ export const MountainProvider = ({ children }) => {
      * Update a step's status
      */
     const updateStepStatus = useCallback(async (stepId, status) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const result = demoStorage.updateDemoStep(stepId, { status })
+            if (result.success) {
+                setSteps(demoStorage.getDemoSteps())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE: Use Supabase
         const { step, error: updateError } = await stepsService.updateStepStatus(stepId, status)
 
         if (updateError) {
@@ -151,7 +183,7 @@ export const MountainProvider = ({ children }) => {
 
         setSteps(prev => prev.map(s => s.id === stepId ? step : s))
         return { success: true, step }
-    }, [])
+    }, [user])
 
     /**
      * Save a journey note for a step
@@ -160,6 +192,16 @@ export const MountainProvider = ({ children }) => {
      * @param {string} result - 'success' or 'failed'
      */
     const saveJourneyNote = useCallback(async (stepId, noteData, result) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const demoResult = demoStorage.addDemoNote(stepId, noteData, result)
+            if (demoResult.success) {
+                setJourneyNotes(demoStorage.getDemoNotes())
+            }
+            return demoResult
+        }
+
+        // AUTHENTICATED MODE: Use Supabase
         const { note, error: saveError } = await notesService.saveJourneyNote(stepId, noteData, result)
 
         if (saveError) {
@@ -177,7 +219,7 @@ export const MountainProvider = ({ children }) => {
         })
 
         return { success: true, note }
-    }, [])
+    }, [user])
 
     /**
      * Delete a journey note and reset step to pending
@@ -185,6 +227,22 @@ export const MountainProvider = ({ children }) => {
      * @param {number} noteId - note ID
      */
     const deleteNoteAndResetStep = useCallback(async (stepId, noteId) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const deleteResult = demoStorage.deleteDemoNote(noteId)
+            if (deleteResult.success) {
+                const updateResult = demoStorage.updateDemoStep(stepId, { status: 'pending' })
+                if (updateResult.success) {
+                    setJourneyNotes(demoStorage.getDemoNotes())
+                    setSteps(demoStorage.getDemoSteps())
+                    return { success: true }
+                }
+                return updateResult
+            }
+            return deleteResult
+        }
+
+        // AUTHENTICATED MODE: Use Supabase
         // Delete the note
         const { error: deleteError } = await notesService.deleteJourneyNote(noteId)
         if (deleteError) {
@@ -204,7 +262,7 @@ export const MountainProvider = ({ children }) => {
         setSteps(prev => prev.map(s => s.id === stepId ? step : s))
 
         return { success: true }
-    }, [])
+    }, [user])
 
     /**
      * Increment share count
@@ -253,9 +311,19 @@ export const MountainProvider = ({ children }) => {
     const progress = Math.min((successfulSteps / totalPlanned) * 100, 100)
     /**
      * Delete a step
-     * @param {number} stepId 
+     * @param {number} stepId
      */
     const deleteStep = useCallback(async (stepId) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const result = demoStorage.deleteDemoStep(stepId)
+            if (result.success) {
+                setSteps(demoStorage.getDemoSteps())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE: Use Supabase
         const { error: deleteError } = await stepsService.deleteStep(stepId)
 
         if (deleteError) {
@@ -265,14 +333,24 @@ export const MountainProvider = ({ children }) => {
 
         setSteps(prev => prev.filter(s => s.id !== stepId))
         return { success: true }
-    }, [])
+    }, [user])
 
     /**
      * Edit a step (title, etc)
-     * @param {number} stepId 
-     * @param {object} updates 
+     * @param {number} stepId
+     * @param {object} updates
      */
     const editStep = useCallback(async (stepId, updates) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const result = demoStorage.updateDemoStep(stepId, updates)
+            if (result.success) {
+                setSteps(demoStorage.getDemoSteps())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE: Use Supabase
         const { step, error: updateError } = await stepsService.updateStep(stepId, updates)
 
         if (updateError) {
@@ -282,7 +360,7 @@ export const MountainProvider = ({ children }) => {
 
         setSteps(prev => prev.map(s => s.id === stepId ? step : s))
         return { success: true, step }
-    }, [])
+    }, [user])
 
     const hasMountain = !!currentMountain
 
@@ -294,6 +372,7 @@ export const MountainProvider = ({ children }) => {
         stickyNotes: journeyNotes, // Alias for backward compatibility
         loading,
         error,
+        isDemoMode, // Demo mode flag
 
         // Computed
         progress,
