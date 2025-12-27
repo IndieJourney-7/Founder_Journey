@@ -1,0 +1,15 @@
+# Robots.txt for Shift Journey
+# https://shift-journey.vercel.app
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://shift-journey.vercel.app/sitemap.xml
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 1
+
+# Disallow admin/private routes
+Disallow: /admin
+Disallow: /api/
