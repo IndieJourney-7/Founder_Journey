@@ -28,6 +28,7 @@ export const MountainProvider = ({ children }) => {
     const [currentMountain, setCurrentMountain] = useState(null)
     const [steps, setSteps] = useState([])
     const [journeyNotes, setJourneyNotes] = useState([])
+    const [productImages, setProductImages] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [isDemoMode, setIsDemoMode] = useState(false)
@@ -42,10 +43,12 @@ export const MountainProvider = ({ children }) => {
             const demoMountain = demoStorage.getDemoMountain() || demoStorage.initializeDemoMountain()
             const demoSteps = demoStorage.getDemoSteps()
             const demoNotes = demoStorage.getDemoNotes()
+            const demoImages = demoStorage.getDemoProductImages()
 
             setCurrentMountain(demoMountain)
             setSteps(demoSteps)
             setJourneyNotes(demoNotes)
+            setProductImages(demoImages)
             setLoading(false)
             return
         }
@@ -265,6 +268,51 @@ export const MountainProvider = ({ children }) => {
     }, [user])
 
     /**
+     * Add a product image
+     * @param {object} imageData - { data: base64string, name: string }
+     */
+    const addProductImage = useCallback(async (imageData) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const result = demoStorage.addDemoProductImage(imageData)
+            if (result.success) {
+                setProductImages(demoStorage.getDemoProductImages())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE: TODO - Use Supabase Storage
+        // For now, use localStorage as fallback
+        const result = demoStorage.addDemoProductImage(imageData)
+        if (result.success) {
+            setProductImages(demoStorage.getDemoProductImages())
+        }
+        return result
+    }, [user])
+
+    /**
+     * Delete a product image
+     * @param {string} imageId
+     */
+    const deleteProductImage = useCallback(async (imageId) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const result = demoStorage.deleteDemoProductImage(imageId)
+            if (result.success) {
+                setProductImages(demoStorage.getDemoProductImages())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE: TODO - Use Supabase Storage
+        const result = demoStorage.deleteDemoProductImage(imageId)
+        if (result.success) {
+            setProductImages(demoStorage.getDemoProductImages())
+        }
+        return result
+    }, [user])
+
+    /**
      * Increment share count
      */
     const incrementShareCount = useCallback(async () => {
@@ -370,6 +418,7 @@ export const MountainProvider = ({ children }) => {
         steps,
         journeyNotes,
         stickyNotes: journeyNotes, // Alias for backward compatibility
+        productImages,
         loading,
         error,
         isDemoMode, // Demo mode flag
@@ -392,6 +441,8 @@ export const MountainProvider = ({ children }) => {
         saveJourneyNote,
         deleteNoteAndResetStep,
         addStickyNote: saveJourneyNote, // Alias
+        addProductImage,
+        deleteProductImage,
         refresh,
 
         // Setters

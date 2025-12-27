@@ -8,14 +8,15 @@
 const DEMO_KEYS = {
     MOUNTAIN: 'shift_demo_mountain',
     STEPS: 'shift_demo_steps',
-    NOTES: 'shift_demo_notes'
+    NOTES: 'shift_demo_notes',
+    PRODUCT_IMAGES: 'shift_demo_product_images'
 };
 
 const MAX_DEMO_STEPS = 6; // Match free tier limit
 
 // Generate temporary IDs for demo mode
 const generateDemoId = () => {
-    return `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `demo_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 };
 
 // ============ MOUNTAIN ============
@@ -217,6 +218,85 @@ export const getNotesForDemoStep = (stepId) => {
     } catch (error) {
         console.error('Error getting notes for demo step:', error);
         return [];
+    }
+};
+
+// ============ PRODUCT IMAGES ============
+
+const MAX_PRODUCT_IMAGES = 3; // Limit for demo mode
+
+export const getDemoProductImages = () => {
+    try {
+        const data = localStorage.getItem(DEMO_KEYS.PRODUCT_IMAGES);
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error('Error getting demo product images:', error);
+        return [];
+    }
+};
+
+export const addDemoProductImage = (imageData) => {
+    try {
+        const images = getDemoProductImages();
+
+        // Enforce 3 image limit
+        if (images.length >= MAX_PRODUCT_IMAGES) {
+            return {
+                success: false,
+                error: `Maximum ${MAX_PRODUCT_IMAGES} product images allowed`,
+                limitReached: true
+            };
+        }
+
+        const newImage = {
+            id: generateDemoId(),
+            data: imageData.data, // base64 string
+            name: imageData.name || 'Product Image',
+            order_index: images.length,
+            created_at: new Date().toISOString()
+        };
+
+        images.push(newImage);
+        localStorage.setItem(DEMO_KEYS.PRODUCT_IMAGES, JSON.stringify(images));
+        return { success: true, image: newImage };
+    } catch (error) {
+        console.error('Error adding demo product image:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+export const deleteDemoProductImage = (imageId) => {
+    try {
+        let images = getDemoProductImages();
+        images = images.filter(img => img.id !== imageId);
+
+        // Reorder
+        images = images.map((img, index) => ({
+            ...img,
+            order_index: index
+        }));
+
+        localStorage.setItem(DEMO_KEYS.PRODUCT_IMAGES, JSON.stringify(images));
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting demo product image:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+export const reorderDemoProductImages = (orderedIds) => {
+    try {
+        const images = getDemoProductImages();
+        const reordered = orderedIds.map((id, index) => {
+            const img = images.find(i => i.id === id);
+            return img ? { ...img, order_index: index } : null;
+        }).filter(Boolean);
+
+        localStorage.setItem(DEMO_KEYS.PRODUCT_IMAGES, JSON.stringify(reordered));
+        return { success: true, images: reordered };
+    } catch (error) {
+        console.error('Error reordering demo product images:', error);
+        return { success: false, error: error.message };
     }
 };
 

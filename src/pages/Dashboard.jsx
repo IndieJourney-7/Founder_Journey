@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { Plus, X, Share2, MessageSquare } from 'lucide-react'
+import { Plus, X, Share2, MessageSquare, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMountain } from '../context/MountainContext'
@@ -10,6 +10,8 @@ import MountainDashboard from '../components/mountain/MountainDashboard'
 import StepCard from '../components/StepCard'
 import BannerExportModal from '../components/sharing/BannerExportModal'
 import MinimalBannerExport from '../components/sharing/MinimalBannerExport'
+import ProductShowcaseBanner from '../components/sharing/ProductShowcaseBanner'
+import ProductGallery from '../components/ProductGallery'
 import ReflectionModal from '../components/ReflectionModal'
 import NoteViewer from '../components/NoteViewer'
 import FeedbackModal from '../components/FeedbackModal'
@@ -47,6 +49,7 @@ export default function Dashboard() {
     const [newStep, setNewStep] = useState({ title: '', description: '', expected_outcome: '' })
     const [isExportOpen, setIsExportOpen] = useState(false)
     const [isMinimalExportOpen, setIsMinimalExportOpen] = useState(false)
+    const [isProductBannerOpen, setIsProductBannerOpen] = useState(false)
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
     const [showSignupPrompt, setShowSignupPrompt] = useState(false)
     const [signupPromptType, setSignupPromptType] = useState('stepLimit')
@@ -252,10 +255,20 @@ export default function Dashboard() {
                 >
                     <MessageSquare size={18} className="sm:w-5 sm:h-5" />
                 </button>
+                {/* Product Showcase Banner - Featured */}
+                <button
+                    onClick={() => setIsProductBannerOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-md rounded-lg text-white hover:opacity-90 transition-all border border-white/20 font-medium text-sm"
+                    title="Create Marketing Banner with Product"
+                >
+                    <Sparkles size={16} />
+                    <span className="hidden sm:inline">Create Banner</span>
+                </button>
+                {/* Classic Banner */}
                 <button
                     onClick={handleExportClick}
                     className={`p-2 backdrop-blur-md rounded-full transition-colors border ${!isPro ? 'bg-black/10 text-white/30 border-white/5 cursor-not-allowed' : 'bg-black/30 text-white hover:bg-white/10 border-white/10'}`}
-                    title={!isPro ? "Upgrade to Pro to create banners" : "Create Progress Banner"}
+                    title={!isPro ? "Upgrade to Pro for classic banners" : "Classic Progress Banner"}
                 >
                     <Share2 size={18} className="sm:w-5 sm:h-5" />
                 </button>
@@ -308,6 +321,11 @@ export default function Dashboard() {
             {/* Steps Panel */}
             <div className="h-1/3 min-h-[250px] bg-brand-blue border-t border-white/10 p-3 sm:p-6 overflow-y-auto">
                 <div className="max-w-6xl mx-auto">
+                    {/* Product Gallery - Collapsible Section */}
+                    <div className="mb-6">
+                        <ProductGallery />
+                    </div>
+
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
                         <div>
                             <h3 className="text-lg sm:text-xl font-bold">Your Strategies</h3>
@@ -446,6 +464,12 @@ export default function Dashboard() {
                 note={noteViewer.note}
                 onEdit={handleEditNote}
                 onDelete={handleDeleteNote}
+            />
+
+            {/* Product Showcase Banner - NEW */}
+            <ProductShowcaseBanner
+                isOpen={isProductBannerOpen}
+                onClose={() => setIsProductBannerOpen(false)}
             />
 
             {/* Minimal Banner Export Modal */}
