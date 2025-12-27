@@ -131,6 +131,28 @@ const FONTS = {
     bold: '"Archivo Black", "Impact", sans-serif'
 };
 
+// Professional S-curve mountain path
+const MOUNTAIN_PATH = "M150 850 C 300 800, 400 700, 550 600 C 700 500, 850 400, 1000 300 C 1100 250, 1150 220, 1250 180";
+
+// Calculate point on path at given progress
+const getPointOnPath = (pathString, progress) => {
+    try {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathString);
+        svg.appendChild(path);
+        document.body.appendChild(svg);
+
+        const pathLength = path.getTotalLength();
+        const point = path.getPointAtLength((progress / 100) * pathLength);
+
+        document.body.removeChild(svg);
+        return point;
+    } catch (e) {
+        return { x: 150, y: 850 };
+    }
+};
+
 export default function ProductShowcaseBanner({ isOpen, onClose }) {
     const {
         currentMountain,
@@ -146,11 +168,13 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
     // User inputs
     const [headline, setHeadline] = useState(currentMountain?.title || 'Building Something Amazing');
     const [subheadline, setSubheadline] = useState('');
+    const [goalTarget, setGoalTarget] = useState(currentMountain?.target || '$1K MRR');
     const [metric, setMetric] = useState({ label: 'Revenue', value: '$0', show: true });
     const [dayCount, setDayCount] = useState('1');
     const [quote, setQuote] = useState('The journey of a thousand miles begins with a single step');
     const [cta, setCta] = useState({ text: '', url: 'shift-journey.vercel.app', show: true });
     const [selectedProductImage, setSelectedProductImage] = useState(null);
+    const [showMountainPath, setShowMountainPath] = useState(true);
 
     // Export settings
     const [selectedFormat, setSelectedFormat] = useState('twitter');
@@ -172,13 +196,20 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
         }
     }, [productImages]);
 
+    // Calculate safe progress
+    const safeProgress = Math.round(progress || 0);
+
+    // Calculate climber position on path
+    const climberPoint = safeProgress > 0 ? getPointOnPath(MOUNTAIN_PATH, Math.min(safeProgress, 95)) : { x: 150, y: 850 };
+    const peakPoint = { x: 1250, y: 180 };
+
     // Generate preview
     useEffect(() => {
         if (isOpen && exportRef.current) {
             const timer = setTimeout(generatePreview, 300);
             return () => clearTimeout(timer);
         }
-    }, [isOpen, selectedFormat, selectedTheme, selectedLayout, selectedFont, headline, subheadline, metric, dayCount, quote, cta, selectedProductImage]);
+    }, [isOpen, selectedFormat, selectedTheme, selectedLayout, selectedFont, headline, subheadline, metric, dayCount, quote, cta, selectedProductImage, goalTarget, showMountainPath]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -255,9 +286,6 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(cta.url || 'https://shift-journey.vercel.app')}`, '_blank');
         }, 500);
     };
-
-    // Calculate safe progress
-    const safeProgress = Math.round(progress || 0);
 
     // ============ LAYOUT RENDERERS ============
 
@@ -630,26 +658,62 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                 fontFamily: FONTS[selectedFont],
                 overflow: 'hidden'
             }}>
-                {/* Mountain SVG Background */}
-                <svg
-                    viewBox="0 0 1500 500"
-                    preserveAspectRatio="xMidYMid slice"
-                    style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '60%',
-                        opacity: 0.15
-                    }}
-                >
-                    <path
-                        d="M0 500 L300 200 L450 300 L750 100 L1050 280 L1200 180 L1500 400 L1500 500 Z"
-                        fill={theme.accent}
-                    />
-                </svg>
+                {/* SVG Journey Path with Mountain */}
+                {showMountainPath && (
+                    <svg
+                        width={format.width}
+                        height={format.height}
+                        viewBox="0 0 1440 900"
+                        preserveAspectRatio="xMidYMid meet"
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    >
+                        {/* Journey Path - Remaining (dotted) */}
+                        <path
+                            d={MOUNTAIN_PATH}
+                            stroke="rgba(255, 255, 255, 0.15)"
+                            strokeWidth="4"
+                            strokeDasharray="12 12"
+                            strokeLinecap="round"
+                            fill="none"
+                        />
 
-                {/* Content */}
+                        {/* Journey Path - Completed (solid glowing) */}
+                        <path
+                            d={MOUNTAIN_PATH}
+                            stroke={theme.accent}
+                            strokeWidth="6"
+                            strokeLinecap="round"
+                            fill="none"
+                            strokeDasharray={`${safeProgress * 16} ${1600 - safeProgress * 16}`}
+                            style={{ filter: `drop-shadow(0 0 12px ${theme.glow})` }}
+                        />
+
+                        {/* Climber Dot with glow */}
+                        {safeProgress > 0 && (
+                            <g>
+                                <circle cx={climberPoint.x} cy={climberPoint.y} r="22" fill={theme.accent} opacity="0.3" />
+                                <circle cx={climberPoint.x} cy={climberPoint.y} r="14" fill={theme.accent} stroke="#ffffff" strokeWidth="3" />
+                            </g>
+                        )}
+
+                        {/* Goal Flag at Peak */}
+                        <g>
+                            <line x1={peakPoint.x} y1={peakPoint.y} x2={peakPoint.x} y2={peakPoint.y - 90} stroke={theme.accent} strokeWidth="6" />
+                            <path
+                                d={`M ${peakPoint.x},${peakPoint.y - 90} L ${peakPoint.x + 75},${peakPoint.y - 65} L ${peakPoint.x},${peakPoint.y - 40} Z`}
+                                fill={theme.accent}
+                                stroke="#ffffff"
+                                strokeWidth="2.5"
+                            />
+                            <text x={peakPoint.x} y={peakPoint.y - 105} fill={theme.text} fontSize="32" fontWeight="bold" textAnchor="middle"
+                                style={{ filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.9))' }}>
+                                {goalTarget}
+                            </text>
+                        </g>
+                    </svg>
+                )}
+
+                {/* Content Overlay */}
                 <div style={{
                     position: 'relative',
                     width: '100%',
@@ -664,14 +728,16 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                         flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '16px'
+                        gap: '16px',
+                        maxWidth: '50%'
                     }}>
                         <h1 style={{
                             fontSize: `${Math.min(format.width * 0.038, 52)}px`,
                             fontWeight: 800,
                             color: theme.text,
                             margin: 0,
-                            lineHeight: 1.1
+                            lineHeight: 1.1,
+                            textShadow: '0 4px 12px rgba(0,0,0,0.9)'
                         }}>
                             {headline}
                         </h1>
@@ -682,7 +748,8 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                                 color: theme.muted,
                                 fontStyle: 'italic',
                                 margin: 0,
-                                maxWidth: '450px'
+                                maxWidth: '400px',
+                                textShadow: '0 2px 6px rgba(0,0,0,0.8)'
                             }}>
                                 "{quote}"
                             </p>
@@ -695,10 +762,12 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                             gap: '20px',
                             marginTop: '10px',
                             padding: '16px 24px',
-                            background: 'rgba(0,0,0,0.3)',
+                            background: 'rgba(0,0,0,0.5)',
                             borderRadius: '16px',
                             backdropFilter: 'blur(10px)',
-                            width: 'fit-content'
+                            width: 'fit-content',
+                            border: `2px solid ${theme.accent}40`,
+                            boxShadow: `0 8px 24px rgba(0,0,0,0.5)`
                         }}>
                             <div>
                                 <div style={{ fontSize: '28px', fontWeight: 800, color: theme.accent }}>
@@ -756,7 +825,8 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                         right: '40px',
                         fontSize: '13px',
                         color: theme.muted,
-                        fontFamily: FONTS.technical
+                        fontFamily: FONTS.technical,
+                        textShadow: '0 2px 4px rgba(0,0,0,0.6)'
                     }}>
                         {cta.url}
                     </div>
@@ -1085,6 +1155,25 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                                             </button>
                                         ))}
                                     </div>
+
+                                    {/* Mountain Path Toggle - Only for Journey Focus */}
+                                    {selectedLayout === 'journey_focus' && (
+                                        <div className="mt-3 flex items-center gap-3">
+                                            <button
+                                                onClick={() => setShowMountainPath(!showMountainPath)}
+                                                className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                                                    showMountainPath
+                                                        ? 'border-brand-teal bg-brand-teal/10 text-white'
+                                                        : 'border-white/10 text-white/50'
+                                                }`}
+                                            >
+                                                Show Mountain Path
+                                            </button>
+                                            <span className="text-xs text-white/40">
+                                                Displays journey progress with goal at peak
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Product Images */}
@@ -1131,6 +1220,16 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
+                                            <label className="text-sm font-bold text-white mb-2 block">Goal Target (Peak)</label>
+                                            <input
+                                                type="text"
+                                                value={goalTarget}
+                                                onChange={(e) => setGoalTarget(e.target.value)}
+                                                placeholder="$1K MRR"
+                                                className="w-full px-4 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
+                                            />
+                                        </div>
+                                        <div>
                                             <label className="text-sm font-bold text-white mb-2 block">Day</label>
                                             <input
                                                 type="text"
@@ -1139,16 +1238,17 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                                                 className="w-full px-4 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white focus:border-brand-teal focus:outline-none"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="text-sm font-bold text-white mb-2 block">Metric Value</label>
-                                            <input
-                                                type="text"
-                                                value={metric.value}
-                                                onChange={(e) => setMetric({ ...metric, value: e.target.value })}
-                                                placeholder="$1,234"
-                                                className="w-full px-4 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
-                                            />
-                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-bold text-white mb-2 block">Current Metric Value</label>
+                                        <input
+                                            type="text"
+                                            value={metric.value}
+                                            onChange={(e) => setMetric({ ...metric, value: e.target.value })}
+                                            placeholder="$347"
+                                            className="w-full px-4 py-2.5 rounded-xl bg-black/30 border border-white/10 text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
+                                        />
                                     </div>
 
                                     <div>
