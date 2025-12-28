@@ -203,7 +203,7 @@ export const MountainProvider = ({ children }) => {
     }, [user])
 
     /**
-     * Save a journey note for a step
+     * Save a journey note for a step (ALWAYS creates a new note - supports multiple notes per step)
      * @param {number} stepId - step ID
      * @param {object} noteData - { reflection_text, lesson_learned }
      * @param {string} result - 'success' or 'failed'
@@ -218,28 +218,28 @@ export const MountainProvider = ({ children }) => {
             return demoResult
         }
 
-        // AUTHENTICATED MODE: Use Supabase
-        const { note, error: saveError } = await notesService.saveJourneyNote(stepId, noteData, result)
+        // AUTHENTICATED MODE: Use Supabase - ALWAYS create new note (supports multiple per step)
+        const { note, error: saveError } = await notesService.createJourneyNote(stepId, {
+            title: noteData.lesson_learned?.slice(0, 60) || 'Lesson', // Use lesson as title
+            reflection_text: noteData.reflection_text,
+            lesson_learned: noteData.lesson_learned
+        }, result)
 
         if (saveError) {
             setError(saveError.message)
             return { success: false, error: saveError }
         }
 
-        // Update or add the note in state
-        setJourneyNotes(prev => {
-            const exists = prev.find(n => n.step_id === stepId)
-            if (exists) {
-                return prev.map(n => n.step_id === stepId ? note : n)
-            }
-            return [...prev, note]
-        })
+        // ALWAYS add the new note to state (never replace)
+        setJourneyNotes(prev => [...prev, note])
 
         return { success: true, note }
     }, [user])
 
     /**
-     * Delete a journey note and reset step to pending
+     * Delete a journey note (supports multiple notes per step)
+     * - If other notes remain, step status = latest remaining note's result
+     * - If no notes remain, step status = pending
      * @param {number} stepId - step ID
      * @param {number} noteId - note ID
      */
@@ -248,7 +248,16 @@ export const MountainProvider = ({ children }) => {
         if (!user) {
             const deleteResult = demoStorage.deleteDemoNote(noteId)
             if (deleteResult.success) {
-                const updateResult = demoStorage.updateDemoStep(stepId, { status: 'pending' })
+                const remainingNotes = demoStorage.getDemoNotes().filter(n => n.step_id === stepId)
+
+                // Determine new status based on remaining notes
+                let newStatus = 'pending'
+                if (remainingNotes.length > 0) {
+                    const latestNote = remainingNotes[remainingNotes.length - 1]
+                    newStatus = latestNote.result === 'failure' ? 'failed' : latestNote.result
+                }
+
+                const updateResult = demoStorage.updateDemoStep(stepId, { status: newStatus })
                 if (updateResult.success) {
                     setJourneyNotes(demoStorage.getDemoNotes())
                     setSteps(demoStorage.getDemoSteps())
@@ -267,8 +276,18 @@ export const MountainProvider = ({ children }) => {
             return { success: false, error: deleteError }
         }
 
-        // Reset step to pending
-        const { step, error: updateError } = await stepsService.updateStepStatus(stepId, 'pending')
+        // Update notes state first
+        const remainingNotes = journeyNotes.filter(n => n.id !== noteId && n.step_id === stepId)
+
+        // Determine new status based on remaining notes
+        let newStatus = 'pending'
+        if (remainingNotes.length > 0) {
+            const latestNote = remainingNotes[remainingNotes.length - 1]
+            newStatus = latestNote.result === 'failure' ? 'failed' : latestNote.result
+        }
+
+        // Update step status
+        const { step, error: updateError } = await stepsService.updateStepStatus(stepId, newStatus)
         if (updateError) {
             setError(updateError.message)
             return { success: false, error: updateError }
@@ -279,7 +298,7 @@ export const MountainProvider = ({ children }) => {
         setSteps(prev => prev.map(s => s.id === stepId ? step : s))
 
         return { success: true }
-    }, [user])
+    }, [user, journeyNotes])
 
     /**
      * Add a product image
