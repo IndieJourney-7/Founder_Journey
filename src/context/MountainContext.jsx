@@ -374,10 +374,15 @@ export const MountainProvider = ({ children }) => {
     const totalPlanned = currentMountain?.total_steps_planned || steps.length || 1
 
     // Check if using metric-based progress
+    // hasMetricProgress is TRUE when target_value is set and > 0
     const hasMetricProgress = currentMountain?.target_value && currentMountain.target_value > 0
+
+    // Calculate metric progress - handle null/undefined current_value as 0
+    const currentValue = currentMountain?.current_value ?? 0
     const metricProgress = hasMetricProgress
-        ? Math.min((currentMountain.current_value / currentMountain.target_value) * 100, 100)
+        ? Math.min((currentValue / currentMountain.target_value) * 100, 100)
         : null
+
     const stepProgress = Math.min((successfulSteps / totalPlanned) * 100, 100)
 
     // Use metric progress if available, otherwise use step progress

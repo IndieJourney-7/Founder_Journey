@@ -413,10 +413,17 @@ export const initializeInspiringDemo = () => {
     }
 
     // Create an inspiring SaaS journey - Day 47
+    // Note: Metric tracking fields start as null - user sets up via MetricProgressModal
     const mountain = saveDemoMountain({
         title: '$10K MRR Journey',
         target: '$10,000 MRR',
         total_steps_planned: 6,
+        // Metric fields start null (step-based progress by default)
+        target_value: null,
+        current_value: 0,
+        metric_prefix: '',
+        metric_suffix: '',
+        progress_history: [],
         created_at: new Date(Date.now() - 47 * 24 * 60 * 60 * 1000).toISOString() // 47 days ago
     });
 
