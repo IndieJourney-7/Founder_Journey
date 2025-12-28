@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { Plus, X, Share2, MessageSquare, Sparkles } from 'lucide-react'
+import { Plus, X, Share2, MessageSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMountain } from '../context/MountainContext'
 import { usePlanLimits } from '../hooks/usePlanLimits'
 import MountainDashboard from '../components/mountain/MountainDashboard'
 import StepCard from '../components/StepCard'
-import BannerExportModal from '../components/sharing/BannerExportModal'
-import MinimalBannerExport from '../components/sharing/MinimalBannerExport'
 import ProductShowcaseBanner from '../components/sharing/ProductShowcaseBanner'
 import ProductGallery from '../components/ProductGallery'
 import ReflectionModal from '../components/ReflectionModal'
@@ -47,13 +45,10 @@ export default function Dashboard() {
     const [isAddingStep, setIsAddingStep] = useState(false)
     const [editingStep, setEditingStep] = useState(null) // New state for editing
     const [newStep, setNewStep] = useState({ title: '', description: '', expected_outcome: '' })
-    const [isExportOpen, setIsExportOpen] = useState(false)
-    const [isMinimalExportOpen, setIsMinimalExportOpen] = useState(false)
     const [isProductBannerOpen, setIsProductBannerOpen] = useState(false)
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
     const [showSignupPrompt, setShowSignupPrompt] = useState(false)
     const [signupPromptType, setSignupPromptType] = useState('stepLimit')
-    const mountainRef = useRef(null)
 
     // Reflection Modal State
     const [reflectionModal, setReflectionModal] = useState({
@@ -217,14 +212,6 @@ export default function Dashboard() {
         setIsAddingStep(true)
     }
 
-    const handleExportClick = () => {
-        if (!checkLimit('export')) {
-            alert("Upgrade to Pro to create custom banners for social media!")
-            return
-        }
-        setIsMinimalExportOpen(true)
-    }
-
     return (
         <div className="flex-1 flex flex-col relative">
             {/* Demo Mode Banner */}
@@ -255,22 +242,14 @@ export default function Dashboard() {
                 >
                     <MessageSquare size={18} className="sm:w-5 sm:h-5" />
                 </button>
-                {/* Product Showcase Banner - Featured */}
+                {/* Share Banner */}
                 <button
                     onClick={() => setIsProductBannerOpen(true)}
                     className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-md rounded-lg text-white hover:opacity-90 transition-all border border-white/20 font-medium text-sm"
-                    title="Create Marketing Banner with Product"
+                    title="Create & Share Progress Banner"
                 >
-                    <Sparkles size={16} />
-                    <span className="hidden sm:inline">Create Banner</span>
-                </button>
-                {/* Classic Banner */}
-                <button
-                    onClick={handleExportClick}
-                    className={`p-2 backdrop-blur-md rounded-full transition-colors border ${!isPro ? 'bg-black/10 text-white/30 border-white/5 cursor-not-allowed' : 'bg-black/30 text-white hover:bg-white/10 border-white/10'}`}
-                    title={!isPro ? "Upgrade to Pro for classic banners" : "Classic Progress Banner"}
-                >
-                    <Share2 size={18} className="sm:w-5 sm:h-5" />
+                    <Share2 size={16} />
+                    <span className="hidden sm:inline">Share</span>
                 </button>
             </div>
 
@@ -472,18 +451,6 @@ export default function Dashboard() {
                 onClose={() => setIsProductBannerOpen(false)}
             />
 
-            {/* Minimal Banner Export Modal */}
-            <MinimalBannerExport
-                isOpen={isMinimalExportOpen}
-                onClose={() => setIsMinimalExportOpen(false)}
-            />
-
-            {/* Banner Export Modal (Original) */}
-            <BannerExportModal
-                isOpen={isExportOpen}
-                onClose={() => setIsExportOpen(false)}
-                mountainRef={mountainRef}
-            />
 
             {/* Feedback Modal */}
             <FeedbackModal
