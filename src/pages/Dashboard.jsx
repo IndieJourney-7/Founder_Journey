@@ -70,7 +70,12 @@ export default function Dashboard() {
         note: null
     })
 
-    // Get note for a step
+    // Get ALL notes for a step (supports multiple notes per step)
+    const getNotesForStep = (stepId) => {
+        return journeyNotes.filter(n => n.step_id === stepId)
+    }
+
+    // Legacy: Get single note for a step (for backward compatibility)
     const getNoteForStep = (stepId) => {
         return journeyNotes.find(n => n.step_id === stepId)
     }
@@ -154,29 +159,29 @@ export default function Dashboard() {
         setNewStep({ title: '', description: '', expected_outcome: '' })
     }
 
-    // Open reflection modal when clicking Success/Fail
-    const handleStepAction = (stepId, result) => {
-        // DEMO MODE: Allow adding notes locally
-        const step = steps.find(s => s.id === stepId)
+    // Open reflection modal to add a new note (NEW FLOW)
+    const handleAddNote = (step) => {
         setReflectionModal({
             isOpen: true,
             step: step,
-            result: result,
+            result: null, // No pre-selected result - user chooses inside modal
             editingNote: null
         })
     }
 
-    // Save reflection and update step status
+    // Save reflection - result now comes from noteData (NEW FLOW)
     const handleReflectionSave = async (noteData) => {
-        const { step, result, editingNote } = reflectionModal
+        const { step } = reflectionModal
+        const result = noteData.result // Result is now inside noteData
 
-        // Save the journey note
-        await saveJourneyNote(step.id, noteData, result)
+        // Save the journey note with the result
+        await saveJourneyNote(step.id, {
+            reflection_text: noteData.reflection_text,
+            lesson_learned: noteData.lesson_learned
+        }, result)
 
-        // Only update step status if not editing an existing note
-        if (!editingNote) {
-            await updateStepStatus(step.id, result)
-        }
+        // Update step status based on the note result
+        await updateStepStatus(step.id, result)
 
         setReflectionModal({ isOpen: false, step: null, result: null, editingNote: null })
     }
@@ -376,8 +381,8 @@ export default function Dashboard() {
                                 <StepCard
                                     key={step.id}
                                     step={step}
-                                    note={getNoteForStep(step.id)}
-                                    onUpdateStatus={handleStepAction}
+                                    notes={getNotesForStep(step.id)}
+                                    onAddNote={handleAddNote}
                                     onViewNote={handleViewNote}
                                     onDelete={handleDeleteStep}
                                     onEdit={handleEditStepClick}
