@@ -40,7 +40,13 @@ export const MountainProvider = ({ children }) => {
         // DEMO MODE: User not logged in
         if (!user) {
             setIsDemoMode(true)
-            const demoMountain = demoStorage.getDemoMountain() || demoStorage.initializeDemoMountain()
+
+            // Initialize with inspiring pre-populated demo if no existing data
+            if (!demoStorage.hasDemoData()) {
+                demoStorage.initializeInspiringDemo()
+            }
+
+            const demoMountain = demoStorage.getDemoMountain()
             const demoSteps = demoStorage.getDemoSteps()
             const demoNotes = demoStorage.getDemoNotes()
             const demoImages = demoStorage.getDemoProductImages()
