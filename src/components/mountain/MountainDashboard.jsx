@@ -9,7 +9,23 @@ import StepDetailModal from './StepDetailModal';
 import LessonModal from '../lessons/LessonModal';
 import confetti from 'canvas-confetti';
 
-const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepClick, onAddStickyNote, onRefreshNotes, missionName, goalTarget, titleSize = "text-6xl md:text-7xl" }) => {
+const MountainDashboard = ({
+    steps = [],
+    stickyNotes = [],
+    progress = 0,
+    onStepClick,
+    onAddStickyNote,
+    onRefreshNotes,
+    missionName,
+    goalTarget,
+    titleSize = "text-6xl md:text-7xl",
+    // Metric tracking props
+    hasMetricProgress = false,
+    currentValue = 0,
+    targetValue = 0,
+    metricPrefix = '',
+    metricSuffix = ''
+}) => {
     const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
     const [currentStepForLesson, setCurrentStepForLesson] = useState(null);
     const [avatarNudge, setAvatarNudge] = useState(0);
@@ -144,7 +160,7 @@ const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepC
                     );
                 })}
 
-                {/* Avatar */}
+                {/* Avatar with Metric Badge */}
                 <motion.div
                     className="absolute z-30 pointer-events-none transition-all duration-1000 ease-in-out"
                     style={{
@@ -154,6 +170,18 @@ const MountainDashboard = ({ steps = [], stickyNotes = [], progress = 0, onStepC
                     }}
                 >
                     <ClimberAvatar progress={progress + avatarNudge} />
+                    {/* Current Metric Value Badge (shows near climber when metric tracking is active) */}
+                    {hasMetricProgress && currentValue > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap"
+                        >
+                            <div className="bg-brand-teal text-white font-bold px-2 py-1 rounded-full text-xs shadow-lg border border-white/30">
+                                {metricPrefix}{currentValue >= 1000 ? `${(currentValue/1000).toFixed(1)}K` : currentValue.toLocaleString()}{metricSuffix ? ` ${metricSuffix}` : ''}
+                            </div>
+                        </motion.div>
+                    )}
                 </motion.div>
 
                 {/* Summit Goal & Target */}

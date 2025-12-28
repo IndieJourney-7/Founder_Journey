@@ -293,6 +293,12 @@ export default function Dashboard() {
                     theme={theme}
                     missionName={missionName}
                     goalTarget={goal.goal_amount}
+                    // Metric tracking props for mountain visualization
+                    hasMetricProgress={hasMetricProgress}
+                    currentValue={currentMountain?.current_value || 0}
+                    targetValue={currentMountain?.target_value || 0}
+                    metricPrefix={currentMountain?.metric_prefix || ''}
+                    metricSuffix={currentMountain?.metric_suffix || ''}
                     onStepClick={(step) => {
                         const note = getNoteForStep(step.id)
                         if (note) handleViewNote(step, note)
