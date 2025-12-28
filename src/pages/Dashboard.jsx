@@ -5,6 +5,7 @@ import { Plus, X, Share2, MessageSquare, TrendingUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMountain } from '../context/MountainContext'
+import { useToast } from '../context/ToastContext'
 import { usePlanLimits } from '../hooks/usePlanLimits'
 import MountainDashboard from '../components/mountain/MountainDashboard'
 import StepCard from '../components/StepCard'
@@ -38,6 +39,7 @@ export default function Dashboard() {
         setupMetricTracking
     } = useMountain()
     const { checkLimit, isPro } = usePlanLimits()
+    const toast = useToast()
 
     // Data
     const steps = contextSteps || []
@@ -119,13 +121,13 @@ export default function Dashboard() {
 
         // Check limits if adding new step (not editing)
         if (!editingStep && !checkLimit('add_step')) {
-            alert("You've reached the step limit for the Free plan. Upgrade to Pro!")
+            toast.warning('Limit Reached', "You've reached the step limit. Upgrade to Pro!")
             return
         }
 
         // Integrity Check: Previous step must be resolved (only if adding new)
         if (!editingStep && !checkPreviousStepResolved()) {
-            alert("Reflect on the previous step before continuing your journey.")
+            toast.info('Add a Note First', 'Reflect on the previous step before continuing.')
             return
         }
 
@@ -137,6 +139,7 @@ export default function Dashboard() {
                 description: newStep.description,
                 expected_outcome: newStep.expected_outcome
             })
+            toast.success('Step Updated', 'Your strategy has been updated.')
         } else {
             // Add mode
             const result = await addStep({
@@ -152,6 +155,8 @@ export default function Dashboard() {
                 setShowSignupPrompt(true)
                 return
             }
+
+            toast.success('Step Added', 'New strategy added to your journey!')
         }
 
         setIsAddingStep(false)
@@ -184,6 +189,13 @@ export default function Dashboard() {
         await updateStepStatus(step.id, result)
 
         setReflectionModal({ isOpen: false, step: null, result: null, editingNote: null })
+
+        // Show toast based on result
+        if (result === 'success') {
+            toast.success('Lesson Saved', 'Great win! Your lesson has been recorded.')
+        } else {
+            toast.info('Lesson Saved', 'Learning from setbacks makes you stronger.')
+        }
     }
 
     // Open note viewer
@@ -204,11 +216,13 @@ export default function Dashboard() {
     // Delete note and reset step
     const handleDeleteNote = async (stepId, noteId) => {
         await deleteNoteAndResetStep(stepId, noteId)
+        toast.success('Note Deleted', 'Your note has been removed.')
     }
 
     const handleDeleteStep = async (stepId) => {
         if (window.confirm('Are you sure you want to delete this step? This cannot be undone.')) {
             await deleteStep(stepId)
+            toast.success('Step Deleted', 'Your step has been removed.')
         }
     }
 

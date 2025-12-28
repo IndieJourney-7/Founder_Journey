@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { MountainProvider, useMountain } from './context/MountainContext'
+import { ToastProvider } from './context/ToastContext'
 import Layout from './components/Layout'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
@@ -96,8 +97,9 @@ export default function App() {
     return (
         <AuthProvider>
             <MountainProvider>
-                <BrowserRouter>
-                    <Routes>
+                <ToastProvider>
+                    <BrowserRouter>
+                        <Routes>
                         <Route path="/" element={<Layout />}>
                             <Route index element={<Landing />} />
                             <Route path="auth" element={<Auth />} />
@@ -130,14 +132,15 @@ export default function App() {
                             } />
                         </Route>
 
-                        {/* Admin Route - Isolated from Layout */}
-                        <Route path="admin" element={
-                            <ProtectedRoute>
-                                <Admin />
-                            </ProtectedRoute>
-                        } />
-                    </Routes>
-                </BrowserRouter>
+                            {/* Admin Route - Isolated from Layout */}
+                            <Route path="admin" element={
+                                <ProtectedRoute>
+                                    <Admin />
+                                </ProtectedRoute>
+                            } />
+                        </Routes>
+                    </BrowserRouter>
+                </ToastProvider>
             </MountainProvider>
         </AuthProvider>
     )
