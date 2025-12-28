@@ -264,27 +264,71 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
         }
     };
 
-    const handleShareToX = () => {
-        if (isDemoMode) {
-            setShowSignupPrompt(true);
-            return;
+    // Generate viral tweet text for banners
+    const generateBannerTweetText = () => {
+        const hashtags = '#buildinpublic #startups #indiehackers';
+        const trackingUrl = `\n\n🏔️ ${cta.url || 'shift-journey.vercel.app'}`;
+
+        if (selectedLayout === 'product_hero') {
+            return `🚀 ${headline}\n\n📊 Day ${dayCount} Progress:\n• ${safeProgress}% to ${goalTarget}\n• ${successfulSteps} milestones hit\n\n${quote ? `"${quote.slice(0, 100)}${quote.length > 100 ? '...' : ''}"` : ''}\n\n${hashtags}${trackingUrl}`;
+        } else if (selectedLayout === 'journey_focus') {
+            return `🏔️ Day ${dayCount} of building ${headline}\n\n📈 ${safeProgress}% of the way to ${goalTarget}\n\n${successfulSteps} wins | ${steps.length} total steps\n\nThe climb continues...\n\n${hashtags}${trackingUrl}`;
+        } else if (selectedLayout === 'stats_card') {
+            return `📊 Weekly Stats Update:\n\n🎯 Goal: ${goalTarget}\n📈 Progress: ${safeProgress}%\n✅ Wins: ${successfulSteps}\n📅 Day: ${dayCount}\n\n${quote ? `"${quote.slice(0, 80)}..."` : ''}\n\n${hashtags}${trackingUrl}`;
+        } else if (selectedLayout === 'minimal_clean') {
+            return `${headline}\n\n${subheadline ? `${subheadline}\n\n` : ''}Day ${dayCount} • ${safeProgress}% progress\n\n${hashtags}${trackingUrl}`;
+        } else {
+            // split_screen
+            return `🚀 ${headline}\n\n${quote ? `"${quote.slice(0, 120)}${quote.length > 120 ? '...' : ''}"` : ''}\n\n📊 ${safeProgress}% to ${goalTarget}\n\n${hashtags}${trackingUrl}`;
         }
-        handleDownload();
-        setTimeout(() => {
-            const tweetText = `${headline}\n\n${quote}\n\n${cta.url}`;
-            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
-        }, 500);
     };
 
-    const handleShareToLinkedIn = () => {
+    const [bannerTweetText, setBannerTweetText] = useState('');
+    const [copySuccess, setCopySuccess] = useState(false);
+
+    // Update tweet text when inputs change
+    useEffect(() => {
+        setBannerTweetText(generateBannerTweetText());
+    }, [selectedLayout, headline, subheadline, quote, dayCount, safeProgress, goalTarget, successfulSteps, cta.url]);
+
+    const handleCopyTweet = async () => {
+        try {
+            await navigator.clipboard.writeText(bannerTweetText);
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        } catch (error) {
+            console.error('Failed to copy tweet:', error);
+        }
+    };
+
+    const handleShareToX = async () => {
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
+
+        // Download image + copy tweet text
         handleDownload();
-        setTimeout(() => {
-            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(cta.url || 'https://shift-journey.vercel.app')}`, '_blank');
-        }, 500);
+        await navigator.clipboard.writeText(bannerTweetText);
+
+        // Show instructions
+        alert('✅ Image downloaded + Tweet copied!\n\n1. Open X/Twitter\n2. Click "Post"\n3. Paste the text (Ctrl+V)\n4. Attach the downloaded image\n5. Post! 🚀');
+    };
+
+    const handleShareToLinkedIn = async () => {
+        if (isDemoMode) {
+            setShowSignupPrompt(true);
+            return;
+        }
+
+        // Generate LinkedIn-specific text
+        const linkedInText = `${headline}\n\n${quote ? `${quote}\n\n` : ''}📊 Progress Update:\n• Day ${dayCount} of the journey\n• ${safeProgress}% towards ${goalTarget}\n• ${successfulSteps} milestones achieved\n\n#BuildInPublic #Startups #FounderLife #Entrepreneurship`;
+
+        // Copy text and download image
+        await navigator.clipboard.writeText(linkedInText);
+        handleDownload();
+
+        alert('✅ Image downloaded + Post text copied!\n\n1. Open LinkedIn\n2. Start a new post\n3. Paste the text (Ctrl+V)\n4. Attach the downloaded image\n5. Post! 🚀');
     };
 
     // ============ LAYOUT RENDERERS ============
@@ -1323,46 +1367,71 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                                     </div>
                                 </div>
 
-                                {/* Action Buttons */}
-                                <div className="space-y-3 pt-2">
-                                    <button
-                                        onClick={handleDownload}
-                                        disabled={isGenerating || !previewUrl}
-                                        className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-teal to-emerald-500 text-white font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        <Download size={20} />
-                                        Download HD Banner
-                                    </button>
-
-                                    <button
-                                        onClick={handleCopyImage}
-                                        disabled={isGenerating || !previewUrl}
-                                        className="w-full py-2.5 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        <Copy size={18} />
-                                        Copy to Clipboard
-                                    </button>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={handleShareToX}
-                                            disabled={isGenerating || !previewUrl}
-                                            className="py-2.5 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-                                        >
+                                {/* Tweet Preview Section */}
+                                <div className="pt-3 border-t border-white/10">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-bold text-white flex items-center gap-2">
                                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                                             </svg>
-                                            Share to X
+                                            Tweet Preview
+                                        </label>
+                                        <button
+                                            onClick={handleCopyTweet}
+                                            className="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-white/70 hover:text-white transition-colors flex items-center gap-1"
+                                        >
+                                            <Copy size={12} />
+                                            {copySuccess ? 'Copied!' : 'Copy'}
+                                        </button>
+                                    </div>
+                                    <div className="p-3 bg-black/40 rounded-xl border border-white/10 max-h-28 overflow-y-auto">
+                                        <p className="text-white/80 text-xs whitespace-pre-wrap leading-relaxed">{bannerTweetText}</p>
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="space-y-3 pt-3">
+                                    {/* Primary: Share to X */}
+                                    <button
+                                        onClick={handleShareToX}
+                                        disabled={isGenerating || !previewUrl}
+                                        className="w-full py-3.5 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-base border border-white/20 hover:border-white/40"
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                        </svg>
+                                        {isGenerating ? 'Generating...' : 'Share to X (Download + Copy)'}
+                                    </button>
+
+                                    {/* LinkedIn */}
+                                    <button
+                                        onClick={handleShareToLinkedIn}
+                                        disabled={isGenerating || !previewUrl}
+                                        className="w-full py-3 bg-[#0A66C2] text-white font-bold rounded-xl hover:bg-[#004182] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                        </svg>
+                                        Share to LinkedIn
+                                    </button>
+
+                                    {/* Secondary actions */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={handleDownload}
+                                            disabled={isGenerating || !previewUrl}
+                                            className="py-2.5 bg-brand-teal/20 text-brand-teal border border-brand-teal/30 font-bold rounded-xl hover:bg-brand-teal/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <Download size={16} />
+                                            Download
                                         </button>
                                         <button
-                                            onClick={handleShareToLinkedIn}
+                                            onClick={handleCopyImage}
                                             disabled={isGenerating || !previewUrl}
-                                            className="py-2.5 bg-[#0A66C2] text-white font-bold rounded-xl hover:bg-[#004182] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                                            className="py-2.5 bg-purple-600/20 text-purple-400 border border-purple-500/30 font-bold rounded-xl hover:bg-purple-600/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                                         >
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                                            </svg>
-                                            LinkedIn
+                                            <Copy size={16} />
+                                            Copy Image
                                         </button>
                                     </div>
                                 </div>
