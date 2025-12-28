@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { Plus, X, Share2, MessageSquare } from 'lucide-react'
+import { Plus, X, Share2, MessageSquare, TrendingUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMountain } from '../context/MountainContext'
@@ -14,6 +14,7 @@ import ReflectionModal from '../components/ReflectionModal'
 import NoteViewer from '../components/NoteViewer'
 import FeedbackModal from '../components/FeedbackModal'
 import SignupPromptModal from '../components/SignupPromptModal'
+import MetricProgressModal from '../components/MetricProgressModal'
 
 export default function Dashboard() {
     const { user } = useAuth()
@@ -31,7 +32,10 @@ export default function Dashboard() {
         resolvedSteps,
         totalPlanned,
         refresh,
-        isDemoMode
+        isDemoMode,
+        hasMetricProgress,
+        updateMetricProgress,
+        setupMetricTracking
     } = useMountain()
     const { checkLimit, isPro } = usePlanLimits()
 
@@ -48,6 +52,7 @@ export default function Dashboard() {
     const [isProductBannerOpen, setIsProductBannerOpen] = useState(false)
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
     const [showSignupPrompt, setShowSignupPrompt] = useState(false)
+    const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
     const [signupPromptType, setSignupPromptType] = useState('stepLimit')
 
     // Reflection Modal State
@@ -258,9 +263,24 @@ export default function Dashboard() {
                 <div className="bg-black/30 backdrop-blur-md rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 border border-white/10">
                     <div className="text-[10px] sm:text-xs text-white/60">Progress</div>
                     <div className="text-xl sm:text-2xl font-bold text-brand-gold">{Math.round(progress)}%</div>
-                    <div className="text-[10px] sm:text-xs text-white/40">
-                        {resolvedSteps}/{totalPlanned} done
-                    </div>
+                    {hasMetricProgress ? (
+                        <div className="text-[10px] sm:text-xs text-white/40">
+                            {currentMountain?.metric_prefix}{currentMountain?.current_value?.toLocaleString() || 0} {currentMountain?.metric_suffix}
+                            <span className="text-white/30"> / {currentMountain?.metric_prefix}{currentMountain?.target_value?.toLocaleString()}</span>
+                        </div>
+                    ) : (
+                        <div className="text-[10px] sm:text-xs text-white/40">
+                            {resolvedSteps}/{totalPlanned} done
+                        </div>
+                    )}
+                    {/* Update Progress Button */}
+                    <button
+                        onClick={() => setIsMetricModalOpen(true)}
+                        className="mt-2 w-full flex items-center justify-center gap-1 px-2 py-1 bg-brand-gold/20 hover:bg-brand-gold/30 text-brand-gold text-[10px] sm:text-xs font-medium rounded-md transition-colors"
+                    >
+                        <TrendingUp size={12} />
+                        {hasMetricProgress ? 'Update' : 'Track Goal'}
+                    </button>
                 </div>
             </div>
 
@@ -463,6 +483,16 @@ export default function Dashboard() {
                 isOpen={showSignupPrompt}
                 onClose={() => setShowSignupPrompt(false)}
                 promptType={signupPromptType}
+            />
+
+            {/* Metric Progress Modal */}
+            <MetricProgressModal
+                isOpen={isMetricModalOpen}
+                onClose={() => setIsMetricModalOpen(false)}
+                currentMountain={currentMountain}
+                hasMetricProgress={hasMetricProgress}
+                onUpdateProgress={updateMetricProgress}
+                onSetupMetric={setupMetricTracking}
             />
         </div>
     )

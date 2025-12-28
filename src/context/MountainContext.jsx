@@ -365,12 +365,81 @@ export const MountainProvider = ({ children }) => {
         setLoading(false)
     }, [user])
 
-    // Computed values - Progress based on total_steps_planned
-    // Only count successful steps for progress (failures don't move the climber forward)
+    // Computed values - Progress calculation
+    // Supports TWO modes:
+    // 1. METRIC-BASED: If target_value exists, use current_value / target_value
+    // 2. STEP-BASED: Fallback to successfulSteps / totalPlanned
     const successfulSteps = steps.filter(s => s.status === 'success').length
     const resolvedSteps = steps.filter(s => s.status === 'success' || s.status === 'failed').length
     const totalPlanned = currentMountain?.total_steps_planned || steps.length || 1
-    const progress = Math.min((successfulSteps / totalPlanned) * 100, 100)
+
+    // Check if using metric-based progress
+    const hasMetricProgress = currentMountain?.target_value && currentMountain.target_value > 0
+    const metricProgress = hasMetricProgress
+        ? Math.min((currentMountain.current_value / currentMountain.target_value) * 100, 100)
+        : null
+    const stepProgress = Math.min((successfulSteps / totalPlanned) * 100, 100)
+
+    // Use metric progress if available, otherwise use step progress
+    const progress = hasMetricProgress ? metricProgress : stepProgress
+
+    /**
+     * Update metric progress value (current_value)
+     * @param {number} newValue - New current value
+     */
+    const updateMetricProgress = useCallback(async (newValue) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const result = demoStorage.updateDemoMetricProgress(newValue)
+            if (result.success) {
+                setCurrentMountain(result.mountain)
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE: Use Supabase
+        const { data, error: updateError } = await mountainService.updateMountain(currentMountain.id, {
+            current_value: newValue,
+            progress_history: [
+                ...(currentMountain.progress_history || []),
+                { date: new Date().toISOString(), value: newValue }
+            ]
+        })
+
+        if (updateError) {
+            setError(updateError.message)
+            return { success: false, error: updateError }
+        }
+
+        setCurrentMountain(data)
+        return { success: true, mountain: data }
+    }, [user, currentMountain])
+
+    /**
+     * Setup metric tracking for the mountain
+     * @param {object} metricData - { target_value, metric_prefix, metric_suffix }
+     */
+    const setupMetricTracking = useCallback(async (metricData) => {
+        // DEMO MODE: Use localStorage
+        if (!user) {
+            const result = demoStorage.updateDemoMountain(metricData)
+            if (result.success) {
+                setCurrentMountain(result.mountain)
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE: Use Supabase
+        const { data, error: updateError } = await mountainService.updateMountain(currentMountain.id, metricData)
+
+        if (updateError) {
+            setError(updateError.message)
+            return { success: false, error: updateError }
+        }
+
+        setCurrentMountain(data)
+        return { success: true, mountain: data }
+    }, [user, currentMountain])
     /**
      * Delete a step
      * @param {number} stepId
@@ -445,6 +514,11 @@ export const MountainProvider = ({ children }) => {
         totalSteps: steps.length,
         totalPlanned,
 
+        // Metric progress computed values
+        hasMetricProgress,
+        metricProgress,
+        stepProgress,
+
         // Actions
         createMountain,
         addMountain: createMountain, // Alias
@@ -458,6 +532,8 @@ export const MountainProvider = ({ children }) => {
         addProductImage,
         deleteProductImage,
         refresh,
+        updateMetricProgress,
+        setupMetricTracking,
 
         // Setters
         setCurrentMountain,

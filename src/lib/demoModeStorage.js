@@ -38,6 +38,12 @@ export const saveDemoMountain = (mountainData) => {
             title: mountainData.title || 'My First Mountain',
             target: mountainData.target || '10 steps',
             total_steps_planned: mountainData.total_steps_planned || 10,
+            // Metric-based progress tracking
+            target_value: mountainData.target_value || null,      // e.g., 1000 (for $1K)
+            current_value: mountainData.current_value || 0,       // e.g., 247 (current $)
+            metric_prefix: mountainData.metric_prefix || '',      // e.g., "$"
+            metric_suffix: mountainData.metric_suffix || '',      // e.g., "MRR", "followers"
+            progress_history: mountainData.progress_history || [], // [{date, value}]
             created_at: new Date().toISOString(),
             ...mountainData
         };
@@ -46,6 +52,57 @@ export const saveDemoMountain = (mountainData) => {
     } catch (error) {
         console.error('Error saving demo mountain:', error);
         return null;
+    }
+};
+
+/**
+ * Update demo mountain with new data (for metric progress updates)
+ */
+export const updateDemoMountain = (updates) => {
+    try {
+        const mountain = getDemoMountain();
+        if (!mountain) return { success: false, error: 'No mountain found' };
+
+        const updatedMountain = {
+            ...mountain,
+            ...updates,
+            updated_at: new Date().toISOString()
+        };
+
+        localStorage.setItem(DEMO_KEYS.MOUNTAIN, JSON.stringify(updatedMountain));
+        return { success: true, mountain: updatedMountain };
+    } catch (error) {
+        console.error('Error updating demo mountain:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Update metric progress value and add to history
+ */
+export const updateDemoMetricProgress = (newValue) => {
+    try {
+        const mountain = getDemoMountain();
+        if (!mountain) return { success: false, error: 'No mountain found' };
+
+        const history = mountain.progress_history || [];
+        history.push({
+            date: new Date().toISOString(),
+            value: newValue
+        });
+
+        const updatedMountain = {
+            ...mountain,
+            current_value: newValue,
+            progress_history: history,
+            updated_at: new Date().toISOString()
+        };
+
+        localStorage.setItem(DEMO_KEYS.MOUNTAIN, JSON.stringify(updatedMountain));
+        return { success: true, mountain: updatedMountain };
+    } catch (error) {
+        console.error('Error updating metric progress:', error);
+        return { success: false, error: error.message };
     }
 };
 
