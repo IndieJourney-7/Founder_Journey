@@ -79,9 +79,13 @@ export const MountainProvider = ({ children }) => {
     }, [user])
 
     /**
-     * Fetch steps when mountain changes
+     * Fetch steps when mountain changes (AUTHENTICATED mode only)
+     * Demo mode already loads steps synchronously in the first useEffect
      */
     useEffect(() => {
+        // Skip for demo mode - data already loaded
+        if (!user) return
+
         if (!currentMountain) {
             setSteps([])
             setJourneyNotes([])
@@ -94,12 +98,16 @@ export const MountainProvider = ({ children }) => {
         }
 
         loadSteps()
-    }, [currentMountain])
+    }, [currentMountain, user])
 
     /**
-     * Fetch journey notes when steps change
+     * Fetch journey notes when steps change (AUTHENTICATED mode only)
+     * Demo mode already loads notes synchronously in the first useEffect
      */
     useEffect(() => {
+        // Skip for demo mode - data already loaded
+        if (!user) return
+
         if (steps.length === 0) {
             setJourneyNotes([])
             return
@@ -112,7 +120,7 @@ export const MountainProvider = ({ children }) => {
         }
 
         loadNotes()
-    }, [steps])
+    }, [steps, user])
 
     /**
      * Create a new mountain (if user doesn't have one)
