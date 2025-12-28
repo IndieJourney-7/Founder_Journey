@@ -157,6 +157,8 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
     const {
         currentMountain,
         progress,
+        steps,
+        successfulSteps,
         resolvedSteps,
         totalPlanned,
         productImages,
