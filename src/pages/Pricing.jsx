@@ -45,42 +45,43 @@ export default function Pricing() {
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="grid sm:grid-cols-3 gap-6 sm:gap-6 w-full max-w-6xl mb-16 sm:mb-24">
-                    {/* Base Camp (Free) */}
+                <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 w-full max-w-4xl mb-16 sm:mb-24">
+                    {/* Free - Build Everything */}
                     <PricingCard
-                        title="Base Camp"
+                        title="Free Forever"
                         price="$0"
-                        period="forever"
-                        description="Validate your first big idea and build momentum."
+                        period="no credit card"
+                        description="Build your entire journey. No limits on creating."
                         features={[
-                            "1 Mountain Journey",
-                            "Up to 6 planned steps",
-                            "Success & Failure notes",
-                            "Lessons Trail (Notes Gallery)",
-                            "Journey path visualization",
-                            "4 Social Shares (w/ watermark)",
-                            "Basic Theme"
+                            "✅ Unlimited steps & milestones",
+                            "✅ Unlimited notes & reflections",
+                            "✅ Full mountain visualization",
+                            "✅ 3 product images",
+                            "✅ Lessons trail gallery",
+                            "📤 3 shares/month (with watermark)",
+                            "🎨 Basic theme"
                         ]}
-                        buttonText="Start Your First Climb"
-                        buttonLink="/auth"
+                        buttonText="Start Building Free"
+                        buttonLink="/dashboard"
                         isPro={false}
                         delay={0.3}
                     />
 
-                    {/* Summit Pro ($7/mo) */}
+                    {/* Pro - Share Everything */}
                     <PricingCard
                         title="Summit Pro"
                         price="$7"
                         period="per month"
-                        description="For founders actively building and sharing progress."
+                        description="Share your journey everywhere. Stand out as a founder."
                         features={[
-                            "1 Mountain Journey",
-                            "Unlimited steps",
-                            "Unlimited notes & lessons",
-                            "Unlimited Social Sharing",
-                            "No Watermark on shares",
-                            "HD Exports",
-                            "All Premium Themes"
+                            "Everything in Free, plus:",
+                            "📤 Unlimited sharing",
+                            "✨ No watermark on exports",
+                            "🔗 Public profile URL",
+                            "📊 Viral tweet templates",
+                            "🖼️ HD quality exports",
+                            "🎨 All premium themes",
+                            "⚡ Priority support"
                         ]}
                         buttonText="Join Pro Waitlist"
                         isPro={true}
@@ -88,30 +89,24 @@ export default function Pricing() {
                         delay={0.4}
                         mostPopular={true}
                     />
-
-                    {/* Peak Performance ($19/mo) - NEW */}
-                    <PricingCard
-                        title="Peak Performance"
-                        price="$19"
-                        period="per month"
-                        description="For serial entrepreneurs managing multiple ventures."
-                        features={[
-                            "✨ UNLIMITED Mountains",
-                            "Unlimited steps per mountain",
-                            "Unlimited notes & lessons",
-                            "Unlimited Social Sharing",
-                            "No Watermark on shares",
-                            "HD Exports",
-                            "All Premium Themes",
-                            "Priority Support"
-                        ]}
-                        buttonText="Join Waitlist"
-                        isPro={true}
-                        isWaitlist={true}
-                        delay={0.5}
-                        isUltimate={true}
-                    />
                 </div>
+
+                {/* Value Proposition */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-center max-w-2xl mb-16"
+                >
+                    <div className="bg-gradient-to-r from-brand-gold/10 to-brand-teal/10 border border-white/10 rounded-2xl p-6 sm:p-8">
+                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">Why This Pricing?</h3>
+                        <p className="text-white/60 text-sm sm:text-base leading-relaxed">
+                            We believe in <span className="text-brand-gold font-semibold">building first, paying later</span>.
+                            Create your entire founder journey for free. When you're ready to share your wins
+                            with the world and build your audience, upgrade to Pro.
+                        </p>
+                    </div>
+                </motion.div>
 
                 {/* Waitlist Section (Restored) */}
                 <WaitlistSection />

@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Copy, Sparkles, Layout, Image, Palette } from 'lucide-react';
+import { X, Download, Copy, Sparkles, Layout, Image, Palette, Lock, Crown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { useMountain } from '../../context/MountainContext';
+import { usePlanLimits } from '../../hooks/usePlanLimits';
 import SignupPromptModal from '../SignupPromptModal';
 import ProductGallery from '../ProductGallery';
 
@@ -165,7 +167,17 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
         isDemoMode
     } = useMountain();
 
+    const {
+        isPro,
+        checkLimit,
+        getRemainingShares,
+        incrementShareCount,
+        hasWatermark
+    } = usePlanLimits();
+
     const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+    const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+    const remainingShares = getRemainingShares();
 
     // User inputs
     const [headline, setHeadline] = useState(currentMountain?.title || 'Building Something Amazing');
@@ -234,16 +246,75 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
         }
     };
 
-    const handleDownload = () => {
+    // Add watermark to canvas for free users
+    const addWatermarkToImage = async (dataUrl) => {
+        return new Promise((resolve) => {
+            const img = new window.Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+
+                // Draw original image
+                ctx.drawImage(img, 0, 0);
+
+                // Add watermark
+                const watermarkText = 'Made with ShiftJourney.com';
+                const fontSize = Math.max(16, img.width / 50);
+                ctx.font = `bold ${fontSize}px Inter, system-ui, sans-serif`;
+
+                // Measure text
+                const textMetrics = ctx.measureText(watermarkText);
+                const textWidth = textMetrics.width;
+                const padding = 20;
+
+                // Position: bottom right
+                const x = img.width - textWidth - padding - 15;
+                const y = img.height - padding - 10;
+
+                // Draw semi-transparent background
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.roundRect(x - 10, y - fontSize - 5, textWidth + 20, fontSize + 15, 8);
+                ctx.fill();
+
+                // Draw text
+                ctx.fillStyle = '#E7C778'; // brand-gold
+                ctx.fillText(watermarkText, x, y);
+
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.src = dataUrl;
+        });
+    };
+
+    const handleDownload = async () => {
         if (!previewUrl) return;
         if (isDemoMode) {
             setShowSignupPrompt(true);
             return;
         }
 
+        // Check share limit for free users
+        if (!isPro && remainingShares <= 0) {
+            setShowUpgradePrompt(true);
+            return;
+        }
+
+        // Add watermark for free users
+        let finalUrl = previewUrl;
+        if (hasWatermark) {
+            finalUrl = await addWatermarkToImage(previewUrl);
+        }
+
+        // Increment share count for free users
+        if (!isPro) {
+            incrementShareCount();
+        }
+
         const link = document.createElement('a');
         link.download = `shift-banner-${selectedLayout}-${Date.now()}.png`;
-        link.href = previewUrl;
+        link.href = finalUrl;
         link.click();
     };
 
@@ -254,8 +325,25 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
             return;
         }
 
+        // Check share limit for free users
+        if (!isPro && remainingShares <= 0) {
+            setShowUpgradePrompt(true);
+            return;
+        }
+
         try {
-            const blob = await (await fetch(previewUrl)).blob();
+            // Add watermark for free users
+            let finalUrl = previewUrl;
+            if (hasWatermark) {
+                finalUrl = await addWatermarkToImage(previewUrl);
+            }
+
+            // Increment share count for free users
+            if (!isPro) {
+                incrementShareCount();
+            }
+
+            const blob = await (await fetch(finalUrl)).blob();
             await navigator.clipboard.write([
                 new ClipboardItem({ [blob.type]: blob })
             ]);
@@ -1391,18 +1479,66 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                                     </div>
                                 </div>
 
+                                {/* Share Limit Indicator for Free Users */}
+                                {!isPro && (
+                                    <div className={`p-3 rounded-xl border ${remainingShares > 0 ? 'bg-brand-gold/10 border-brand-gold/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                {remainingShares > 0 ? (
+                                                    <>
+                                                        <Sparkles size={16} className="text-brand-gold" />
+                                                        <span className="text-sm text-white/80">
+                                                            <span className="font-bold text-brand-gold">{remainingShares}</span> shares left this month
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Lock size={16} className="text-red-400" />
+                                                        <span className="text-sm text-red-400 font-medium">
+                                                            Monthly limit reached
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <Link
+                                                to="/pricing"
+                                                className="text-xs font-bold text-brand-gold hover:text-yellow-400 flex items-center gap-1"
+                                            >
+                                                <Crown size={12} />
+                                                Upgrade
+                                            </Link>
+                                        </div>
+                                        {hasWatermark && remainingShares > 0 && (
+                                            <p className="text-xs text-white/50 mt-2">
+                                                Exports include "Made with ShiftJourney" watermark
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Pro Badge */}
+                                {isPro && (
+                                    <div className="p-3 rounded-xl bg-gradient-to-r from-brand-gold/20 to-brand-teal/20 border border-brand-gold/30">
+                                        <div className="flex items-center gap-2">
+                                            <Crown size={16} className="text-brand-gold" />
+                                            <span className="text-sm font-bold text-brand-gold">Pro Member</span>
+                                            <span className="text-xs text-white/60">• Unlimited HD exports, no watermark</span>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Action Buttons */}
                                 <div className="space-y-3 pt-3">
                                     {/* Primary: Share to X */}
                                     <button
                                         onClick={handleShareToX}
-                                        disabled={isGenerating || !previewUrl}
+                                        disabled={isGenerating || !previewUrl || (!isPro && remainingShares <= 0)}
                                         className="w-full py-3.5 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex items-center justify-center gap-3 text-base border border-white/20 hover:border-white/40"
                                     >
                                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                                         </svg>
-                                        {isGenerating ? 'Generating...' : 'Share to X (Download + Copy)'}
+                                        {isGenerating ? 'Generating...' : (!isPro && remainingShares <= 0) ? 'Upgrade to Share' : 'Share to X (Download + Copy)'}
                                     </button>
 
                                     {/* LinkedIn */}
@@ -1485,6 +1621,50 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                 onClose={() => setShowSignupPrompt(false)}
                 promptType="share"
             />
+
+            {/* Upgrade Prompt Modal */}
+            <AnimatePresence>
+                {showUpgradePrompt && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        onClick={() => setShowUpgradePrompt(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="w-full max-w-md bg-[#0F1F3D] border border-white/10 rounded-2xl p-6 shadow-2xl text-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-brand-gold to-yellow-500 rounded-full flex items-center justify-center">
+                                <Crown size={32} className="text-brand-blue" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">Share Limit Reached</h3>
+                            <p className="text-white/60 mb-6">
+                                You've used all 3 free shares this month. Upgrade to Pro for unlimited sharing without watermarks!
+                            </p>
+                            <div className="space-y-3">
+                                <Link
+                                    to="/pricing"
+                                    className="block w-full py-3 bg-gradient-to-r from-brand-gold to-yellow-500 text-brand-blue font-bold rounded-xl hover:shadow-lg transition-all"
+                                    onClick={() => setShowUpgradePrompt(false)}
+                                >
+                                    Upgrade to Pro - $7/mo
+                                </Link>
+                                <button
+                                    onClick={() => setShowUpgradePrompt(false)}
+                                    className="w-full py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-colors"
+                                >
+                                    Maybe Later
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </AnimatePresence>
     );
 }
