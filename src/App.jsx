@@ -14,6 +14,7 @@ import Pricing from './pages/Pricing'
 import Admin from './pages/Admin'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentCancel from './pages/PaymentCancel'
+import Settings from './pages/Settings'
 
 /**
  * Protected Route - Requires authentication
@@ -122,6 +123,7 @@ export default function App() {
                             } />
                             <Route path="lessons" element={<Lessons />} />
                             <Route path="pricing" element={<Pricing />} />
+                            <Route path="settings" element={<Settings />} />
                             <Route path="payment-success" element={
                                 <ProtectedRoute>
                                     <PaymentSuccess />
