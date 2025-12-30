@@ -17,6 +17,7 @@ import FeedbackModal from '../components/FeedbackModal'
 import SignupPromptModal from '../components/SignupPromptModal'
 import MetricProgressModal from '../components/MetricProgressModal'
 import ThemeSelector, { ThemeToggleButton } from '../components/mountain/ThemeSelector'
+import ShareButton from '../components/sharing/ShareButton'
 
 export default function Dashboard() {
     const { user } = useAuth()
@@ -275,8 +276,10 @@ export default function Dashboard() {
                     title="Create & Share Progress Banner"
                 >
                     <Share2 size={16} />
-                    <span className="hidden sm:inline">Share</span>
+                    <span className="hidden sm:inline">Export</span>
                 </button>
+                {/* Public Profile Share Button */}
+                <ShareButton />
             </div>
 
             {/* Progress Display */}

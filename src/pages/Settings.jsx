@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Settings as SettingsIcon,
@@ -14,7 +14,14 @@ import {
     AlertTriangle,
     Zap,
     Moon,
-    Sun
+    Sun,
+    Share2,
+    Globe,
+    Lock,
+    Link as LinkIcon,
+    Copy,
+    ExternalLink,
+    Loader2
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -23,6 +30,12 @@ import { useTheme } from '../context/ThemeContext'
 import { useToast } from '../context/ToastContext'
 import { usePlanLimits } from '../hooks/usePlanLimits'
 import { THEME_CATEGORIES, getThemesByCategory } from '../config/themes'
+import {
+    validateUsername,
+    checkUsernameAvailable,
+    claimUsername,
+    updatePublicSettings
+} from '../lib/publicProfileService'
 
 // Particle Intensity Slider Component
 const ParticleIntensitySlider = ({ value, onChange }) => {
@@ -173,6 +186,112 @@ export default function Settings() {
 
     const [showResetConfirm, setShowResetConfirm] = useState(false)
 
+    // Public Profile State
+    const [username, setUsername] = useState(currentMountain?.username || '')
+    const [usernameInput, setUsernameInput] = useState('')
+    const [usernameError, setUsernameError] = useState('')
+    const [usernameAvailable, setUsernameAvailable] = useState(null)
+    const [checkingUsername, setCheckingUsername] = useState(false)
+    const [claimingUsername, setClaimingUsername] = useState(false)
+    const [isPublic, setIsPublic] = useState(currentMountain?.is_public || false)
+    const [publicBio, setPublicBio] = useState(currentMountain?.public_bio || '')
+    const [savingPublicSettings, setSavingPublicSettings] = useState(false)
+    const [linkCopied, setLinkCopied] = useState(false)
+
+    // Sync state when mountain loads
+    useEffect(() => {
+        if (currentMountain) {
+            setUsername(currentMountain.username || '')
+            setIsPublic(currentMountain.is_public || false)
+            setPublicBio(currentMountain.public_bio || '')
+        }
+    }, [currentMountain])
+
+    // Check username availability with debounce
+    useEffect(() => {
+        if (!usernameInput || usernameInput === username) {
+            setUsernameError('')
+            setUsernameAvailable(null)
+            return
+        }
+
+        const validation = validateUsername(usernameInput)
+        if (!validation.valid) {
+            setUsernameError(validation.error)
+            setUsernameAvailable(false)
+            return
+        }
+
+        setUsernameError('')
+        setCheckingUsername(true)
+
+        const timer = setTimeout(async () => {
+            const result = await checkUsernameAvailable(usernameInput)
+            setCheckingUsername(false)
+            setUsernameAvailable(result.available)
+            if (!result.available && result.error) {
+                setUsernameError(result.error)
+            }
+        }, 500)
+
+        return () => clearTimeout(timer)
+    }, [usernameInput, username])
+
+    // Handle username claim
+    const handleClaimUsername = async () => {
+        if (!currentMountain || !usernameAvailable || claimingUsername) return
+
+        setClaimingUsername(true)
+        const result = await claimUsername(currentMountain.id, usernameInput)
+
+        if (result.success) {
+            setUsername(usernameInput)
+            setUsernameInput('')
+            setUsernameAvailable(null)
+            toast.success('Username Claimed!', `Your profile is now at /climb/@${usernameInput}`)
+            refresh()
+        } else {
+            toast.error('Failed to Claim', result.error || 'Could not claim username')
+        }
+
+        setClaimingUsername(false)
+    }
+
+    // Handle public settings update
+    const handleSavePublicSettings = async () => {
+        if (!currentMountain || savingPublicSettings) return
+
+        setSavingPublicSettings(true)
+        const result = await updatePublicSettings(currentMountain.id, {
+            is_public: isPublic,
+            public_bio: publicBio
+        })
+
+        if (result.success) {
+            toast.success('Settings Saved', isPublic ? 'Your profile is now public!' : 'Your profile is now private')
+            refresh()
+        } else {
+            toast.error('Failed to Save', result.error || 'Could not update settings')
+        }
+
+        setSavingPublicSettings(false)
+    }
+
+    // Copy share link
+    const handleCopyLink = async () => {
+        if (!username) return
+
+        const url = `${window.location.origin}/climb/@${username}`
+        try {
+            await navigator.clipboard.writeText(url)
+            setLinkCopied(true)
+            toast.success('Link Copied!', 'Share your journey with others')
+            setTimeout(() => setLinkCopied(false), 2000)
+        } catch (err) {
+            toast.error('Copy Failed', 'Could not copy link')
+        }
+    }
+
     // Handle particle intensity change
     const handleParticleIntensityChange = (value) => {
         setParticleIntensity(value)
@@ -315,6 +434,184 @@ export default function Settings() {
                             </div>
                         </div>
                     </SettingsSection>
+
+                    {/* Public Profile & Sharing */}
+                    {user && currentMountain && !isDemoMode && (
+                        <SettingsSection
+                            icon={Share2}
+                            title="Public Profile & Sharing"
+                            description="Share your journey with the world"
+                        >
+                            <div className="space-y-6">
+                                {/* Username Section */}
+                                <div>
+                                    <h4 className="text-sm font-medium text-white/60 mb-3">Your Profile URL</h4>
+
+                                    {username ? (
+                                        // Has username - show it
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-3 p-4 bg-black/20 rounded-xl">
+                                                <div className="flex-1">
+                                                    <p className="text-sm text-white/50">Your shareable link</p>
+                                                    <p className="font-mono text-brand-teal">
+                                                        {window.location.origin}/climb/@{username}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={handleCopyLink}
+                                                    className={`p-2 rounded-lg transition-colors ${
+                                                        linkCopied
+                                                            ? 'bg-green-500/20 text-green-400'
+                                                            : 'bg-white/10 hover:bg-white/20 text-white/60'
+                                                    }`}
+                                                >
+                                                    {linkCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                                                </button>
+                                                <a
+                                                    href={`/climb/@${username}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                                                >
+                                                    <ExternalLink className="w-5 h-5 text-white/60" />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // No username - claim one
+                                        <div className="space-y-3">
+                                            <p className="text-sm text-white/50">
+                                                Claim a username to create your public profile URL
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <div className="flex-1 relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">@</span>
+                                                    <input
+                                                        type="text"
+                                                        value={usernameInput}
+                                                        onChange={(e) => setUsernameInput(e.target.value.toLowerCase())}
+                                                        placeholder="yourname"
+                                                        maxLength={20}
+                                                        className="w-full pl-8 pr-10 py-2.5 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
+                                                    />
+                                                    {/* Status indicator */}
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                        {checkingUsername && (
+                                                            <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
+                                                        )}
+                                                        {!checkingUsername && usernameAvailable === true && (
+                                                            <Check className="w-4 h-4 text-green-400" />
+                                                        )}
+                                                        {!checkingUsername && usernameAvailable === false && (
+                                                            <AlertTriangle className="w-4 h-4 text-red-400" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={handleClaimUsername}
+                                                    disabled={!usernameAvailable || claimingUsername}
+                                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                                        usernameAvailable && !claimingUsername
+                                                            ? 'bg-brand-teal text-brand-blue hover:bg-brand-teal/80'
+                                                            : 'bg-white/10 text-white/40 cursor-not-allowed'
+                                                    }`}
+                                                >
+                                                    {claimingUsername ? (
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                                    ) : (
+                                                        'Claim'
+                                                    )}
+                                                </button>
+                                            </div>
+                                            {usernameError && (
+                                                <p className="text-sm text-red-400">{usernameError}</p>
+                                            )}
+                                            <p className="text-xs text-white/30">
+                                                3-20 characters, letters, numbers, and underscores only
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Privacy Toggle */}
+                                <div className="pt-4 border-t border-white/10">
+                                    <h4 className="text-sm font-medium text-white/60 mb-3">Profile Visibility</h4>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setIsPublic(false)}
+                                            className={`flex-1 flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                                                !isPublic
+                                                    ? 'border-brand-teal bg-brand-teal/10'
+                                                    : 'border-white/10 hover:border-white/20'
+                                            }`}
+                                        >
+                                            <Lock className={`w-5 h-5 ${!isPublic ? 'text-brand-teal' : 'text-white/40'}`} />
+                                            <div className="text-left">
+                                                <p className={`font-medium ${!isPublic ? 'text-brand-teal' : 'text-white'}`}>Private</p>
+                                                <p className="text-xs text-white/50">Only you can see</p>
+                                            </div>
+                                        </button>
+                                        <button
+                                            onClick={() => setIsPublic(true)}
+                                            disabled={!username}
+                                            className={`flex-1 flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                                                isPublic
+                                                    ? 'border-brand-gold bg-brand-gold/10'
+                                                    : !username
+                                                        ? 'border-white/5 opacity-50 cursor-not-allowed'
+                                                        : 'border-white/10 hover:border-white/20'
+                                            }`}
+                                        >
+                                            <Globe className={`w-5 h-5 ${isPublic ? 'text-brand-gold' : 'text-white/40'}`} />
+                                            <div className="text-left">
+                                                <p className={`font-medium ${isPublic ? 'text-brand-gold' : 'text-white'}`}>Public</p>
+                                                <p className="text-xs text-white/50">
+                                                    {username ? 'Anyone can view' : 'Claim username first'}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Bio */}
+                                {username && (
+                                    <div className="pt-4 border-t border-white/10">
+                                        <h4 className="text-sm font-medium text-white/60 mb-3">Public Bio (optional)</h4>
+                                        <textarea
+                                            value={publicBio}
+                                            onChange={(e) => setPublicBio(e.target.value)}
+                                            placeholder="A short bio about you or your journey..."
+                                            maxLength={160}
+                                            rows={2}
+                                            className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-brand-teal focus:outline-none resize-none"
+                                        />
+                                        <p className="text-xs text-white/30 mt-1">{publicBio.length}/160 characters</p>
+                                    </div>
+                                )}
+
+                                {/* Save Button */}
+                                {username && (
+                                    <button
+                                        onClick={handleSavePublicSettings}
+                                        disabled={savingPublicSettings}
+                                        className="w-full py-3 bg-brand-gold hover:bg-yellow-400 text-brand-blue font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        {savingPublicSettings ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="w-5 h-5" />
+                                                Save Changes
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </SettingsSection>
+                    )}
 
                     {/* Journey Management */}
                     <SettingsSection
