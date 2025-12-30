@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Copy, Sparkles, Layout, Image, Palette, Lock, Crown } from 'lucide-react';
+import { X, Download, Copy, Sparkles, Layout, Image, Palette, Lock, Crown, Wand2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { useMountain } from '../../context/MountainContext';
 import { usePlanLimits } from '../../hooks/usePlanLimits';
+import { useTheme } from '../../context/ThemeContext';
 import SignupPromptModal from '../SignupPromptModal';
 import ProductGallery from '../ProductGallery';
+import { ANIMATED_THEMES } from '../../config/themes';
+import { BANNER_DECORATIONS, getBannerThemeFromAnimated, generateDecorationsSVG } from '../../config/bannerThemes';
 
 // ============ EXPORT FORMATS ============
 const EXPORT_FORMATS = {
@@ -96,6 +99,24 @@ const THEMES = {
     }
 };
 
+// Animated themes converted to banner format
+const ANIMATED_BANNER_THEMES = Object.keys(ANIMATED_THEMES).reduce((acc, key) => {
+    const theme = ANIMATED_THEMES[key];
+    acc[key] = {
+        name: theme.name,
+        isAnimated: true,
+        bg: `linear-gradient(135deg, ${theme.sky.from} 0%, ${theme.sky.via || theme.sky.to} 50%, ${theme.sky.to} 100%)`,
+        accent: theme.isLight ? '#1a1a2e' : '#E7C778',
+        text: theme.isLight ? '#1a1a2e' : '#ffffff',
+        muted: theme.isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
+        glow: theme.glow?.primary || 'rgba(255,255,255,0.2)',
+        decorations: BANNER_DECORATIONS[key]?.elements || [],
+        overlay: BANNER_DECORATIONS[key]?.overlay || 'none',
+        originalTheme: theme,
+    };
+    return acc;
+}, {});
+
 // ============ LAYOUT TEMPLATES ============
 const LAYOUTS = {
     product_hero: {
@@ -175,6 +196,9 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
         hasWatermark
     } = usePlanLimits();
 
+    // Get current dashboard theme
+    const { currentThemeId } = useTheme();
+
     const [showSignupPrompt, setShowSignupPrompt] = useState(false);
     const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
     const remainingShares = getRemainingShares();
@@ -192,7 +216,8 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
 
     // Export settings
     const [selectedFormat, setSelectedFormat] = useState('twitter');
-    const [selectedTheme, setSelectedTheme] = useState('midnight');
+    const [selectedTheme, setSelectedTheme] = useState(currentThemeId || 'midnight'); // Default to user's dashboard theme
+    const [useAnimatedTheme, setUseAnimatedTheme] = useState(true); // Toggle between animated/classic themes
     const [selectedLayout, setSelectedLayout] = useState('product_hero');
     const [selectedFont, setSelectedFont] = useState('modern');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -200,8 +225,19 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
 
     const exportRef = useRef(null);
     const format = EXPORT_FORMATS[selectedFormat];
-    const theme = THEMES[selectedTheme];
+    // Get theme based on whether using animated or classic
+    const theme = useAnimatedTheme && ANIMATED_BANNER_THEMES[selectedTheme]
+        ? ANIMATED_BANNER_THEMES[selectedTheme]
+        : THEMES[selectedTheme] || THEMES.midnight;
     const layout = LAYOUTS[selectedLayout];
+
+    // Sync with dashboard theme when modal opens
+    useEffect(() => {
+        if (isOpen && currentThemeId && ANIMATED_BANNER_THEMES[currentThemeId]) {
+            setSelectedTheme(currentThemeId);
+            setUseAnimatedTheme(true);
+        }
+    }, [isOpen, currentThemeId]);
 
     // Auto-select first product image
     useEffect(() => {
@@ -223,7 +259,7 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
             const timer = setTimeout(generatePreview, 300);
             return () => clearTimeout(timer);
         }
-    }, [isOpen, selectedFormat, selectedTheme, selectedLayout, selectedFont, headline, subheadline, metric, dayCount, quote, cta, selectedProductImage, goalTarget, showMountainPath]);
+    }, [isOpen, selectedFormat, selectedTheme, useAnimatedTheme, selectedLayout, selectedFont, headline, subheadline, metric, dayCount, quote, cta, selectedProductImage, goalTarget, showMountainPath]);
 
     const generatePreview = async () => {
         if (!exportRef.current) return;
@@ -1414,25 +1450,100 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                                         <Palette size={16} />
                                         Theme
                                     </label>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {Object.entries(THEMES).map(([key, thm]) => (
-                                            <button
-                                                key={key}
-                                                onClick={() => setSelectedTheme(key)}
-                                                className={`p-2 rounded-xl border-2 transition-all ${
-                                                    selectedTheme === key
-                                                        ? 'border-brand-teal'
-                                                        : 'border-white/10'
-                                                }`}
-                                            >
-                                                <div
-                                                    className="w-full h-8 rounded-lg mb-1"
-                                                    style={{ background: thm.bg }}
-                                                />
-                                                <div className="text-[10px] text-white font-medium">{thm.name}</div>
-                                            </button>
-                                        ))}
+
+                                    {/* Theme Type Toggle */}
+                                    <div className="flex gap-2 mb-3">
+                                        <button
+                                            onClick={() => setUseAnimatedTheme(true)}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                                                useAnimatedTheme
+                                                    ? 'border-brand-gold bg-brand-gold/10 text-brand-gold'
+                                                    : 'border-white/10 text-white/60 hover:border-white/20'
+                                            }`}
+                                        >
+                                            <Wand2 size={14} />
+                                            Seasonal
+                                        </button>
+                                        <button
+                                            onClick={() => setUseAnimatedTheme(false)}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                                                !useAnimatedTheme
+                                                    ? 'border-brand-teal bg-brand-teal/10 text-brand-teal'
+                                                    : 'border-white/10 text-white/60 hover:border-white/20'
+                                            }`}
+                                        >
+                                            <Palette size={14} />
+                                            Classic
+                                        </button>
                                     </div>
+
+                                    {/* Animated Themes (Seasonal) */}
+                                    {useAnimatedTheme ? (
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {Object.entries(ANIMATED_BANNER_THEMES).map(([key, thm]) => (
+                                                <button
+                                                    key={key}
+                                                    onClick={() => setSelectedTheme(key)}
+                                                    className={`p-2 rounded-xl border-2 transition-all relative ${
+                                                        selectedTheme === key && useAnimatedTheme
+                                                            ? 'border-brand-gold ring-2 ring-brand-gold/30'
+                                                            : 'border-white/10 hover:border-white/20'
+                                                    }`}
+                                                >
+                                                    {/* Theme preview with mini decorations hint */}
+                                                    <div
+                                                        className="w-full h-10 rounded-lg mb-1 relative overflow-hidden"
+                                                        style={{ background: thm.bg }}
+                                                    >
+                                                        {/* Show decoration count as indicator */}
+                                                        {thm.decorations?.length > 0 && (
+                                                            <div className="absolute top-1 right-1 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center">
+                                                                <Sparkles size={10} className="text-white" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[10px] text-white font-medium truncate">{thm.name}</div>
+                                                    {/* Special badge */}
+                                                    {thm.originalTheme?.isSpecial && (
+                                                        <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-[7px] font-bold text-black rounded-full">
+                                                            LIMITED
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        /* Classic Themes */
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {Object.entries(THEMES).map(([key, thm]) => (
+                                                <button
+                                                    key={key}
+                                                    onClick={() => setSelectedTheme(key)}
+                                                    className={`p-2 rounded-xl border-2 transition-all ${
+                                                        selectedTheme === key && !useAnimatedTheme
+                                                            ? 'border-brand-teal'
+                                                            : 'border-white/10'
+                                                    }`}
+                                                >
+                                                    <div
+                                                        className="w-full h-8 rounded-lg mb-1"
+                                                        style={{ background: thm.bg }}
+                                                    />
+                                                    <div className="text-[10px] text-white font-medium">{thm.name}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Decoration info for animated themes */}
+                                    {useAnimatedTheme && theme?.decorations?.length > 0 && (
+                                        <div className="mt-2 p-2 bg-brand-gold/10 border border-brand-gold/20 rounded-lg">
+                                            <p className="text-xs text-brand-gold flex items-center gap-1">
+                                                <Sparkles size={12} />
+                                                Includes {theme.decorations.length} decorative elements
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Format Selector */}
@@ -1609,7 +1720,38 @@ export default function ProductShowcaseBanner({ isOpen, onClose }) {
                                     background: theme.bg
                                 }}
                             >
-                                {renderLayout()}
+                                {/* Theme overlay gradient */}
+                                {theme.overlay && theme.overlay !== 'none' && (
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            background: theme.overlay,
+                                            pointerEvents: 'none',
+                                            zIndex: 1
+                                        }}
+                                    />
+                                )}
+
+                                {/* Theme decorations (SVG elements) */}
+                                {useAnimatedTheme && theme.decorations?.length > 0 && (
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            pointerEvents: 'none',
+                                            zIndex: 2
+                                        }}
+                                        dangerouslySetInnerHTML={{
+                                            __html: generateDecorationsSVG(selectedTheme, format.width, format.height)
+                                        }}
+                                    />
+                                )}
+
+                                {/* Main content */}
+                                <div style={{ position: 'relative', zIndex: 10, width: '100%', height: '100%' }}>
+                                    {renderLayout()}
+                                </div>
                             </div>
                         </div>
                     </motion.div>
