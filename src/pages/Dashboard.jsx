@@ -16,6 +16,7 @@ import NoteViewer from '../components/NoteViewer'
 import FeedbackModal from '../components/FeedbackModal'
 import SignupPromptModal from '../components/SignupPromptModal'
 import MetricProgressModal from '../components/MetricProgressModal'
+import ThemeSelector, { ThemeToggleButton } from '../components/mountain/ThemeSelector'
 
 export default function Dashboard() {
     const { user } = useAuth()
@@ -55,6 +56,7 @@ export default function Dashboard() {
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
     const [showSignupPrompt, setShowSignupPrompt] = useState(false)
     const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
+    const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false)
     const [signupPromptType, setSignupPromptType] = useState('stepLimit')
 
     // Reflection Modal State
