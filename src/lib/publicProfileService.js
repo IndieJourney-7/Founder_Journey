@@ -321,3 +321,234 @@ export const getEncouragementStats = async (mountainId) => {
         return { error: 'Could not load stats' };
     }
 };
+
+// ==================== PHASE 2 ADDITIONS ====================
+
+/**
+ * Get detailed encouragement summary for mountain owner dashboard
+ * @param {string} mountainId
+ * @returns {Promise<{ summary?: object, error?: string }>}
+ */
+export const getEncouragementSummary = async (mountainId) => {
+    try {
+        // Get all encouragements with details
+        const { data, error } = await supabase
+            .from('encouragements')
+            .select('*')
+            .eq('mountain_id', mountainId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching encouragement summary:', error);
+            return { error: 'Could not load summary' };
+        }
+
+        const encouragements = data || [];
+
+        // Calculate summary
+        const summary = {
+            total: encouragements.length,
+            unread: encouragements.filter(e => !e.is_read).length,
+            withMessages: encouragements.filter(e => e.message).length,
+            emojiBreakdown: {},
+            recentMessages: [],
+            topSupporters: {},
+            allEncouragements: encouragements
+        };
+
+        // Emoji breakdown
+        encouragements.forEach(e => {
+            summary.emojiBreakdown[e.emoji] = (summary.emojiBreakdown[e.emoji] || 0) + 1;
+            if (e.sender_name) {
+                summary.topSupporters[e.sender_name] = (summary.topSupporters[e.sender_name] || 0) + 1;
+            }
+        });
+
+        // Recent messages (last 10 with actual messages)
+        summary.recentMessages = encouragements
+            .filter(e => e.message)
+            .slice(0, 10);
+
+        // Convert top supporters to sorted array
+        summary.topSupporters = Object.entries(summary.topSupporters)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([name, count]) => ({ name, count }));
+
+        return { summary };
+    } catch (err) {
+        console.error('Error fetching encouragement summary:', err);
+        return { error: 'Could not load summary' };
+    }
+};
+
+/**
+ * Mark encouragements as read
+ * @param {string} mountainId
+ * @param {string[]} [encouragementIds] - Specific IDs to mark, or all if not provided
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export const markEncouragementRead = async (mountainId, encouragementIds = null) => {
+    try {
+        let query = supabase
+            .from('encouragements')
+            .update({ is_read: true })
+            .eq('mountain_id', mountainId);
+
+        if (encouragementIds && encouragementIds.length > 0) {
+            query = query.in('id', encouragementIds);
+        }
+
+        const { error } = await query;
+
+        if (error) {
+            console.error('Error marking encouragements read:', error);
+            return { success: false, error: 'Could not update' };
+        }
+
+        return { success: true };
+    } catch (err) {
+        console.error('Error marking encouragements read:', err);
+        return { success: false, error: 'Could not update' };
+    }
+};
+
+/**
+ * Fetch featured/public journeys for discovery
+ * @param {object} options
+ * @param {boolean} [options.featuredOnly=false] - Only show featured journeys
+ * @param {number} [options.limit=20] - Max results
+ * @param {number} [options.offset=0] - Pagination offset
+ * @returns {Promise<{ journeys?: array, error?: string }>}
+ */
+export const fetchPublicJourneys = async ({ featuredOnly = false, limit = 20, offset = 0 } = {}) => {
+    try {
+        let query = supabase
+            .from('mountains')
+            .select(`
+                id,
+                username,
+                title,
+                target,
+                public_bio,
+                current_value,
+                target_value,
+                metric_prefix,
+                metric_suffix,
+                encouragement_count,
+                is_featured,
+                featured_at,
+                created_at
+            `)
+            .eq('is_public', true)
+            .not('username', 'is', null);
+
+        if (featuredOnly) {
+            query = query.eq('is_featured', true);
+        }
+
+        query = query
+            .order('is_featured', { ascending: false })
+            .order('encouragement_count', { ascending: false })
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        const { data, error } = await query;
+
+        if (error) {
+            console.error('Error fetching public journeys:', error);
+            return { error: 'Could not load journeys' };
+        }
+
+        // Calculate progress for each journey
+        const journeys = (data || []).map(m => ({
+            ...m,
+            progress: m.target_value > 0
+                ? Math.min(100, Math.floor((m.current_value || 0) / m.target_value * 100))
+                : 0
+        }));
+
+        return { journeys };
+    } catch (err) {
+        console.error('Error fetching public journeys:', err);
+        return { error: 'Could not load journeys' };
+    }
+};
+
+/**
+ * Fetch milestones for a mountain
+ * @param {string} mountainId
+ * @returns {Promise<{ milestones?: array, error?: string }>}
+ */
+export const fetchMilestones = async (mountainId) => {
+    try {
+        const { data, error } = await supabase
+            .from('milestones')
+            .select('*')
+            .eq('mountain_id', mountainId)
+            .order('achieved_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching milestones:', error);
+            return { error: 'Could not load milestones' };
+        }
+
+        return { milestones: data || [] };
+    } catch (err) {
+        console.error('Error fetching milestones:', err);
+        return { error: 'Could not load milestones' };
+    }
+};
+
+/**
+ * Mark milestone as shared
+ * @param {string} milestoneId
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export const markMilestoneShared = async (milestoneId) => {
+    try {
+        const { error } = await supabase
+            .from('milestones')
+            .update({
+                shared: true,
+                shared_at: new Date().toISOString()
+            })
+            .eq('id', milestoneId);
+
+        if (error) {
+            console.error('Error marking milestone shared:', error);
+            return { success: false, error: 'Could not update milestone' };
+        }
+
+        return { success: true };
+    } catch (err) {
+        console.error('Error marking milestone shared:', err);
+        return { success: false, error: 'Could not update milestone' };
+    }
+};
+
+/**
+ * Get unshared milestones for prompting user
+ * @param {string} mountainId
+ * @returns {Promise<{ milestones?: array, error?: string }>}
+ */
+export const getUnsharedMilestones = async (mountainId) => {
+    try {
+        const { data, error } = await supabase
+            .from('milestones')
+            .select('*')
+            .eq('mountain_id', mountainId)
+            .eq('shared', false)
+            .order('achieved_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching unshared milestones:', error);
+            return { error: 'Could not load milestones' };
+        }
+
+        return { milestones: data || [] };
+    } catch (err) {
+        console.error('Error fetching unshared milestones:', err);
+        return { error: 'Could not load milestones' };
+    }
+};

@@ -16,6 +16,7 @@ import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentCancel from './pages/PaymentCancel'
 import Settings from './pages/Settings'
 import PublicProfile from './pages/PublicProfile'
+import Discover from './pages/Discover'
 
 /**
  * Protected Route - Requires authentication
@@ -125,6 +126,7 @@ export default function App() {
                             <Route path="lessons" element={<Lessons />} />
                             <Route path="pricing" element={<Pricing />} />
                             <Route path="settings" element={<Settings />} />
+                            <Route path="discover" element={<Discover />} />
                             <Route path="climb/:username" element={<PublicProfile />} />
                             <Route path="payment-success" element={
                                 <ProtectedRoute>

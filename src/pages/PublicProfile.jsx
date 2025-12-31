@@ -26,9 +26,10 @@ import {
     ENCOURAGEMENT_EMOJIS
 } from '../lib/publicProfileService'
 import MountainBackground from '../components/mountain/MountainBackground'
+import SEO, { getPublicProfileSEO } from '../components/SEO'
 
 // Encouragement Reaction Button
-const EmojiButton = ({ emojiKey, onClick, disabled, count = 0 }) => {
+const EmojiButton = ({ emojiKey, onClick, disabled, count = 0, selected = false }) => {
     const { emoji, label, color } = ENCOURAGEMENT_EMOJIS[emojiKey];
 
     return (
@@ -40,7 +41,9 @@ const EmojiButton = ({ emojiKey, onClick, disabled, count = 0 }) => {
             className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all ${
                 disabled
                     ? 'opacity-50 cursor-not-allowed bg-white/5'
-                    : 'bg-white/5 hover:bg-white/15 cursor-pointer'
+                    : selected
+                        ? 'bg-white/20 ring-2 ring-white/40'
+                        : 'bg-white/5 hover:bg-white/15 cursor-pointer'
             }`}
             style={{ '--emoji-color': color }}
         >
@@ -50,6 +53,75 @@ const EmojiButton = ({ emojiKey, onClick, disabled, count = 0 }) => {
                 <span className="text-xs font-bold" style={{ color }}>{count}</span>
             )}
         </motion.button>
+    );
+};
+
+// Cheer Message Form
+const CheerMessageForm = ({ selectedEmoji, onSend, onCancel, sending }) => {
+    const [senderName, setSenderName] = useState('');
+    const [message, setMessage] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSend(senderName.trim() || null, message.trim() || null);
+    };
+
+    const emojiData = ENCOURAGEMENT_EMOJIS[selectedEmoji];
+
+    return (
+        <motion.form
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            onSubmit={handleSubmit}
+            className="mt-4 p-4 bg-black/30 rounded-xl border border-white/10 space-y-3"
+        >
+            <div className="flex items-center gap-3 mb-3">
+                <span className="text-3xl">{emojiData?.emoji}</span>
+                <div>
+                    <p className="text-white font-medium">Add a personal touch</p>
+                    <p className="text-xs text-white/50">Optional: Include your name and message</p>
+                </div>
+            </div>
+
+            <input
+                type="text"
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                placeholder="Your name (optional)"
+                maxLength={50}
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-brand-teal focus:outline-none"
+            />
+
+            <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Write a short message of encouragement... (optional)"
+                maxLength={140}
+                rows={2}
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-brand-teal focus:outline-none resize-none"
+            />
+
+            <div className="flex items-center justify-between">
+                <span className="text-xs text-white/30">{message.length}/140</span>
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={sending}
+                        className="px-6 py-2 bg-gradient-to-r from-brand-teal to-brand-gold text-brand-blue font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                        {sending ? 'Sending...' : 'Send Cheer'}
+                    </button>
+                </div>
+            </div>
+        </motion.form>
     );
 };
 
@@ -223,6 +295,8 @@ export default function PublicProfile() {
     const [sending, setSending] = useState(false);
     const [showShare, setShowShare] = useState(false);
     const [cooldown, setCooldown] = useState(false);
+    const [selectedEmoji, setSelectedEmoji] = useState(null);
+    const [showCheerForm, setShowCheerForm] = useState(false);
 
     // Clean username (remove @ if present)
     const cleanUsername = username?.replace('@', '');
@@ -291,20 +365,40 @@ export default function PublicProfile() {
         return counts;
     }, [encouragements]);
 
-    // Handle sending encouragement
-    const handleSendEncouragement = async (emoji) => {
+    // Handle emoji selection (first click shows form, second click quick sends)
+    const handleEmojiClick = (emoji) => {
         if (sending || cooldown || !mountain) return;
 
+        if (selectedEmoji === emoji && showCheerForm) {
+            // If same emoji clicked again while form is open, quick send
+            handleSendCheer(null, null);
+        } else {
+            // Show the cheer form with this emoji selected
+            setSelectedEmoji(emoji);
+            setShowCheerForm(true);
+        }
+    };
+
+    // Handle sending encouragement with optional name/message
+    const handleSendCheer = async (senderName, message) => {
+        if (sending || !mountain || !selectedEmoji) return;
+
         setSending(true);
-        const result = await sendEncouragement(mountain.id, emoji);
+        const result = await sendEncouragement(mountain.id, selectedEmoji, senderName, message);
 
         if (result.success) {
-            setSentEmoji(emoji);
+            setSentEmoji(selectedEmoji);
             setEncouragements(prev => [{
                 id: Date.now(),
-                emoji,
+                emoji: selectedEmoji,
+                sender_name: senderName,
+                message: message,
                 created_at: new Date().toISOString()
             }, ...prev]);
+
+            // Reset form
+            setShowCheerForm(false);
+            setSelectedEmoji(null);
 
             // Cooldown to prevent spam
             setCooldown(true);
@@ -312,6 +406,12 @@ export default function PublicProfile() {
         }
 
         setSending(false);
+    };
+
+    // Cancel cheer form
+    const handleCancelCheer = () => {
+        setShowCheerForm(false);
+        setSelectedEmoji(null);
     };
 
     // Loading state
@@ -350,8 +450,21 @@ export default function PublicProfile() {
         );
     }
 
+    // Generate SEO props
+    const seoProps = mountain ? getPublicProfileSEO({
+        username: cleanUsername,
+        title: mountain.title,
+        target: mountain.target,
+        progress: stats?.progress,
+        bio: mountain.public_bio,
+        encouragementCount: mountain.encouragement_count
+    }) : null;
+
     return (
         <div className="min-h-screen bg-brand-blue relative overflow-hidden">
+            {/* Dynamic SEO Meta Tags */}
+            {seoProps && <SEO {...seoProps} />}
+
             {/* Mountain Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <MountainBackground progress={stats?.progress || 0} height="100vh" />
@@ -473,12 +586,31 @@ export default function PublicProfile() {
                                 <EmojiButton
                                     key={key}
                                     emojiKey={key}
-                                    onClick={handleSendEncouragement}
+                                    onClick={handleEmojiClick}
                                     disabled={sending || cooldown}
                                     count={emojiCounts[key]}
+                                    selected={selectedEmoji === key}
                                 />
                             ))}
                         </div>
+
+                        {/* Cheer Message Form */}
+                        <AnimatePresence>
+                            {showCheerForm && selectedEmoji && (
+                                <CheerMessageForm
+                                    selectedEmoji={selectedEmoji}
+                                    onSend={handleSendCheer}
+                                    onCancel={handleCancelCheer}
+                                    sending={sending}
+                                />
+                            )}
+                        </AnimatePresence>
+
+                        {!showCheerForm && !cooldown && (
+                            <p className="text-center text-white/30 text-xs mt-3">
+                                Click an emoji to add an optional message
+                            </p>
+                        )}
 
                         {cooldown && (
                             <p className="text-center text-white/40 text-sm mt-3">
