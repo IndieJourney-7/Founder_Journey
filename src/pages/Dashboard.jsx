@@ -18,6 +18,7 @@ import SignupPromptModal from '../components/SignupPromptModal'
 import MetricProgressModal from '../components/MetricProgressModal'
 import ThemeSelector, { ThemeToggleButton } from '../components/mountain/ThemeSelector'
 import ShareButton from '../components/sharing/ShareButton'
+import EncouragementsDashboard, { EncouragementWidget } from '../components/sharing/EncouragementsDashboard'
 
 export default function Dashboard() {
     const { user } = useAuth()
@@ -59,6 +60,7 @@ export default function Dashboard() {
     const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
     const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false)
     const [signupPromptType, setSignupPromptType] = useState('stepLimit')
+    const [isEncouragementsDashboardOpen, setIsEncouragementsDashboardOpen] = useState(false)
 
     // Reflection Modal State
     const [reflectionModal, setReflectionModal] = useState({
@@ -283,7 +285,7 @@ export default function Dashboard() {
             </div>
 
             {/* Progress Display */}
-            <div className={`absolute ${isDemoMode ? 'top-16' : 'top-4'} left-2 sm:left-4 z-40`}>
+            <div className={`absolute ${isDemoMode ? 'top-16' : 'top-4'} left-2 sm:left-4 z-40 flex flex-col gap-2`}>
                 <div className="bg-black/30 backdrop-blur-md rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 border border-white/10">
                     <div className="text-[10px] sm:text-xs text-white/60">Progress</div>
                     <div className="text-xl sm:text-2xl font-bold text-brand-gold">{Math.round(progress)}%</div>
@@ -306,6 +308,13 @@ export default function Dashboard() {
                         {hasMetricProgress ? 'Update' : 'Track Goal'}
                     </button>
                 </div>
+
+                {/* Encouragements Widget - Only show for public profiles */}
+                {currentMountain?.is_public && (
+                    <div className="w-full max-w-[180px] sm:max-w-[200px]">
+                        <EncouragementWidget onClick={() => setIsEncouragementsDashboardOpen(true)} />
+                    </div>
+                )}
             </div>
 
             {/* Mountain View - Give more space on mobile */}
@@ -523,6 +532,12 @@ export default function Dashboard() {
                 hasMetricProgress={hasMetricProgress}
                 onUpdateProgress={updateMetricProgress}
                 onSetupMetric={setupMetricTracking}
+            />
+
+            {/* Encouragements Dashboard Modal */}
+            <EncouragementsDashboard
+                isOpen={isEncouragementsDashboardOpen}
+                onClose={() => setIsEncouragementsDashboardOpen(false)}
             />
         </div>
     )
