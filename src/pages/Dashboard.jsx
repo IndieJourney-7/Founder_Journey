@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { Plus, X, Share2, MessageSquare, TrendingUp } from 'lucide-react'
+import { Plus, X, Share2, MessageSquare, TrendingUp, Code } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMountain } from '../context/MountainContext'
@@ -19,6 +19,8 @@ import MetricProgressModal from '../components/MetricProgressModal'
 import ThemeSelector, { ThemeToggleButton } from '../components/mountain/ThemeSelector'
 import ShareButton from '../components/sharing/ShareButton'
 import EncouragementsDashboard, { EncouragementWidget } from '../components/sharing/EncouragementsDashboard'
+import EmbedWidget from '../components/sharing/EmbedWidget'
+import MilestoneCelebration, { MilestoneBadge } from '../components/sharing/MilestoneCelebration'
 
 export default function Dashboard() {
     const { user } = useAuth()
@@ -61,6 +63,8 @@ export default function Dashboard() {
     const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false)
     const [signupPromptType, setSignupPromptType] = useState('stepLimit')
     const [isEncouragementsDashboardOpen, setIsEncouragementsDashboardOpen] = useState(false)
+    const [isEmbedWidgetOpen, setIsEmbedWidgetOpen] = useState(false)
+    const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false)
 
     // Reflection Modal State
     const [reflectionModal, setReflectionModal] = useState({
@@ -280,6 +284,16 @@ export default function Dashboard() {
                     <Share2 size={16} />
                     <span className="hidden sm:inline">Export</span>
                 </button>
+                {/* Embed Widget Button */}
+                {currentMountain?.is_public && (
+                    <button
+                        onClick={() => setIsEmbedWidgetOpen(true)}
+                        className="p-2 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition-colors border border-white/10"
+                        title="Get Embed Code"
+                    >
+                        <Code size={18} className="sm:w-5 sm:h-5" />
+                    </button>
+                )}
                 {/* Public Profile Share Button */}
                 <ShareButton />
             </div>
@@ -539,6 +553,23 @@ export default function Dashboard() {
                 isOpen={isEncouragementsDashboardOpen}
                 onClose={() => setIsEncouragementsDashboardOpen(false)}
             />
+
+            {/* Embed Widget Modal */}
+            <EmbedWidget
+                isOpen={isEmbedWidgetOpen}
+                onClose={() => setIsEmbedWidgetOpen(false)}
+            />
+
+            {/* Milestone Celebration Modal */}
+            <MilestoneCelebration
+                isOpen={isMilestoneModalOpen}
+                onClose={() => setIsMilestoneModalOpen(false)}
+            />
+
+            {/* Floating Milestone Badge */}
+            {currentMountain?.is_public && (
+                <MilestoneBadge onClick={() => setIsMilestoneModalOpen(true)} />
+            )}
         </div>
     )
 }

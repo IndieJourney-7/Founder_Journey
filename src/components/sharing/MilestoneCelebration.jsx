@@ -10,7 +10,10 @@ import {
     Rocket,
     Star,
     Target,
-    Check
+    Check,
+    Copy,
+    Download,
+    Image
 } from 'lucide-react'
 import { useMountain } from '../../context/MountainContext'
 import { useToast } from '../../context/ToastContext'
@@ -19,6 +22,7 @@ import {
     markMilestoneShared,
     ENCOURAGEMENT_EMOJIS
 } from '../../lib/publicProfileService'
+import { generateOGImageUrl, BASE_URL } from '../SEO'
 
 // Milestone icons and colors by type
 const MILESTONE_CONFIG = {
@@ -93,27 +97,90 @@ const ConfettiParticle = ({ delay }) => {
     );
 };
 
+// Generate viral share captions
+const generateShareCaptions = (milestone, mountain, config) => {
+    const milestonePercent = milestone.milestone_type;
+    const journeyTitle = mountain?.title || 'my journey';
+    const username = mountain?.username || '';
+
+    // Different captions for different milestones
+    const captions = {
+        '25': [
+            `${config.emoji} 25% of the way to "${journeyTitle}"!\n\nThe first quarter is always the hardest. Now the momentum kicks in.\n\n#buildinpublic #startups`,
+            `${config.emoji} Quarter of the way there!\n\nBuilding "${journeyTitle}" in public.\n\nSmall wins compound into big results.\n\n#buildinpublic #founderjourney`,
+        ],
+        '50': [
+            `${config.emoji} HALFWAY POINT!\n\n50% of the way to "${journeyTitle}"\n\nThis is where most people quit. Not me.\n\n#buildinpublic #startups #nevergiveup`,
+            `${config.emoji} The view from halfway up is incredible.\n\nBuilding "${journeyTitle}" - 50% complete!\n\nKeep climbing. 🏔️\n\n#buildinpublic`,
+        ],
+        '75': [
+            `${config.emoji} 75% TO THE SUMMIT!\n\n"${journeyTitle}" is almost complete.\n\nThe final push. This is where legends are made.\n\n#buildinpublic #startups #almostthere`,
+            `${config.emoji} Three quarters done!\n\nI can see the peak from here.\n\n"${journeyTitle}" - 75% complete\n\n#buildinpublic #founderjourney`,
+        ],
+        '100': [
+            `🏆 I DID IT!\n\nReached 100% on "${journeyTitle}"!\n\nMonths of hard work. Countless lessons. One incredible journey.\n\nThank you to everyone who cheered me on!\n\n#buildinpublic #startup #success`,
+            `🏆 SUMMIT REACHED!\n\n"${journeyTitle}" - 100% COMPLETE!\n\nFrom Day 1 to the peak. Every step was worth it.\n\nWhat's next? Another mountain. 🏔️\n\n#buildinpublic #founder`,
+        ],
+    };
+
+    // Pick a random caption for variety
+    const options = captions[milestonePercent] || [`${config.emoji} Milestone achieved on "${journeyTitle}"!\n\n#buildinpublic`];
+    return options[Math.floor(Math.random() * options.length)];
+};
+
 // Single Milestone Card
 const MilestoneCard = ({ milestone, onShare, onDismiss, isSharing }) => {
     const config = MILESTONE_CONFIG[milestone.milestone_type] || MILESTONE_CONFIG.custom;
     const Icon = config.icon;
+    const [copied, setCopied] = useState(false);
+    const [showCaptions, setShowCaptions] = useState(false);
 
     const { currentMountain } = useMountain();
+    const toast = useToast();
 
-    const shareText = `${config.emoji} ${milestone.title}\n\n${milestone.description}\n\nMy "${currentMountain?.title}" journey on SHIFT ASCENT`;
+    // Generate share content
+    const shareCaption = generateShareCaptions(milestone, currentMountain, config);
     const shareUrl = currentMountain?.username
-        ? `${window.location.origin}/climb/@${currentMountain.username}`
-        : window.location.origin;
+        ? `${BASE_URL}/climb/@${currentMountain.username}`
+        : BASE_URL;
 
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    // Generate dynamic OG image URL for this milestone
+    const ogImageUrl = generateOGImageUrl({
+        username: currentMountain?.username,
+        title: currentMountain?.title,
+        target: currentMountain?.target,
+        progress: parseInt(milestone.milestone_type) || 0,
+        type: 'milestone',
+        milestone: milestone.milestone_type
+    });
+
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareCaption)}&url=${encodeURIComponent(shareUrl)}`;
     const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+
+    // Copy caption to clipboard
+    const handleCopyCaption = async () => {
+        try {
+            await navigator.clipboard.writeText(`${shareCaption}\n\n${shareUrl}`);
+            setCopied(true);
+            toast.success('Copied!', 'Caption copied to clipboard');
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            toast.error('Failed to copy', 'Please try again');
+        }
+    };
+
+    // Download OG image
+    const handleDownloadImage = () => {
+        window.open(ogImageUrl, '_blank');
+        toast.info('Opening image...', 'Right-click to save the image');
+    };
 
     return (
         <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0, y: 20 }}
-            className="bg-[#0F1F3D] border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-w-md w-full"
+            className="bg-[#0F1F3D] border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-w-lg w-full"
         >
             {/* Header with gradient */}
             <div className={`p-6 bg-gradient-to-r ${config.gradient} relative overflow-hidden`}>
@@ -158,13 +225,26 @@ const MilestoneCard = ({ milestone, onShare, onDismiss, isSharing }) => {
 
             {/* Content */}
             <div className="p-6">
-                <p className="text-white/60 text-center mb-6">
-                    {milestone.description}
-                </p>
+                {/* Pre-written caption preview */}
+                <div className="mb-4 p-3 bg-white/5 rounded-xl border border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-white/40">Ready-to-share caption</span>
+                        <button
+                            onClick={handleCopyCaption}
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-white/10 hover:bg-white/20 rounded-md transition-colors"
+                        >
+                            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                            {copied ? 'Copied!' : 'Copy'}
+                        </button>
+                    </div>
+                    <p className="text-sm text-white/70 whitespace-pre-line line-clamp-4">
+                        {shareCaption}
+                    </p>
+                </div>
 
                 {/* Share Options */}
                 <div className="space-y-3">
-                    <p className="text-xs text-white/40 text-center">Share your achievement</p>
+                    <p className="text-xs text-white/40 text-center">One-click share</p>
 
                     <div className="grid grid-cols-2 gap-3">
                         <a
@@ -192,6 +272,15 @@ const MilestoneCard = ({ milestone, onShare, onDismiss, isSharing }) => {
                             LinkedIn
                         </a>
                     </div>
+
+                    {/* Download image button */}
+                    <button
+                        onClick={handleDownloadImage}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-sm"
+                    >
+                        <Image className="w-4 h-4" />
+                        Get Shareable Image
+                    </button>
 
                     <button
                         onClick={() => onDismiss(milestone.id)}

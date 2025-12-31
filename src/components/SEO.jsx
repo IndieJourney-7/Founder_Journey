@@ -61,11 +61,33 @@ export default function SEO({
 }
 
 /**
+ * Generate dynamic OG image URL
+ */
+export function generateOGImageUrl({ username, title, target, progress, cheers, days, type = 'profile', milestone }) {
+    const params = new URLSearchParams({
+        username: username || 'founder',
+        title: title || 'My Journey',
+        progress: Math.round(progress || 0).toString(),
+        type,
+    });
+
+    if (target) params.set('target', target);
+    if (cheers) params.set('cheers', cheers.toString());
+    if (days) params.set('days', days.toString());
+    if (milestone) params.set('milestone', milestone);
+
+    return `${BASE_URL}/api/og?${params.toString()}`;
+}
+
+/**
  * Generate SEO props for a public profile
  */
-export function getPublicProfileSEO({ username, title, target, progress, bio, encouragementCount }) {
+export function getPublicProfileSEO({ username, title, target, progress, bio, encouragementCount, createdAt }) {
     const displayProgress = Math.round(progress || 0);
     const profileUrl = `${BASE_URL}/climb/@${username}`;
+
+    // Calculate days on journey
+    const days = createdAt ? Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
     // Generate a dynamic description
     let description = `@${username} is ${displayProgress}% towards "${title}"`;
@@ -74,9 +96,16 @@ export function getPublicProfileSEO({ username, title, target, progress, bio, en
     }
     description += `. Follow their journey on SHIFT ASCENT!`;
 
-    // For now, use the default OG image
-    // In production, you could generate dynamic images via an API
-    const ogImage = `${BASE_URL}/img1.png`;
+    // Generate dynamic OG image
+    const ogImage = generateOGImageUrl({
+        username,
+        title,
+        target,
+        progress: displayProgress,
+        cheers: encouragementCount,
+        days,
+        type: 'profile'
+    });
 
     return {
         title: `@${username}'s Journey: ${title}`,
@@ -87,10 +116,47 @@ export function getPublicProfileSEO({ username, title, target, progress, bio, en
         twitter: {
             card: 'summary_large_image',
             title: `${displayProgress}% to "${title}" | @${username}`,
-            description: bio || description
+            description: bio || description,
+            image: ogImage
         },
         additional: {
             'profile:username': username
+        }
+    };
+}
+
+/**
+ * Generate SEO props for a milestone celebration
+ */
+export function getMilestoneSEO({ username, title, milestone, target }) {
+    const profileUrl = `${BASE_URL}/climb/@${username}`;
+
+    const milestoneText = milestone === '100' ? 'reached the summit' :
+        milestone === '75' ? 'is 75% there' :
+            milestone === '50' ? 'hit the halfway point' : 'is 25% of the way';
+
+    const description = `@${username} ${milestoneText} on their journey to "${title}"! Cheer them on!`;
+
+    // Generate milestone OG image
+    const ogImage = generateOGImageUrl({
+        username,
+        title,
+        target,
+        progress: parseInt(milestone),
+        type: 'milestone',
+        milestone
+    });
+
+    return {
+        title: `${milestone}% Milestone: @${username}'s Journey`,
+        description: description.substring(0, 160),
+        url: profileUrl,
+        image: ogImage,
+        twitter: {
+            card: 'summary_large_image',
+            title: `${milestone === '100' ? '🏆' : milestone === '75' ? '⭐' : milestone === '50' ? '🎯' : '🚀'} ${milestone}% Complete!`,
+            description,
+            image: ogImage
         }
     };
 }

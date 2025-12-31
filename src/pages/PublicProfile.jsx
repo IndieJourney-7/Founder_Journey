@@ -17,7 +17,9 @@ import {
     ArrowLeft,
     BookOpen,
     TrendingUp,
-    X
+    X,
+    Star,
+    Users
 } from 'lucide-react'
 import {
     fetchPublicMountain,
@@ -365,6 +367,29 @@ export default function PublicProfile() {
         return counts;
     }, [encouragements]);
 
+    // Calculate top supporters (people who sent encouragements with names)
+    const topSupporters = useMemo(() => {
+        const supporterMap = {};
+        encouragements.forEach(e => {
+            if (e.sender_name) {
+                if (!supporterMap[e.sender_name]) {
+                    supporterMap[e.sender_name] = { name: e.sender_name, count: 0, latestEmoji: e.emoji };
+                }
+                supporterMap[e.sender_name].count++;
+            }
+        });
+        return Object.values(supporterMap)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+    }, [encouragements]);
+
+    // Recent messages from supporters
+    const recentMessages = useMemo(() => {
+        return encouragements
+            .filter(e => e.message)
+            .slice(0, 5);
+    }, [encouragements]);
+
     // Handle emoji selection (first click shows form, second click quick sends)
     const handleEmojiClick = (emoji) => {
         if (sending || cooldown || !mountain) return;
@@ -618,6 +643,82 @@ export default function PublicProfile() {
                             </p>
                         )}
                     </motion.div>
+
+                    {/* Top Supporters & Recent Messages */}
+                    {(topSupporters.length > 0 || recentMessages.length > 0) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.25 }}
+                            className="bg-[#0F1F3D]/80 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6"
+                        >
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Top Supporters */}
+                                {topSupporters.length > 0 && (
+                                    <div>
+                                        <h4 className="text-sm font-bold text-white/60 mb-3 flex items-center gap-2">
+                                            <Users className="w-4 h-4" />
+                                            Top Supporters
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {topSupporters.map((supporter, index) => (
+                                                <div
+                                                    key={supporter.name}
+                                                    className="flex items-center gap-3 p-2 bg-white/5 rounded-lg"
+                                                >
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                                        index === 0 ? 'bg-brand-gold/20 text-brand-gold' :
+                                                        index === 1 ? 'bg-gray-400/20 text-gray-300' :
+                                                        index === 2 ? 'bg-amber-700/20 text-amber-600' :
+                                                        'bg-white/10 text-white/60'
+                                                    }`}>
+                                                        {index < 3 ? (
+                                                            <Star className="w-4 h-4" />
+                                                        ) : (
+                                                            supporter.name.charAt(0).toUpperCase()
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-white truncate">{supporter.name}</p>
+                                                        <p className="text-xs text-white/40">{supporter.count} cheers</p>
+                                                    </div>
+                                                    <span className="text-lg">{ENCOURAGEMENT_EMOJIS[supporter.latestEmoji]?.emoji}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Recent Messages */}
+                                {recentMessages.length > 0 && (
+                                    <div>
+                                        <h4 className="text-sm font-bold text-white/60 mb-3 flex items-center gap-2">
+                                            <Heart className="w-4 h-4 text-red-400" />
+                                            Recent Messages
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {recentMessages.map((msg, index) => (
+                                                <div
+                                                    key={msg.id || index}
+                                                    className="p-3 bg-white/5 rounded-lg"
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <span className="text-lg shrink-0">{ENCOURAGEMENT_EMOJIS[msg.emoji]?.emoji}</span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm text-white/80 line-clamp-2">{msg.message}</p>
+                                                            <p className="text-xs text-white/40 mt-1">
+                                                                — {msg.sender_name || 'Anonymous'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* Steps List */}
                     {steps.length > 0 && (
