@@ -4,7 +4,16 @@
 -- Run this in Supabase SQL Editor AFTER Phase 1 migration
 -- =====================================================
 
--- 1. Add featured profile fields to mountains table
+-- 1. Add metric tracking fields to mountains table (if not exists)
+-- These support metric-based progress tracking (e.g., $0 → $10K MRR)
+ALTER TABLE mountains
+ADD COLUMN IF NOT EXISTS current_value NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS target_value NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS metric_prefix TEXT DEFAULT '',
+ADD COLUMN IF NOT EXISTS metric_suffix TEXT DEFAULT '',
+ADD COLUMN IF NOT EXISTS progress_history JSONB DEFAULT '[]'::JSONB;
+
+-- 2. Add featured profile fields to mountains table
 ALTER TABLE mountains
 ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE,
 ADD COLUMN IF NOT EXISTS featured_at TIMESTAMP WITH TIME ZONE,
@@ -131,10 +140,14 @@ WITH CHECK (
 );
 
 -- 6. Function to auto-create milestones when progress changes
+-- Supports BOTH metric-based (current_value/target_value) and step-based progress
 CREATE OR REPLACE FUNCTION check_milestone_achievements()
 RETURNS TRIGGER AS $$
 DECLARE
     progress_percent INTEGER;
+    old_progress_percent INTEGER;
+    completed_steps INTEGER;
+    total_steps INTEGER;
     milestone_titles JSONB := '{
         "25": "Quarter Way There!",
         "50": "Halfway Point!",
@@ -150,19 +163,38 @@ DECLARE
     milestone_key TEXT;
 BEGIN
     -- Calculate progress percentage
-    IF NEW.target_value IS NOT NULL AND NEW.target_value > 0 THEN
+    -- Method 1: Metric-based (if target_value is set)
+    IF COALESCE(NEW.target_value, 0) > 0 THEN
         progress_percent := FLOOR((COALESCE(NEW.current_value, 0)::FLOAT / NEW.target_value::FLOAT) * 100);
+        old_progress_percent := FLOOR((COALESCE(OLD.current_value, 0)::FLOAT / NULLIF(COALESCE(OLD.target_value, 0), 0)::FLOAT) * 100);
     ELSE
-        progress_percent := 0;
+        -- Method 2: Step-based progress (fallback)
+        SELECT
+            COUNT(*) FILTER (WHERE status = 'success'),
+            GREATEST(COUNT(*), COALESCE(NEW.total_steps_planned, 1))
+        INTO completed_steps, total_steps
+        FROM steps
+        WHERE mountain_id = NEW.id;
+
+        progress_percent := FLOOR((completed_steps::FLOAT / NULLIF(total_steps, 0)::FLOAT) * 100);
+
+        -- Calculate old progress for step-based
+        SELECT COUNT(*) FILTER (WHERE status = 'success')
+        INTO completed_steps
+        FROM steps
+        WHERE mountain_id = OLD.id;
+
+        old_progress_percent := FLOOR((completed_steps::FLOAT / NULLIF(total_steps, 0)::FLOAT) * 100);
     END IF;
+
+    -- Handle null cases
+    progress_percent := COALESCE(progress_percent, 0);
+    old_progress_percent := COALESCE(old_progress_percent, 0);
 
     -- Check each milestone threshold
     FOREACH milestone_key IN ARRAY ARRAY['25', '50', '75', '100']
     LOOP
-        IF progress_percent >= milestone_key::INTEGER AND
-           (OLD.current_value IS NULL OR
-            FLOOR((COALESCE(OLD.current_value, 0)::FLOAT / NULLIF(OLD.target_value, 0)::FLOAT) * 100) < milestone_key::INTEGER) THEN
-
+        IF progress_percent >= milestone_key::INTEGER AND old_progress_percent < milestone_key::INTEGER THEN
             -- Check if this milestone already exists
             IF NOT EXISTS (
                 SELECT 1 FROM milestones
@@ -185,14 +217,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Apply milestone trigger
+-- Apply milestone trigger on mountain updates
+-- Triggers on both current_value changes (metric-based) and any update (step recalc)
 DROP TRIGGER IF EXISTS trigger_check_milestones ON mountains;
 CREATE TRIGGER trigger_check_milestones
-    AFTER UPDATE OF current_value ON mountains
+    AFTER UPDATE ON mountains
     FOR EACH ROW
     EXECUTE FUNCTION check_milestone_achievements();
 
 -- 7. View for featured journeys (public discovery)
+-- Supports both metric-based and step-based progress calculation
 CREATE OR REPLACE VIEW public_featured_journeys AS
 SELECT
     m.id,
@@ -200,16 +234,24 @@ SELECT
     m.title,
     m.target,
     m.public_bio,
-    m.current_value,
-    m.target_value,
-    m.metric_prefix,
-    m.metric_suffix,
-    m.encouragement_count,
+    COALESCE(m.current_value, 0) as current_value,
+    COALESCE(m.target_value, 0) as target_value,
+    COALESCE(m.metric_prefix, '') as metric_prefix,
+    COALESCE(m.metric_suffix, '') as metric_suffix,
+    COALESCE(m.encouragement_count, 0) as encouragement_count,
     m.featured_at,
     m.created_at,
+    -- Progress: use metric-based if target_value > 0, else use step-based
     CASE
-        WHEN m.target_value > 0 THEN FLOOR((COALESCE(m.current_value, 0)::FLOAT / m.target_value::FLOAT) * 100)
-        ELSE 0
+        WHEN COALESCE(m.target_value, 0) > 0 THEN
+            FLOOR((COALESCE(m.current_value, 0)::FLOAT / m.target_value::FLOAT) * 100)
+        ELSE
+            CASE
+                WHEN (SELECT COUNT(*) FROM steps WHERE mountain_id = m.id) > 0 THEN
+                    FLOOR((SELECT COUNT(*) FROM steps WHERE mountain_id = m.id AND status = 'success')::FLOAT /
+                          GREATEST((SELECT COUNT(*) FROM steps WHERE mountain_id = m.id), COALESCE(m.total_steps_planned, 1))::FLOAT * 100)
+                ELSE 0
+            END
     END as progress_percent,
     (SELECT COUNT(*) FROM steps WHERE mountain_id = m.id AND status = 'success') as completed_steps,
     (SELECT COUNT(*) FROM steps WHERE mountain_id = m.id) as total_steps
@@ -220,6 +262,7 @@ AND m.username IS NOT NULL
 ORDER BY m.featured_at DESC NULLS LAST, m.encouragement_count DESC;
 
 -- 8. View for public discovery (all public journeys, not just featured)
+-- Supports both metric-based and step-based progress calculation
 CREATE OR REPLACE VIEW public_journeys AS
 SELECT
     m.id,
@@ -227,17 +270,25 @@ SELECT
     m.title,
     m.target,
     m.public_bio,
-    m.current_value,
-    m.target_value,
-    m.metric_prefix,
-    m.metric_suffix,
-    m.encouragement_count,
-    m.is_featured,
+    COALESCE(m.current_value, 0) as current_value,
+    COALESCE(m.target_value, 0) as target_value,
+    COALESCE(m.metric_prefix, '') as metric_prefix,
+    COALESCE(m.metric_suffix, '') as metric_suffix,
+    COALESCE(m.encouragement_count, 0) as encouragement_count,
+    COALESCE(m.is_featured, FALSE) as is_featured,
     m.featured_at,
     m.created_at,
+    -- Progress: use metric-based if target_value > 0, else use step-based
     CASE
-        WHEN m.target_value > 0 THEN FLOOR((COALESCE(m.current_value, 0)::FLOAT / m.target_value::FLOAT) * 100)
-        ELSE 0
+        WHEN COALESCE(m.target_value, 0) > 0 THEN
+            FLOOR((COALESCE(m.current_value, 0)::FLOAT / m.target_value::FLOAT) * 100)
+        ELSE
+            CASE
+                WHEN (SELECT COUNT(*) FROM steps WHERE mountain_id = m.id) > 0 THEN
+                    FLOOR((SELECT COUNT(*) FROM steps WHERE mountain_id = m.id AND status = 'success')::FLOAT /
+                          GREATEST((SELECT COUNT(*) FROM steps WHERE mountain_id = m.id), COALESCE(m.total_steps_planned, 1))::FLOAT * 100)
+                ELSE 0
+            END
     END as progress_percent,
     (SELECT COUNT(*) FROM steps WHERE mountain_id = m.id AND status = 'success') as completed_steps,
     (SELECT COUNT(*) FROM steps WHERE mountain_id = m.id) as total_steps
