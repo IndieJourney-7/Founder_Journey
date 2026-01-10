@@ -10,11 +10,12 @@
  * - journey_notes (id bigint, step_id bigint, notes)
  */
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from './AuthContext'
 import * as mountainService from '../lib/mountainService'
 import * as stepsService from '../lib/stepsService'
 import * as notesService from '../lib/notesService'
+import * as milestoneService from '../lib/milestoneService'
 import * as demoStorage from '../lib/demoModeStorage'
 
 const MountainContext = createContext()
@@ -29,6 +30,9 @@ export const MountainProvider = ({ children }) => {
     const [steps, setSteps] = useState([])
     const [journeyNotes, setJourneyNotes] = useState([])
     const [productImages, setProductImages] = useState([])
+    const [milestones, setMilestones] = useState([])
+    const [checkins, setCheckins] = useState([])
+    const [recentlyUnlockedMilestone, setRecentlyUnlockedMilestone] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [isDemoMode, setIsDemoMode] = useState(false)
@@ -50,11 +54,15 @@ export const MountainProvider = ({ children }) => {
             const demoSteps = demoStorage.getDemoSteps()
             const demoNotes = demoStorage.getDemoNotes()
             const demoImages = demoStorage.getDemoProductImages()
+            const demoMilestones = demoStorage.getDemoMilestones()
+            const demoCheckins = demoStorage.getDemoCheckins()
 
             setCurrentMountain(demoMountain)
             setSteps(demoSteps)
             setJourneyNotes(demoNotes)
             setProductImages(demoImages)
+            setMilestones(demoMilestones)
+            setCheckins(demoCheckins)
             setLoading(false)
             return
         }
@@ -89,15 +97,22 @@ export const MountainProvider = ({ children }) => {
         if (!currentMountain) {
             setSteps([])
             setJourneyNotes([])
+            setMilestones([])
+            setCheckins([])
             return
         }
 
-        const loadSteps = async () => {
+        const loadData = async () => {
+            // Load steps
             const { steps: fetchedSteps } = await stepsService.fetchSteps(currentMountain.id)
             setSteps(fetchedSteps)
+
+            // Load milestones
+            const { milestones: fetchedMilestones } = await milestoneService.fetchMilestones(currentMountain.id)
+            setMilestones(fetchedMilestones)
         }
 
-        loadSteps()
+        loadData()
     }, [currentMountain, user])
 
     /**
@@ -517,6 +532,253 @@ export const MountainProvider = ({ children }) => {
         return { success: true, step }
     }, [user])
 
+    // ============ MILESTONE FUNCTIONS ============
+
+    /**
+     * Create milestones for the journey
+     */
+    const createMilestones = useCallback(async (milestonesData) => {
+        if (!currentMountain) return { success: false, error: 'No mountain' }
+
+        // DEMO MODE
+        if (!user) {
+            const result = demoStorage.addDemoMilestonesBatch(milestonesData)
+            if (result.success) {
+                setMilestones(demoStorage.getDemoMilestones())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE
+        const { milestones: created, error: createError } = await milestoneService.createMilestonesBatch(
+            currentMountain.id,
+            user.id,
+            milestonesData
+        )
+
+        if (createError) {
+            setError(createError.message)
+            return { success: false, error: createError }
+        }
+
+        setMilestones(created)
+        return { success: true, milestones: created }
+    }, [user, currentMountain])
+
+    /**
+     * Update a milestone
+     */
+    const updateMilestone = useCallback(async (milestoneId, updates) => {
+        // DEMO MODE
+        if (!user) {
+            const result = demoStorage.updateDemoMilestone(milestoneId, updates)
+            if (result.success) {
+                setMilestones(demoStorage.getDemoMilestones())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE
+        const { milestone, error: updateError } = await milestoneService.updateMilestone(milestoneId, updates)
+
+        if (updateError) {
+            setError(updateError.message)
+            return { success: false, error: updateError }
+        }
+
+        setMilestones(prev => prev.map(m => m.id === milestoneId ? milestone : m))
+        return { success: true, milestone }
+    }, [user])
+
+    /**
+     * Delete a milestone
+     */
+    const deleteMilestone = useCallback(async (milestoneId) => {
+        // DEMO MODE
+        if (!user) {
+            const result = demoStorage.deleteDemoMilestone(milestoneId)
+            if (result.success) {
+                setMilestones(demoStorage.getDemoMilestones())
+                setCheckins(demoStorage.getDemoCheckins())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE
+        const { error: deleteError } = await milestoneService.deleteMilestone(milestoneId)
+
+        if (deleteError) {
+            setError(deleteError.message)
+            return { success: false, error: deleteError }
+        }
+
+        setMilestones(prev => prev.filter(m => m.id !== milestoneId))
+        setCheckins(prev => prev.filter(c => c.milestone_id !== milestoneId))
+        return { success: true }
+    }, [user])
+
+    /**
+     * Daily check-in for a milestone
+     */
+    const checkIn = useCallback(async (milestoneId, keptPromise, note = null) => {
+        const today = new Date().toISOString().split('T')[0]
+
+        // DEMO MODE
+        if (!user) {
+            const result = demoStorage.upsertDemoCheckin(milestoneId, today, keptPromise, note)
+            if (result.success) {
+                setCheckins(demoStorage.getDemoCheckins())
+            }
+            return result
+        }
+
+        // AUTHENTICATED MODE
+        const { checkin, error: checkinError } = await milestoneService.upsertCheckin(
+            milestoneId,
+            user.id,
+            today,
+            keptPromise,
+            note
+        )
+
+        if (checkinError) {
+            setError(checkinError.message)
+            return { success: false, error: checkinError }
+        }
+
+        // Update or add to checkins
+        setCheckins(prev => {
+            const existingIndex = prev.findIndex(c => c.milestone_id === milestoneId && c.checkin_date === today)
+            if (existingIndex >= 0) {
+                const updated = [...prev]
+                updated[existingIndex] = checkin
+                return updated
+            }
+            return [...prev, checkin]
+        })
+
+        return { success: true, checkin }
+    }, [user])
+
+    /**
+     * Update progress and check for milestone unlocks
+     */
+    const updateProgressWithMilestones = useCallback(async (newValue) => {
+        // DEMO MODE
+        if (!user) {
+            // Update progress
+            const progressResult = demoStorage.updateDemoMetricProgress(newValue)
+            if (!progressResult.success) return progressResult
+
+            // Check milestones
+            const milestoneResult = demoStorage.checkAndUnlockDemoMilestones(newValue)
+
+            setCurrentMountain(progressResult.mountain)
+            setMilestones(milestoneResult.milestones || [])
+
+            // Trigger celebration for newly unlocked
+            if (milestoneResult.newlyUnlocked?.length > 0) {
+                setRecentlyUnlockedMilestone(milestoneResult.newlyUnlocked[0])
+            }
+
+            return {
+                success: true,
+                mountain: progressResult.mountain,
+                newlyUnlocked: milestoneResult.newlyUnlocked || []
+            }
+        }
+
+        // AUTHENTICATED MODE
+        const { data, error: updateError } = await mountainService.updateMountain(currentMountain.id, {
+            current_value: newValue,
+            progress_history: [
+                ...(currentMountain.progress_history || []),
+                { date: new Date().toISOString(), value: newValue }
+            ]
+        })
+
+        if (updateError) {
+            setError(updateError.message)
+            return { success: false, error: updateError }
+        }
+
+        setCurrentMountain(data)
+
+        // Refresh milestones (trigger auto-unlocks)
+        const { milestones: updatedMilestones } = await milestoneService.fetchMilestones(currentMountain.id)
+        const previousMilestones = milestones
+        setMilestones(updatedMilestones)
+
+        // Find newly unlocked
+        const newlyUnlocked = updatedMilestones.filter(m =>
+            m.is_unlocked && !previousMilestones.find(pm => pm.id === m.id && pm.is_unlocked)
+        )
+
+        if (newlyUnlocked.length > 0) {
+            setRecentlyUnlockedMilestone(newlyUnlocked[0])
+        }
+
+        return { success: true, mountain: data, newlyUnlocked }
+    }, [user, currentMountain, milestones])
+
+    /**
+     * Clear recently unlocked milestone (after showing celebration)
+     */
+    const clearRecentlyUnlockedMilestone = useCallback(() => {
+        setRecentlyUnlockedMilestone(null)
+    }, [])
+
+    /**
+     * Get current (next unlockable) milestone
+     */
+    const currentMilestone = useMemo(() => {
+        const sorted = [...milestones].sort((a, b) => a.target_value - b.target_value)
+        return sorted.find(m => !m.is_unlocked) || null
+    }, [milestones])
+
+    /**
+     * Get streak stats for current milestone
+     */
+    const getCurrentMilestoneStreak = useCallback((milestoneId) => {
+        if (!user) {
+            return demoStorage.getDemoMilestoneStreak(milestoneId)
+        }
+        // For authenticated, we'd call the RPC but for now return from local checkins
+        const milestoneCheckins = checkins.filter(c => c.milestone_id === milestoneId)
+        if (milestoneCheckins.length === 0) {
+            return { current_streak: 0, longest_streak: 0, total_days: 0, kept_days: 0, slip_days: 0, commitment_rate: 0 }
+        }
+
+        const sorted = [...milestoneCheckins].sort((a, b) => new Date(b.checkin_date) - new Date(a.checkin_date))
+        let currentStreak = 0
+        let longestStreak = 0
+        let tempStreak = 0
+
+        for (const c of sorted) {
+            if (c.kept_promise) {
+                currentStreak++
+            } else {
+                break
+            }
+        }
+
+        for (const c of sorted) {
+            if (c.kept_promise) {
+                tempStreak++
+                if (tempStreak > longestStreak) longestStreak = tempStreak
+            } else {
+                tempStreak = 0
+            }
+        }
+
+        const totalDays = milestoneCheckins.length
+        const keptDays = milestoneCheckins.filter(c => c.kept_promise).length
+        const slipDays = totalDays - keptDays
+        const commitmentRate = totalDays > 0 ? Math.round((keptDays / totalDays) * 100) : 0
+
+        return { current_streak: currentStreak, longest_streak: longestStreak, total_days: totalDays, kept_days: keptDays, slip_days: slipDays, commitment_rate: commitmentRate }
+    }, [user, checkins])
+
     const hasMountain = !!currentMountain
 
     const value = {
@@ -526,6 +788,10 @@ export const MountainProvider = ({ children }) => {
         journeyNotes,
         stickyNotes: journeyNotes, // Alias for backward compatibility
         productImages,
+        milestones,
+        checkins,
+        currentMilestone,
+        recentlyUnlockedMilestone,
         loading,
         error,
         isDemoMode, // Demo mode flag
@@ -558,6 +824,15 @@ export const MountainProvider = ({ children }) => {
         refresh,
         updateMetricProgress,
         setupMetricTracking,
+
+        // Milestone Actions
+        createMilestones,
+        updateMilestone,
+        deleteMilestone,
+        checkIn,
+        updateProgressWithMilestones,
+        clearRecentlyUnlockedMilestone,
+        getCurrentMilestoneStreak,
 
         // Setters
         setCurrentMountain,

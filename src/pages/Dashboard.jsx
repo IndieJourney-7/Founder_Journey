@@ -1,249 +1,95 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
-import { Plus, X, Share2, MessageSquare, TrendingUp, Code } from 'lucide-react'
+import { Share2, MessageSquare, TrendingUp, Code, Target, Lock, Gift, Flame } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMountain } from '../context/MountainContext'
 import { useToast } from '../context/ToastContext'
 import { usePlanLimits } from '../hooks/usePlanLimits'
 import MountainDashboard from '../components/mountain/MountainDashboard'
-import StepCard from '../components/StepCard'
 import ProductShowcaseBanner from '../components/sharing/ProductShowcaseBanner'
 import ProductGallery from '../components/ProductGallery'
-import ReflectionModal from '../components/ReflectionModal'
-import NoteViewer from '../components/NoteViewer'
 import FeedbackModal from '../components/FeedbackModal'
 import SignupPromptModal from '../components/SignupPromptModal'
-import MetricProgressModal from '../components/MetricProgressModal'
-import ThemeSelector, { ThemeToggleButton } from '../components/mountain/ThemeSelector'
 import ShareButton from '../components/sharing/ShareButton'
 import EncouragementsDashboard, { EncouragementWidget } from '../components/sharing/EncouragementsDashboard'
 import EmbedWidget from '../components/sharing/EmbedWidget'
-import MilestoneCelebration, { MilestoneBadge } from '../components/sharing/MilestoneCelebration'
+import LockMilestoneCard, { MilestoneUnlockCelebration } from '../components/LockMilestoneCard'
+import DailyCheckIn, { QuickCheckIn } from '../components/DailyCheckIn'
+import UpdateProgressModal from '../components/UpdateProgressModal'
+import MilestoneSetupModal from '../components/MilestoneSetupModal'
 
 export default function Dashboard() {
     const { user } = useAuth()
     const {
         currentMountain,
-        steps: contextSteps,
+        steps,
         journeyNotes,
-        addStep,
-        updateStepStatus,
-        saveJourneyNote,
-        deleteNoteAndResetStep,
-        deleteStep,
-        editStep,
+        milestones,
+        currentMilestone,
+        recentlyUnlockedMilestone,
+        clearRecentlyUnlockedMilestone,
         progress,
         resolvedSteps,
         totalPlanned,
         refresh,
         isDemoMode,
         hasMetricProgress,
-        updateMetricProgress,
-        setupMetricTracking
+        updateProgressWithMilestones,
+        setupMetricTracking,
+        createMilestones,
+        getCurrentMilestoneStreak
     } = useMountain()
     const { checkLimit, isPro } = usePlanLimits()
     const toast = useToast()
 
     // Data
-    const steps = contextSteps || []
     const goal = currentMountain ? { goal_amount: currentMountain.target } : { goal_amount: '' }
     const missionName = currentMountain ? currentMountain.title : ''
     const theme = 'startup'
 
     // UI State
-    const [isAddingStep, setIsAddingStep] = useState(false)
-    const [editingStep, setEditingStep] = useState(null) // New state for editing
-    const [newStep, setNewStep] = useState({ title: '', description: '', expected_outcome: '' })
     const [isProductBannerOpen, setIsProductBannerOpen] = useState(false)
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
     const [showSignupPrompt, setShowSignupPrompt] = useState(false)
-    const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
-    const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false)
+    const [isProgressModalOpen, setIsProgressModalOpen] = useState(false)
     const [signupPromptType, setSignupPromptType] = useState('stepLimit')
     const [isEncouragementsDashboardOpen, setIsEncouragementsDashboardOpen] = useState(false)
     const [isEmbedWidgetOpen, setIsEmbedWidgetOpen] = useState(false)
-    const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false)
+    const [isMilestoneSetupOpen, setIsMilestoneSetupOpen] = useState(false)
+    const [activeTab, setActiveTab] = useState('lock') // 'lock' | 'calendar'
 
-    // Reflection Modal State
-    const [reflectionModal, setReflectionModal] = useState({
-        isOpen: false,
-        step: null,
-        result: null,
-        editingNote: null
-    })
-
-    // Note Viewer State
-    const [noteViewer, setNoteViewer] = useState({
-        isOpen: false,
-        step: null,
-        note: null
-    })
-
-    // Get ALL notes for a step (supports multiple notes per step)
-    const getNotesForStep = (stepId) => {
-        return journeyNotes.filter(n => n.step_id === stepId)
-    }
-
-    // Legacy: Get single note for a step (for backward compatibility)
-    const getNoteForStep = (stepId) => {
-        return journeyNotes.find(n => n.step_id === stepId)
-    }
-
-    // Celebration trigger
+    // Celebration trigger for milestone unlocks
     useEffect(() => {
-        if (progress > 0 && progress % 25 === 0 && progress <= 100) {
+        if (recentlyUnlockedMilestone) {
             confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#E7C778', '#1CC5A3', '#FFFFFF']
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.5 },
+                colors: ['#E7C778', '#1CC5A3', '#FFFFFF', '#FFD700']
             })
         }
-    }, [progress])
+    }, [recentlyUnlockedMilestone])
 
-    // Check if the latest step is resolved (has status + note)
-    const checkPreviousStepResolved = () => {
-        if (steps.length === 0) return true
+    // Check if we need milestone setup
+    const needsMilestoneSetup = hasMetricProgress && milestones.length === 0
 
-        const lastStep = [...steps].sort((a, b) => a.order_index - b.order_index).pop()
+    // Handle progress update
+    const handleProgressUpdate = async (newValue) => {
+        const result = await updateProgressWithMilestones(newValue)
+        if (result.success) {
+            toast.success('Progress Updated', `Now at ${currentMountain?.metric_prefix || ''}${newValue.toLocaleString()}${currentMountain?.metric_suffix ? ' ' + currentMountain.metric_suffix : ''}`)
 
-        // Check if resolved (success/failed)
-        if (lastStep.status !== 'success' && lastStep.status !== 'failed') {
-            return false
-        }
-
-        // Check if note exists
-        const note = getNoteForStep(lastStep.id)
-        if (!note) {
-            return false
-        }
-
-        return true
-    }
-
-    // Add new step
-    const handleAddStep = async (e) => {
-        e.preventDefault()
-        if (!newStep.title) return
-
-        // Check limits if adding new step (not editing)
-        if (!editingStep && !checkLimit('add_step')) {
-            toast.warning('Limit Reached', "You've reached the step limit. Upgrade to Pro!")
-            return
-        }
-
-        // Integrity Check: Previous step must be resolved (only if adding new)
-        if (!editingStep && !checkPreviousStepResolved()) {
-            toast.info('Add a Note First', 'Reflect on the previous step before continuing.')
-            return
-        }
-
-        // Add or edit step
-        if (editingStep) {
-            // Edit mode
-            await editStep(editingStep.id, {
-                title: newStep.title,
-                description: newStep.description,
-                expected_outcome: newStep.expected_outcome
-            })
-            toast.success('Step Updated', 'Your strategy has been updated.')
-        } else {
-            // Add mode
-            const result = await addStep({
-                title: newStep.title,
-                description: newStep.description,
-                expected_outcome: newStep.expected_outcome,
-                status: 'pending'
-            })
-
-            // Check if demo mode hit step limit
-            if (result && result.limitReached) {
-                setSignupPromptType('stepLimit')
-                setShowSignupPrompt(true)
-                return
+            if (result.newlyUnlocked?.length > 0) {
+                // Celebration will show automatically via recentlyUnlockedMilestone
             }
-
-            toast.success('Step Added', 'New strategy added to your journey!')
         }
-
-        setIsAddingStep(false)
-        setEditingStep(null)
-        setNewStep({ title: '', description: '', expected_outcome: '' })
+        setIsProgressModalOpen(false)
     }
 
-    // Open reflection modal to add a new note (NEW FLOW)
-    const handleAddNote = (step) => {
-        setReflectionModal({
-            isOpen: true,
-            step: step,
-            result: null, // No pre-selected result - user chooses inside modal
-            editingNote: null
-        })
-    }
-
-    // Save reflection - result now comes from noteData (NEW FLOW)
-    const handleReflectionSave = async (noteData) => {
-        const { step } = reflectionModal
-        const result = noteData.result // Result is now inside noteData
-
-        // Save the journey note with the result
-        await saveJourneyNote(step.id, {
-            reflection_text: noteData.reflection_text,
-            lesson_learned: noteData.lesson_learned
-        }, result)
-
-        // Update step status based on the note result
-        await updateStepStatus(step.id, result)
-
-        setReflectionModal({ isOpen: false, step: null, result: null, editingNote: null })
-
-        // Show toast based on result
-        if (result === 'success') {
-            toast.success('Lesson Saved', 'Great win! Your lesson has been recorded.')
-        } else {
-            toast.info('Lesson Saved', 'Learning from setbacks makes you stronger.')
-        }
-    }
-
-    // Open note viewer
-    const handleViewNote = (step, note) => {
-        setNoteViewer({ isOpen: true, step, note })
-    }
-
-    // Edit note from viewer
-    const handleEditNote = (step, note) => {
-        setReflectionModal({
-            isOpen: true,
-            step: step,
-            result: note.result,
-            editingNote: note
-        })
-    }
-
-    // Delete note and reset step
-    const handleDeleteNote = async (stepId, noteId) => {
-        await deleteNoteAndResetStep(stepId, noteId)
-        toast.success('Note Deleted', 'Your note has been removed.')
-    }
-
-    const handleDeleteStep = async (stepId) => {
-        if (window.confirm('Are you sure you want to delete this step? This cannot be undone.')) {
-            await deleteStep(stepId)
-            toast.success('Step Deleted', 'Your step has been removed.')
-        }
-    }
-
-    const handleEditStepClick = (step) => {
-        setEditingStep(step)
-        setNewStep({
-            title: step.title,
-            description: step.description || '',
-            expected_outcome: step.expected_outcome || ''
-        })
-        setIsAddingStep(true)
-    }
+    // Get streak for current milestone
+    const currentStreak = currentMilestone ? getCurrentMilestoneStreak(currentMilestone.id) : null
 
     return (
         <div className="flex-1 flex flex-col relative">
@@ -275,7 +121,6 @@ export default function Dashboard() {
                 >
                     <MessageSquare size={18} className="sm:w-5 sm:h-5" />
                 </button>
-                {/* Share Banner */}
                 <button
                     onClick={() => setIsProductBannerOpen(true)}
                     className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-md rounded-lg text-white hover:opacity-90 transition-all border border-white/20 font-medium text-sm"
@@ -284,7 +129,6 @@ export default function Dashboard() {
                     <Share2 size={16} />
                     <span className="hidden sm:inline">Export</span>
                 </button>
-                {/* Embed Widget Button */}
                 {currentMountain?.is_public && (
                     <button
                         onClick={() => setIsEmbedWidgetOpen(true)}
@@ -294,7 +138,6 @@ export default function Dashboard() {
                         <Code size={18} className="sm:w-5 sm:h-5" />
                     </button>
                 )}
-                {/* Public Profile Share Button */}
                 <ShareButton />
             </div>
 
@@ -313,9 +156,8 @@ export default function Dashboard() {
                             {resolvedSteps}/{totalPlanned} done
                         </div>
                     )}
-                    {/* Update Progress Button */}
                     <button
-                        onClick={() => setIsMetricModalOpen(true)}
+                        onClick={() => setIsProgressModalOpen(true)}
                         className="mt-2 w-full flex items-center justify-center gap-1 px-2 py-1 bg-brand-gold/20 hover:bg-brand-gold/30 text-brand-gold text-[10px] sm:text-xs font-medium rounded-md transition-colors"
                     >
                         <TrendingUp size={12} />
@@ -323,7 +165,24 @@ export default function Dashboard() {
                     </button>
                 </div>
 
-                {/* Encouragements Widget - Only show for public profiles */}
+                {/* Current Streak Widget */}
+                {currentMilestone && currentStreak && currentStreak.current_streak > 0 && (
+                    <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-md rounded-lg px-3 py-2 border border-orange-500/30">
+                        <div className="flex items-center gap-2">
+                            <Flame size={18} className="text-orange-400" />
+                            <div>
+                                <div className="text-sm font-bold text-orange-400">
+                                    {currentStreak.current_streak} day streak
+                                </div>
+                                <div className="text-[10px] text-white/50">
+                                    {currentStreak.commitment_rate}% kept
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Encouragements Widget */}
                 {currentMountain?.is_public && (
                     <div className="w-full max-w-[180px] sm:max-w-[200px]">
                         <EncouragementWidget onClick={() => setIsEncouragementsDashboardOpen(true)} />
@@ -331,8 +190,8 @@ export default function Dashboard() {
                 )}
             </div>
 
-            {/* Mountain View - Give more space on mobile */}
-            <div className="flex-1 min-h-[500px] sm:min-h-[600px] bg-gradient-to-b from-[#0a1529] to-brand-blue relative overflow-hidden">
+            {/* Mountain View */}
+            <div className="flex-1 min-h-[400px] sm:min-h-[450px] bg-gradient-to-b from-[#0a1529] to-brand-blue relative overflow-hidden">
                 <MountainDashboard
                     steps={steps}
                     stickyNotes={journeyNotes}
@@ -340,190 +199,161 @@ export default function Dashboard() {
                     theme={theme}
                     missionName={missionName}
                     goalTarget={goal.goal_amount}
-                    // Metric tracking props for mountain visualization
                     hasMetricProgress={hasMetricProgress}
                     currentValue={currentMountain?.current_value || 0}
                     targetValue={currentMountain?.target_value || 0}
                     metricPrefix={currentMountain?.metric_prefix || ''}
                     metricSuffix={currentMountain?.metric_suffix || ''}
-                    onStepClick={(step) => {
-                        const note = getNoteForStep(step.id)
-                        if (note) handleViewNote(step, note)
-                    }}
-                    onAddStickyNote={async (notePayload) => {
-                        // Adapter: MountainDashboard's LessonModal -> Dashboard's saveJourneyNote
-                        // Payload: { step_id, summary (content), lesson_learned (details), ... }
-                        // Dashboard Expects: (stepId, { reflection_text, lesson_learned }, result)
-
-                        // We assume 'success' if added via this modal for now, or we need to know result.
-                        // LessonModal is generic. Let's assume Success for "Lessons Learned".
-
-                        await saveJourneyNote(notePayload.step_id, {
-                            reflection_text: notePayload.lesson_learned || notePayload.summary, // Details
-                            lesson_learned: notePayload.summary // Headline
-                        }, 'success')
-
-                        // Refresh/Update status handled by context usually
-                        await updateStepStatus(notePayload.step_id, 'success')
-                    }}
-                    onRefreshNotes={refresh}
+                    milestones={milestones}
                 />
             </div>
 
-            {/* Steps Panel */}
-            <div className="h-1/3 min-h-[250px] bg-brand-blue border-t border-white/10 p-3 sm:p-6 overflow-y-auto">
-                <div className="max-w-6xl mx-auto">
-                    {/* Product Gallery - Collapsible Section */}
-                    <div className="mb-6">
+            {/* Lock Milestone Panel */}
+            <div className="min-h-[350px] bg-brand-blue border-t border-white/10 p-3 sm:p-6 overflow-y-auto">
+                <div className="max-w-4xl mx-auto">
+                    {/* Product Gallery */}
+                    <div className="mb-4">
                         <ProductGallery />
                     </div>
 
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
-                        <div>
-                            <h3 className="text-lg sm:text-xl font-bold">Your Strategies</h3>
-                            <p className="text-xs sm:text-sm text-white/50">{steps.length} steps added</p>
-                        </div>
-                        <button
-                            onClick={() => {
-                                if (!checkLimit('add_step')) {
-                                    alert("You've reached the step limit for the Free plan (6/6). Upgrade to Summit Pro to add unlimited steps!")
-                                    return
-                                }
-                                setEditingStep(null);
-                                setNewStep({ title: '', description: '', expected_outcome: '' });
-                                setIsAddingStep(true);
-                            }}
-                            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-bold transition-colors text-sm ${!checkLimit('add_step')
-                                ? 'bg-white/10 text-white/50 cursor-not-allowed hover:bg-white/10'
-                                : 'bg-brand-teal text-brand-blue hover:bg-teal-400'
-                                }`}
+                    {/* Setup Milestones Prompt */}
+                    {needsMilestoneSetup && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 rounded-2xl border-2 border-brand-gold/30 p-6 text-center mb-6"
                         >
-                            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            {!checkLimit('add_step') ? 'Limit Reached' : 'Add Step'}
-                        </button>
-                    </div>
+                            <Lock size={40} className="mx-auto mb-3 text-brand-gold" />
+                            <h3 className="text-xl font-bold text-brand-gold mb-2">Set Up Your Lock-In Journey</h3>
+                            <p className="text-white/60 mb-4 max-w-md mx-auto">
+                                Break your goal into milestones. Lock yourself into commitments and unlock rewards as you progress.
+                            </p>
+                            <button
+                                onClick={() => setIsMilestoneSetupOpen(true)}
+                                className="px-6 py-3 bg-brand-gold text-brand-blue font-bold rounded-xl hover:bg-yellow-400 transition-colors"
+                            >
+                                Create Milestones
+                            </button>
+                        </motion.div>
+                    )}
 
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                        {steps.length === 0 ? (
-                            <div className="col-span-3 text-center py-10 text-white/50 border-2 border-dashed border-white/10 rounded-xl">
-                                <p className="mb-2">Your mountain is waiting.</p>
-                                <button
-                                    onClick={() => {
-                                        setEditingStep(null);
-                                        setNewStep({ title: '', description: '', expected_outcome: '' });
-                                        setIsAddingStep(true);
-                                    }}
-                                    className="text-brand-gold hover:underline font-bold"
-                                >
-                                    Add your first strategy step
-                                </button>
-                            </div>
-                        ) : (
-                            steps.map(step => (
-                                <StepCard
-                                    key={step.id}
-                                    step={step}
-                                    notes={getNotesForStep(step.id)}
-                                    onAddNote={handleAddNote}
-                                    onViewNote={handleViewNote}
-                                    onDelete={handleDeleteStep}
-                                    onEdit={handleEditStepClick}
-                                />
-                            ))
-                        )}
-                    </div>
+                    {/* Tab Switcher */}
+                    {milestones.length > 0 && (
+                        <div className="flex gap-2 mb-4">
+                            <button
+                                onClick={() => setActiveTab('lock')}
+                                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                                    activeTab === 'lock'
+                                        ? 'bg-brand-gold text-brand-blue'
+                                        : 'bg-white/5 text-white/60 hover:bg-white/10'
+                                }`}
+                            >
+                                <Lock size={16} />
+                                Current Lock
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('calendar')}
+                                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                                    activeTab === 'calendar'
+                                        ? 'bg-brand-gold text-brand-blue'
+                                        : 'bg-white/5 text-white/60 hover:bg-white/10'
+                                }`}
+                            >
+                                <Target size={16} />
+                                Promise Tracker
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Content based on tab */}
+                    {milestones.length > 0 && (
+                        <div className="grid lg:grid-cols-2 gap-6">
+                            {activeTab === 'lock' ? (
+                                <>
+                                    <LockMilestoneCard
+                                        onUpdateProgress={() => setIsProgressModalOpen(true)}
+                                    />
+                                    {currentMilestone && (
+                                        <QuickCheckIn
+                                            milestoneId={currentMilestone.id}
+                                            commitment={currentMilestone.commitment}
+                                        />
+                                    )}
+                                </>
+                            ) : (
+                                <div className="lg:col-span-2">
+                                    {currentMilestone && (
+                                        <DailyCheckIn milestoneId={currentMilestone.id} />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* No milestones and no metric tracking */}
+                    {!hasMetricProgress && milestones.length === 0 && (
+                        <div className="text-center py-10 text-white/50 border-2 border-dashed border-white/10 rounded-xl">
+                            <Target size={32} className="mx-auto mb-3 opacity-50" />
+                            <p className="mb-2">Set up metric tracking to create milestones</p>
+                            <button
+                                onClick={() => setIsProgressModalOpen(true)}
+                                className="text-brand-gold hover:underline font-bold"
+                            >
+                                Track Your Goal
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Add Step Modal */}
+            {/* Milestone Unlock Celebration */}
             <AnimatePresence>
-                {isAddingStep && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-lg bg-[#0F1F3D] border border-white/10 rounded-2xl p-6 shadow-2xl"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-2xl font-bold">{editingStep ? 'Edit Strategy' : 'New Strategy'}</h3>
-                                <button onClick={() => setIsAddingStep(false)} className="text-white/50 hover:text-white">
-                                    <X size={24} />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleAddStep} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-white/80">Strategy Title</label>
-                                    <input
-                                        value={newStep.title}
-                                        onChange={e => setNewStep({ ...newStep, title: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-lg bg-black/20 border border-white/10 focus:border-brand-gold focus:outline-none"
-                                        placeholder="e.g. Launch on Product Hunt"
-                                        autoFocus
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-white/80">Why try this?</label>
-                                    <textarea
-                                        value={newStep.description}
-                                        onChange={e => setNewStep({ ...newStep, description: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-lg bg-black/20 border border-white/10 focus:border-brand-gold focus:outline-none h-24 resize-none"
-                                        placeholder="Hypothesis..."
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-white/80">Expected Outcome</label>
-                                    <input
-                                        value={newStep.expected_outcome}
-                                        onChange={e => setNewStep({ ...newStep, expected_outcome: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-lg bg-black/20 border border-white/10 focus:border-brand-gold focus:outline-none"
-                                        placeholder="e.g. 500 signups"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="w-full py-3 rounded-lg bg-brand-gold text-brand-blue font-bold hover:bg-yellow-400 transition-colors mt-4"
-                                >
-                                    {editingStep ? 'Update Strategy' : 'Add to Mountain'}
-                                </button>
-                            </form>
-                        </motion.div>
-                    </motion.div>
+                {recentlyUnlockedMilestone && (
+                    <MilestoneUnlockCelebration
+                        milestone={recentlyUnlockedMilestone}
+                        onClose={clearRecentlyUnlockedMilestone}
+                        onShare={() => {
+                            setIsProductBannerOpen(true)
+                            clearRecentlyUnlockedMilestone()
+                        }}
+                    />
                 )}
             </AnimatePresence>
 
-            {/* Reflection Modal */}
-            <ReflectionModal
-                isOpen={reflectionModal.isOpen}
-                onClose={() => setReflectionModal({ isOpen: false, step: null, result: null, editingNote: null })}
-                onSave={handleReflectionSave}
-                stepTitle={reflectionModal.step?.title || ''}
-                result={reflectionModal.result}
-                initialData={reflectionModal.editingNote}
+            {/* Update Progress Modal */}
+            <UpdateProgressModal
+                isOpen={isProgressModalOpen}
+                onClose={() => setIsProgressModalOpen(false)}
+                currentMountain={currentMountain}
+                hasMetricProgress={hasMetricProgress}
+                onUpdateProgress={handleProgressUpdate}
+                onSetupMetric={async (metricData) => {
+                    await setupMetricTracking(metricData)
+                    setIsProgressModalOpen(false)
+                    // After setting up metric, prompt for milestones
+                    setTimeout(() => setIsMilestoneSetupOpen(true), 500)
+                }}
             />
 
-            {/* Note Viewer */}
-            <NoteViewer
-                isOpen={noteViewer.isOpen}
-                onClose={() => setNoteViewer({ isOpen: false, step: null, note: null })}
-                step={noteViewer.step}
-                note={noteViewer.note}
-                onEdit={handleEditNote}
-                onDelete={handleDeleteNote}
+            {/* Milestone Setup Modal */}
+            <MilestoneSetupModal
+                isOpen={isMilestoneSetupOpen}
+                onClose={() => setIsMilestoneSetupOpen(false)}
+                targetValue={currentMountain?.target_value || 0}
+                metricPrefix={currentMountain?.metric_prefix || ''}
+                metricSuffix={currentMountain?.metric_suffix || ''}
+                onSave={async (milestonesData) => {
+                    await createMilestones(milestonesData)
+                    setIsMilestoneSetupOpen(false)
+                    toast.success('Milestones Created', `${milestonesData.length} milestones locked in!`)
+                }}
             />
 
-            {/* Product Showcase Banner - NEW */}
+            {/* Product Showcase Banner */}
             <ProductShowcaseBanner
                 isOpen={isProductBannerOpen}
                 onClose={() => setIsProductBannerOpen(false)}
             />
-
 
             {/* Feedback Modal */}
             <FeedbackModal
@@ -538,16 +368,6 @@ export default function Dashboard() {
                 promptType={signupPromptType}
             />
 
-            {/* Metric Progress Modal */}
-            <MetricProgressModal
-                isOpen={isMetricModalOpen}
-                onClose={() => setIsMetricModalOpen(false)}
-                currentMountain={currentMountain}
-                hasMetricProgress={hasMetricProgress}
-                onUpdateProgress={updateMetricProgress}
-                onSetupMetric={setupMetricTracking}
-            />
-
             {/* Encouragements Dashboard Modal */}
             <EncouragementsDashboard
                 isOpen={isEncouragementsDashboardOpen}
@@ -559,17 +379,6 @@ export default function Dashboard() {
                 isOpen={isEmbedWidgetOpen}
                 onClose={() => setIsEmbedWidgetOpen(false)}
             />
-
-            {/* Milestone Celebration Modal */}
-            <MilestoneCelebration
-                isOpen={isMilestoneModalOpen}
-                onClose={() => setIsMilestoneModalOpen(false)}
-            />
-
-            {/* Floating Milestone Badge */}
-            {currentMountain?.is_public && (
-                <MilestoneBadge onClick={() => setIsMilestoneModalOpen(true)} />
-            )}
         </div>
     )
 }

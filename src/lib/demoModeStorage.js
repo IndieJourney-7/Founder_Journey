@@ -9,10 +9,13 @@ const DEMO_KEYS = {
     MOUNTAIN: 'shift_demo_mountain',
     STEPS: 'shift_demo_steps',
     NOTES: 'shift_demo_notes',
-    PRODUCT_IMAGES: 'shift_demo_product_images'
+    PRODUCT_IMAGES: 'shift_demo_product_images',
+    MILESTONES: 'shift_demo_milestones',
+    CHECKINS: 'shift_demo_checkins'
 };
 
 const MAX_DEMO_STEPS = 6; // Match free tier limit
+const MAX_DEMO_MILESTONES = 10; // Limit for demo mode
 
 // Generate temporary IDs for demo mode
 const generateDemoId = () => {
@@ -376,11 +379,294 @@ export const clearDemoData = () => {
         localStorage.removeItem(DEMO_KEYS.MOUNTAIN);
         localStorage.removeItem(DEMO_KEYS.STEPS);
         localStorage.removeItem(DEMO_KEYS.NOTES);
+        localStorage.removeItem(DEMO_KEYS.MILESTONES);
+        localStorage.removeItem(DEMO_KEYS.CHECKINS);
         return { success: true };
     } catch (error) {
         console.error('Error clearing demo data:', error);
         return { success: false, error: error.message };
     }
+};
+
+// ============ LOCK MILESTONES ============
+
+export const getDemoMilestones = () => {
+    try {
+        const data = localStorage.getItem(DEMO_KEYS.MILESTONES);
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error('Error getting demo milestones:', error);
+        return [];
+    }
+};
+
+export const saveDemoMilestones = (milestones) => {
+    try {
+        localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(milestones));
+        return { success: true, milestones };
+    } catch (error) {
+        console.error('Error saving demo milestones:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+export const addDemoMilestone = (milestoneData) => {
+    try {
+        const milestones = getDemoMilestones();
+        const mountain = getDemoMountain();
+
+        if (milestones.length >= MAX_DEMO_MILESTONES) {
+            return { success: false, error: 'Maximum milestones reached', limitReached: true };
+        }
+
+        const newMilestone = {
+            id: generateDemoId(),
+            mountain_id: mountain?.id || 'demo_mountain',
+            user_id: 'demo_user',
+            target_value: milestoneData.target_value,
+            title: milestoneData.title,
+            commitment: milestoneData.commitment || null,
+            reward: milestoneData.reward || null,
+            icon_emoji: milestoneData.icon_emoji || '🎯',
+            theme_color: milestoneData.theme_color || '#E7C778',
+            is_unlocked: milestoneData.is_unlocked || false,
+            unlocked_at: milestoneData.unlocked_at || null,
+            unlocked_value: milestoneData.unlocked_value || null,
+            sort_order: milestoneData.sort_order ?? milestones.length,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        milestones.push(newMilestone);
+        localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(milestones));
+        return { success: true, milestone: newMilestone };
+    } catch (error) {
+        console.error('Error adding demo milestone:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+export const addDemoMilestonesBatch = (milestonesData) => {
+    try {
+        const mountain = getDemoMountain();
+        const newMilestones = milestonesData.map((m, index) => ({
+            id: generateDemoId(),
+            mountain_id: mountain?.id || 'demo_mountain',
+            user_id: 'demo_user',
+            target_value: m.target_value,
+            title: m.title,
+            commitment: m.commitment || null,
+            reward: m.reward || null,
+            icon_emoji: m.icon_emoji || '🎯',
+            theme_color: m.theme_color || '#E7C778',
+            is_unlocked: m.is_unlocked || false,
+            unlocked_at: m.unlocked_at || null,
+            unlocked_value: m.unlocked_value || null,
+            sort_order: m.sort_order ?? index,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        }));
+
+        localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(newMilestones));
+        return { success: true, milestones: newMilestones };
+    } catch (error) {
+        console.error('Error adding demo milestones batch:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+export const updateDemoMilestone = (milestoneId, updates) => {
+    try {
+        const milestones = getDemoMilestones();
+        const index = milestones.findIndex(m => m.id === milestoneId);
+
+        if (index === -1) {
+            return { success: false, error: 'Milestone not found' };
+        }
+
+        milestones[index] = {
+            ...milestones[index],
+            ...updates,
+            updated_at: new Date().toISOString()
+        };
+
+        localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(milestones));
+        return { success: true, milestone: milestones[index] };
+    } catch (error) {
+        console.error('Error updating demo milestone:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+export const deleteDemoMilestone = (milestoneId) => {
+    try {
+        let milestones = getDemoMilestones();
+        milestones = milestones.filter(m => m.id !== milestoneId);
+        localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(milestones));
+
+        // Also delete associated check-ins
+        let checkins = getDemoCheckins();
+        checkins = checkins.filter(c => c.milestone_id !== milestoneId);
+        localStorage.setItem(DEMO_KEYS.CHECKINS, JSON.stringify(checkins));
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting demo milestone:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Check and unlock milestones when progress updates
+ */
+export const checkAndUnlockDemoMilestones = (currentValue) => {
+    try {
+        const milestones = getDemoMilestones();
+        const newlyUnlocked = [];
+
+        const updatedMilestones = milestones.map(m => {
+            if (m.is_unlocked || currentValue < m.target_value) {
+                return m;
+            }
+
+            // Unlock this milestone!
+            const unlocked = {
+                ...m,
+                is_unlocked: true,
+                unlocked_at: new Date().toISOString(),
+                unlocked_value: currentValue,
+                updated_at: new Date().toISOString()
+            };
+
+            newlyUnlocked.push(unlocked);
+            return unlocked;
+        });
+
+        localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(updatedMilestones));
+        return { success: true, milestones: updatedMilestones, newlyUnlocked };
+    } catch (error) {
+        console.error('Error checking milestone unlocks:', error);
+        return { success: false, error: error.message, newlyUnlocked: [] };
+    }
+};
+
+/**
+ * Get the current (next unlockable) milestone
+ */
+export const getCurrentDemoMilestone = () => {
+    const milestones = getDemoMilestones();
+    const sorted = [...milestones].sort((a, b) => a.target_value - b.target_value);
+    return sorted.find(m => !m.is_unlocked) || null;
+};
+
+// ============ DAILY CHECK-INS ============
+
+export const getDemoCheckins = () => {
+    try {
+        const data = localStorage.getItem(DEMO_KEYS.CHECKINS);
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error('Error getting demo check-ins:', error);
+        return [];
+    }
+};
+
+export const getCheckinsForMilestone = (milestoneId) => {
+    return getDemoCheckins().filter(c => c.milestone_id === milestoneId);
+};
+
+export const upsertDemoCheckin = (milestoneId, date, keptPromise, note = null) => {
+    try {
+        const checkins = getDemoCheckins();
+        const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+
+        // Find existing check-in for this milestone + date
+        const existingIndex = checkins.findIndex(
+            c => c.milestone_id === milestoneId && c.checkin_date === dateStr
+        );
+
+        const checkinData = {
+            id: existingIndex >= 0 ? checkins[existingIndex].id : generateDemoId(),
+            milestone_id: milestoneId,
+            user_id: 'demo_user',
+            checkin_date: dateStr,
+            kept_promise: keptPromise,
+            note: note,
+            created_at: existingIndex >= 0 ? checkins[existingIndex].created_at : new Date().toISOString()
+        };
+
+        if (existingIndex >= 0) {
+            checkins[existingIndex] = checkinData;
+        } else {
+            checkins.push(checkinData);
+        }
+
+        localStorage.setItem(DEMO_KEYS.CHECKINS, JSON.stringify(checkins));
+        return { success: true, checkin: checkinData };
+    } catch (error) {
+        console.error('Error upserting demo check-in:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Calculate streak stats for a milestone
+ */
+export const getDemoMilestoneStreak = (milestoneId) => {
+    const checkins = getCheckinsForMilestone(milestoneId);
+
+    if (checkins.length === 0) {
+        return {
+            current_streak: 0,
+            longest_streak: 0,
+            total_days: 0,
+            kept_days: 0,
+            slip_days: 0,
+            commitment_rate: 0
+        };
+    }
+
+    // Sort by date descending
+    const sorted = [...checkins].sort((a, b) =>
+        new Date(b.checkin_date) - new Date(a.checkin_date)
+    );
+
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+
+    // Calculate current streak (from most recent)
+    for (const checkin of sorted) {
+        if (checkin.kept_promise) {
+            currentStreak++;
+        } else {
+            break;
+        }
+    }
+
+    // Calculate longest streak
+    for (const checkin of sorted) {
+        if (checkin.kept_promise) {
+            tempStreak++;
+            if (tempStreak > longestStreak) longestStreak = tempStreak;
+        } else {
+            tempStreak = 0;
+        }
+    }
+
+    const totalDays = checkins.length;
+    const keptDays = checkins.filter(c => c.kept_promise).length;
+    const slipDays = totalDays - keptDays;
+    const commitmentRate = totalDays > 0 ? Math.round((keptDays / totalDays) * 100) : 0;
+
+    return {
+        current_streak: currentStreak,
+        longest_streak: longestStreak,
+        total_days: totalDays,
+        kept_days: keptDays,
+        slip_days: slipDays,
+        commitment_rate: commitmentRate
+    };
 };
 
 export const isDemoMode = (user) => {

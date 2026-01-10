@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useMountain } from '../context/MountainContext';
 import { usePlanLimits } from '../hooks/usePlanLimits';
-import { Rocket, DollarSign, Target, Smartphone, Zap, ChevronRight } from 'lucide-react';
+import { Rocket, DollarSign, Target, Smartphone, Zap, ChevronRight, Lock, Users, Hash, Percent } from 'lucide-react';
 
-// Founder-specific journey templates
+// Founder-specific journey templates with metric tracking
 const JOURNEY_TEMPLATES = [
     {
         id: 'saas_mrr',
@@ -16,15 +16,15 @@ const JOURNEY_TEMPLATES = [
         defaults: {
             mission_name: '$10K MRR Journey',
             goal_target: '$10,000 MRR',
-            total_steps_planned: 6
+            metric_prefix: '$',
+            metric_suffix: 'MRR',
+            target_value: 10000
         },
-        suggestedSteps: [
-            'Validate problem with 10 user interviews',
-            'Build MVP in 2 weeks',
-            'Get first 10 beta users',
-            'Launch on Product Hunt',
-            'Reach $1K MRR',
-            'Scale to $10K MRR'
+        suggestedMilestones: [
+            { target: 100, title: 'First $100!', commitment: 'No Netflix' },
+            { target: 1000, title: '$1K MRR', commitment: 'No social media scrolling' },
+            { target: 5000, title: 'Halfway!', commitment: 'No eating out' },
+            { target: 10000, title: 'Summit: $10K MRR', reward: 'Weekend trip celebration' }
         ]
     },
     {
@@ -36,15 +36,15 @@ const JOURNEY_TEMPLATES = [
         defaults: {
             mission_name: 'Pre-seed Raise',
             goal_target: '$500K Pre-seed',
-            total_steps_planned: 6
+            metric_prefix: '$',
+            metric_suffix: 'raised',
+            target_value: 500000
         },
-        suggestedSteps: [
-            'Build pitch deck v1',
-            'Get warm intros to 20 investors',
-            'First 10 pitch meetings',
-            'Receive first term sheet',
-            'Close lead investor',
-            'Complete round'
+        suggestedMilestones: [
+            { target: 50000, title: 'First $50K', commitment: 'No video games' },
+            { target: 150000, title: '$150K Committed', commitment: 'Wake up at 6 AM' },
+            { target: 300000, title: 'Halfway!', commitment: 'No unnecessary purchases' },
+            { target: 500000, title: 'Round Complete!', reward: 'Team celebration dinner' }
         ]
     },
     {
@@ -55,16 +55,16 @@ const JOURNEY_TEMPLATES = [
         description: 'Prep for launch day success',
         defaults: {
             mission_name: 'PH Launch Day',
-            goal_target: 'Top 5 Product of the Day',
-            total_steps_planned: 6
+            goal_target: '500 Upvotes',
+            metric_prefix: '',
+            metric_suffix: 'upvotes',
+            target_value: 500
         },
-        suggestedSteps: [
-            'Finish product polish',
-            'Create launch assets (video, images)',
-            'Build hunter network & get featured',
-            'Prep launch day community',
-            'Launch & engage comments',
-            'Post-launch momentum'
+        suggestedMilestones: [
+            { target: 50, title: 'First 50 Upvotes', commitment: 'No distractions during launch' },
+            { target: 150, title: 'Trending!', commitment: 'Stay engaged in comments' },
+            { target: 300, title: 'Top 10!', commitment: 'No breaks until goal' },
+            { target: 500, title: 'Top 5 Product!', reward: 'Launch party' }
         ]
     },
     {
@@ -76,15 +76,15 @@ const JOURNEY_TEMPLATES = [
         defaults: {
             mission_name: 'App Store Launch',
             goal_target: '1,000 Downloads',
-            total_steps_planned: 6
+            metric_prefix: '',
+            metric_suffix: 'downloads',
+            target_value: 1000
         },
-        suggestedSteps: [
-            'Validate app idea',
-            'Design UI/UX mockups',
-            'Build core features',
-            'Beta test with 50 users',
-            'Submit to App Store',
-            'Reach 1K downloads'
+        suggestedMilestones: [
+            { target: 100, title: 'First 100 Downloads', commitment: 'No Netflix until 100' },
+            { target: 300, title: '300 Users!', commitment: 'Ship daily updates' },
+            { target: 600, title: 'Halfway!', commitment: 'No social media scrolling' },
+            { target: 1000, title: '1K Downloads!', reward: 'Buy something nice' }
         ]
     },
     {
@@ -96,25 +96,38 @@ const JOURNEY_TEMPLATES = [
         defaults: {
             mission_name: '',
             goal_target: '',
-            total_steps_planned: 6
+            metric_prefix: '$',
+            metric_suffix: '',
+            target_value: ''
         },
-        suggestedSteps: []
+        suggestedMilestones: []
     }
 ];
 
 const GoalSetup = () => {
     const navigate = useNavigate();
-    const { addMountain } = useMountain();
+    const { addMountain, createMilestones } = useMountain();
     const { limits, isPro } = usePlanLimits();
 
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [formData, setFormData] = useState({
         mission_name: '',
         goal_target: '',
-        total_steps_planned: 6
+        metric_prefix: '$',
+        metric_suffix: '',
+        target_value: ''
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // Metric type presets
+    const metricPresets = [
+        { prefix: '$', suffix: '', label: 'Revenue', icon: DollarSign },
+        { prefix: '', suffix: 'users', label: 'Users', icon: Users },
+        { prefix: '', suffix: 'subscribers', label: 'Subscribers', icon: Users },
+        { prefix: '', suffix: '%', label: 'Percentage', icon: Percent },
+        { prefix: '', suffix: '', label: 'Custom', icon: Hash }
+    ];
 
     const handleTemplateSelect = (template) => {
         setSelectedTemplate(template);
@@ -122,7 +135,9 @@ const GoalSetup = () => {
             setFormData({
                 mission_name: template.defaults.mission_name,
                 goal_target: template.defaults.goal_target,
-                total_steps_planned: template.defaults.total_steps_planned
+                metric_prefix: template.defaults.metric_prefix,
+                metric_suffix: template.defaults.metric_suffix,
+                target_value: template.defaults.target_value
             });
         }
     };
@@ -130,8 +145,9 @@ const GoalSetup = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (parseInt(formData.total_steps_planned) > limits.maxStepsPerMountain) {
-            setError(`On the Free plan, you can only plan up to ${limits.maxStepsPerMountain} steps. Upgrade to Pro for unlimited steps!`);
+        const targetVal = parseFloat(String(formData.target_value).replace(/,/g, ''));
+        if (isNaN(targetVal) || targetVal <= 0) {
+            setError('Please enter a valid target value');
             return;
         }
 
@@ -142,10 +158,26 @@ const GoalSetup = () => {
             const result = await addMountain({
                 title: formData.mission_name,
                 target: formData.goal_target,
-                total_steps_planned: parseInt(formData.total_steps_planned) || 6
+                target_value: targetVal,
+                current_value: 0,
+                metric_prefix: formData.metric_prefix,
+                metric_suffix: formData.metric_suffix,
+                total_steps_planned: selectedTemplate?.suggestedMilestones?.length || 4
             });
 
             if (result && result.success) {
+                // If template has suggested milestones, create them
+                if (selectedTemplate?.suggestedMilestones?.length > 0) {
+                    const milestoneData = selectedTemplate.suggestedMilestones.map((m, i) => ({
+                        target_value: m.target,
+                        title: m.title,
+                        commitment: m.commitment || '',
+                        reward: m.reward || '',
+                        icon_emoji: i === selectedTemplate.suggestedMilestones.length - 1 ? '🏆' : ['🌱', '🚀', '⛰️', '🔥'][i] || '🎯',
+                        sort_order: i
+                    }));
+                    await createMilestones(milestoneData);
+                }
                 navigate('/dashboard');
             } else {
                 setError(result?.error?.message || 'Failed to create mountain. Please try again.');
@@ -156,6 +188,14 @@ const GoalSetup = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Format number with commas
+    const formatNumber = (value) => {
+        const num = String(value).replace(/[^0-9.]/g, '');
+        const parts = num.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return parts.join('.');
     };
 
     return (
@@ -248,7 +288,7 @@ const GoalSetup = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2 text-brand-gold">Summit Goal</label>
+                                    <label className="block text-sm font-medium mb-2 text-brand-gold">Summit Goal (Display Name)</label>
                                     <input
                                         required
                                         value={formData.goal_target}
@@ -258,32 +298,101 @@ const GoalSetup = () => {
                                     />
                                 </div>
 
+                                {/* Metric Type Selection */}
                                 <div>
                                     <label className="block text-sm font-medium mb-2 text-brand-gold">
-                                        Total Steps Planned
+                                        Metric Type
                                     </label>
-                                    <p className="text-xs text-white/50 mb-2">
-                                        How many milestones to reach your goal?
-                                        {!isPro && <span className="text-brand-gold ml-1">(Free limit: {limits.maxStepsPerMountain})</span>}
-                                    </p>
-                                    <input
-                                        required
-                                        type="number"
-                                        min="1"
-                                        max={limits.maxStepsPerMountain}
-                                        value={formData.total_steps_planned}
-                                        onChange={e => {
-                                            let val = parseInt(e.target.value);
-                                            if (isNaN(val)) val = "";
-                                            if (!isPro && val > limits.maxStepsPerMountain) {
-                                                val = limits.maxStepsPerMountain;
-                                            }
-                                            setFormData({ ...formData, total_steps_planned: val })
-                                        }}
-                                        className="w-full px-4 py-3 rounded-lg bg-black/20 border border-white/10 focus:border-brand-gold focus:outline-none text-lg"
-                                        placeholder="6"
-                                    />
+                                    <div className="grid grid-cols-5 gap-2 mb-3">
+                                        {metricPresets.map((preset) => (
+                                            <button
+                                                key={preset.label}
+                                                type="button"
+                                                onClick={() => setFormData({
+                                                    ...formData,
+                                                    metric_prefix: preset.prefix,
+                                                    metric_suffix: preset.suffix
+                                                })}
+                                                className={`p-2 rounded-lg border transition-all flex flex-col items-center gap-1 ${
+                                                    formData.metric_prefix === preset.prefix && formData.metric_suffix === preset.suffix
+                                                        ? 'bg-brand-gold/20 border-brand-gold text-brand-gold'
+                                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                                                }`}
+                                            >
+                                                <preset.icon size={16} />
+                                                <span className="text-[10px]">{preset.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Custom prefix/suffix */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs text-white/50 mb-1">Prefix</label>
+                                            <input
+                                                type="text"
+                                                value={formData.metric_prefix}
+                                                onChange={(e) => setFormData({ ...formData, metric_prefix: e.target.value })}
+                                                placeholder="$"
+                                                maxLength={5}
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-gold"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-white/50 mb-1">Suffix</label>
+                                            <input
+                                                type="text"
+                                                value={formData.metric_suffix}
+                                                onChange={(e) => setFormData({ ...formData, metric_suffix: e.target.value })}
+                                                placeholder="MRR"
+                                                maxLength={15}
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-gold"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {/* Target Value */}
+                                <div>
+                                    <label className="block text-sm font-medium mb-2 text-brand-gold">
+                                        Target Value
+                                    </label>
+                                    <div className="relative">
+                                        {formData.metric_prefix && (
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
+                                                {formData.metric_prefix}
+                                            </span>
+                                        )}
+                                        <input
+                                            required
+                                            type="text"
+                                            value={formatNumber(formData.target_value)}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                target_value: e.target.value.replace(/,/g, '')
+                                            })}
+                                            className={`w-full py-3 rounded-lg bg-black/20 border border-white/10 focus:border-brand-gold focus:outline-none text-lg ${
+                                                formData.metric_prefix ? 'pl-8 pr-20' : 'px-4 pr-16'
+                                            }`}
+                                            placeholder="10,000"
+                                        />
+                                        {formData.metric_suffix && (
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50">
+                                                {formData.metric_suffix}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Preview */}
+                                {formData.target_value && (
+                                    <div className="bg-brand-gold/10 border border-brand-gold/30 rounded-xl p-3 text-center">
+                                        <span className="text-white/60 text-sm">Your goal: </span>
+                                        <span className="text-brand-gold font-bold">
+                                            {formData.metric_prefix}{formatNumber(formData.target_value)} {formData.metric_suffix}
+                                        </span>
+                                    </div>
+                                )}
 
                                 {error && (
                                     <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm">
@@ -294,9 +403,10 @@ const GoalSetup = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-4 rounded-xl bg-gradient-to-r from-brand-gold to-yellow-500 text-brand-blue font-bold text-lg hover:shadow-lg hover:shadow-yellow-500/20 transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                    className="w-full py-4 rounded-xl bg-gradient-to-r from-brand-gold to-yellow-500 text-brand-blue font-bold text-lg hover:shadow-lg hover:shadow-yellow-500/20 transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                                 >
-                                    {loading ? 'Creating your mountain...' : 'Begin Climb 🚀'}
+                                    <Lock size={20} />
+                                    {loading ? 'Creating your mountain...' : 'Lock In & Begin Climb'}
                                 </button>
                             </form>
                         </motion.div>
@@ -326,34 +436,50 @@ const GoalSetup = () => {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                             </div>
 
-                            {/* Suggested Steps */}
-                            {selectedTemplate.suggestedSteps.length > 0 && (
+                            {/* Suggested Milestones with Lock-In */}
+                            {selectedTemplate.suggestedMilestones && selectedTemplate.suggestedMilestones.length > 0 && (
                                 <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
                                     <h4 className="text-sm font-bold text-brand-gold mb-3 flex items-center gap-2">
-                                        <Target size={16} />
-                                        Suggested Milestones
+                                        <Lock size={16} />
+                                        Your Lock-In Milestones
                                     </h4>
-                                    <ol className="space-y-2">
-                                        {selectedTemplate.suggestedSteps.map((step, i) => (
-                                            <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
-                                                <span className="w-5 h-5 rounded-full bg-brand-gold/20 text-brand-gold flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                                                    {i + 1}
+                                    <div className="space-y-3">
+                                        {selectedTemplate.suggestedMilestones.map((milestone, i) => (
+                                            <div key={i} className="flex items-start gap-3 text-sm">
+                                                <span className="w-7 h-7 rounded-lg bg-brand-gold/20 text-brand-gold flex items-center justify-center flex-shrink-0 text-sm">
+                                                    {i === selectedTemplate.suggestedMilestones.length - 1 ? '🏆' : ['🌱', '🚀', '⛰️', '🔥'][i] || '🎯'}
                                                 </span>
-                                                {step}
-                                            </li>
+                                                <div className="flex-1">
+                                                    <div className="text-white font-medium">{milestone.title}</div>
+                                                    <div className="text-xs text-brand-gold/70">
+                                                        {formData.metric_prefix}{milestone.target?.toLocaleString()} {formData.metric_suffix}
+                                                    </div>
+                                                    {milestone.commitment && (
+                                                        <div className="text-xs text-red-400/70 mt-0.5 flex items-center gap-1">
+                                                            <Lock size={10} /> {milestone.commitment}
+                                                        </div>
+                                                    )}
+                                                    {milestone.reward && (
+                                                        <div className="text-xs text-green-400/70 mt-0.5">
+                                                            🎁 {milestone.reward}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         ))}
-                                    </ol>
+                                    </div>
                                     <p className="text-xs text-slate-500 mt-4">
-                                        You'll add your actual steps after creating the journey
+                                        You can customize these milestones anytime from your dashboard
                                     </p>
                                 </div>
                             )}
 
                             {/* Pro Tip */}
                             <div className="bg-brand-gold/10 rounded-xl p-4 border border-brand-gold/20">
-                                <p className="text-brand-gold text-sm font-medium mb-1">Pro Tip</p>
+                                <p className="text-brand-gold text-sm font-medium mb-1">How Lock-In Works</p>
                                 <p className="text-white/70 text-xs">
-                                    Start small. 6 milestones is perfect. You can always add more as you progress. The goal is to share wins early and often.
+                                    Each milestone has a commitment (your "lock") and a reward (when you unlock).
+                                    Track daily if you kept your promise. Stay accountable, celebrate wins!
                                 </p>
                             </div>
                         </motion.div>
