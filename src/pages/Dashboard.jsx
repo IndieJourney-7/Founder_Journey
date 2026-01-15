@@ -205,6 +205,8 @@ export default function Dashboard() {
                     metricPrefix={currentMountain?.metric_prefix || ''}
                     metricSuffix={currentMountain?.metric_suffix || ''}
                     milestones={milestones}
+                    currentMilestone={currentMilestone}
+                    showMilestones={milestones.length > 0}
                 />
             </div>
 

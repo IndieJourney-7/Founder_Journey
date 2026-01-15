@@ -456,12 +456,19 @@ export const addDemoMilestonesBatch = (milestonesData) => {
             target_value: m.target_value,
             title: m.title,
             commitment: m.commitment || null,
+            consequence: m.consequence || null,
             reward: m.reward || null,
             icon_emoji: m.icon_emoji || '🎯',
             theme_color: m.theme_color || '#E7C778',
             is_unlocked: m.is_unlocked || false,
             unlocked_at: m.unlocked_at || null,
             unlocked_value: m.unlocked_value || null,
+            is_broken: m.is_broken || false,
+            broken_at: m.broken_at || null,
+            broken_reason: m.broken_reason || null,
+            deadline: m.deadline || null,
+            milestone_type: m.milestone_type || 'value',
+            task_description: m.task_description || null,
             sort_order: m.sort_order ?? index,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -556,7 +563,75 @@ export const checkAndUnlockDemoMilestones = (currentValue) => {
 export const getCurrentDemoMilestone = () => {
     const milestones = getDemoMilestones();
     const sorted = [...milestones].sort((a, b) => a.target_value - b.target_value);
-    return sorted.find(m => !m.is_unlocked) || null;
+    return sorted.find(m => !m.is_unlocked && !m.is_broken) || null;
+};
+
+/**
+ * Mark a demo milestone as broken (promise failed)
+ */
+export const markDemoMilestoneBroken = (milestoneId, reason = null) => {
+    try {
+        const milestones = getDemoMilestones();
+        const index = milestones.findIndex(m => m.id === milestoneId);
+
+        if (index === -1) {
+            return { success: false, error: 'Milestone not found' };
+        }
+
+        milestones[index] = {
+            ...milestones[index],
+            is_broken: true,
+            broken_at: new Date().toISOString(),
+            broken_reason: reason,
+            updated_at: new Date().toISOString()
+        };
+
+        localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(milestones));
+        return { success: true, milestone: milestones[index] };
+    } catch (error) {
+        console.error('Error marking demo milestone as broken:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Check for expired deadlines in demo mode
+ */
+export const checkExpiredDemoDeadlines = () => {
+    try {
+        const milestones = getDemoMilestones();
+        const now = new Date();
+        const expiredMilestones = [];
+
+        const updatedMilestones = milestones.map(m => {
+            if (m.is_unlocked || m.is_broken || !m.deadline) {
+                return m;
+            }
+
+            const deadline = new Date(m.deadline);
+            if (deadline < now) {
+                const expired = {
+                    ...m,
+                    is_broken: true,
+                    broken_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                expiredMilestones.push(expired);
+                return expired;
+            }
+
+            return m;
+        });
+
+        if (expiredMilestones.length > 0) {
+            localStorage.setItem(DEMO_KEYS.MILESTONES, JSON.stringify(updatedMilestones));
+        }
+
+        return { success: true, expiredMilestones };
+    } catch (error) {
+        console.error('Error checking expired demo deadlines:', error);
+        return { success: false, error: error.message, expiredMilestones: [] };
+    }
 };
 
 // ============ DAILY CHECK-INS ============

@@ -7,7 +7,10 @@ import ClimberAvatar from './ClimberAvatar';
 import StickyNote from './StickyNote';
 import StepDetailModal from './StepDetailModal';
 import LessonModal from '../lessons/LessonModal';
+import MilestoneMarker from './MilestoneMarker';
+import MilestoneDetailModal from '../MilestoneDetailModal';
 import confetti from 'canvas-confetti';
+import { getMilestonePosition, getMilestonePositionByIndex } from '../../utils/pathUtils';
 
 const MountainDashboard = ({
     steps = [],
@@ -24,7 +27,11 @@ const MountainDashboard = ({
     currentValue = 0,
     targetValue = 0,
     metricPrefix = '',
-    metricSuffix = ''
+    metricSuffix = '',
+    // Milestone props (new)
+    milestones = [],
+    currentMilestone = null,
+    showMilestones = true // Toggle between steps view and milestones view
 }) => {
     const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
     const [currentStepForLesson, setCurrentStepForLesson] = useState(null);
@@ -33,6 +40,23 @@ const MountainDashboard = ({
     // State for StepDetailModal
     const [selectedStep, setSelectedStep] = useState(null);
     const [stepModalOpen, setStepModalOpen] = useState(false);
+
+    // State for MilestoneDetailModal
+    const [selectedMilestone, setSelectedMilestone] = useState(null);
+    const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
+
+    // Format value with prefix/suffix for milestones
+    const formatValue = (value) => {
+        if (value === null || value === undefined) return '0';
+        const formatted = value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value.toLocaleString();
+        return `${metricPrefix}${formatted}${metricSuffix ? ' ' + metricSuffix : ''}`;
+    };
+
+    // Handle milestone click
+    const handleMilestoneClick = (milestone) => {
+        setSelectedMilestone(milestone);
+        setMilestoneModalOpen(true);
+    };
 
     // Path points for markers (Approximate positions along the bezier curve)
     // Path points for markers (Aligns with SVG ViewBox 0 0 1440 900)
@@ -128,8 +152,27 @@ const MountainDashboard = ({
                 <MountainBackground />
                 <WindingPath progress={progress} />
 
-                {/* Steps */}
-                {steps.map((step, index) => (
+                {/* Milestone Markers (Lock-based journey) */}
+                {showMilestones && milestones.length > 0 && milestones.map((milestone, index) => {
+                    // Calculate position based on target value or index
+                    const position = hasMetricProgress && targetValue > 0
+                        ? getMilestonePosition(milestone, targetValue)
+                        : getMilestonePositionByIndex(index, milestones.length);
+
+                    return (
+                        <MilestoneMarker
+                            key={milestone.id}
+                            milestone={milestone}
+                            position={position}
+                            isActive={currentMilestone?.id === milestone.id}
+                            onClick={handleMilestoneClick}
+                            formatValue={formatValue}
+                        />
+                    );
+                })}
+
+                {/* Legacy Steps (shown when no milestones or showMilestones is false) */}
+                {(!showMilestones || milestones.length === 0) && steps.map((step, index) => (
                     <StepMarker
                         key={step.id}
                         step={step}
@@ -141,7 +184,7 @@ const MountainDashboard = ({
                 ))}
 
                 {/* Sticky Notes - Pamphlet style on journey path (grouped by step) */}
-                {steps.map((step, stepIndex) => {
+                {(!showMilestones || milestones.length === 0) && steps.map((step, stepIndex) => {
                     // Group all lessons for this step
                     const lessonsForStep = stickyNotes.filter(note => note.step_id === step.id);
                     if (lessonsForStep.length === 0) return null;
@@ -228,6 +271,13 @@ const MountainDashboard = ({
                             onRefreshNotes();
                         }
                     }}
+                />
+
+                {/* Milestone Detail Modal - Promise card with calendar */}
+                <MilestoneDetailModal
+                    isOpen={milestoneModalOpen}
+                    onClose={() => setMilestoneModalOpen(false)}
+                    milestone={selectedMilestone}
                 />
 
             </div>

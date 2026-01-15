@@ -79,10 +79,14 @@ export const createMilestonesBatch = async (mountainId, userId, milestonesData) 
         target_value: m.target_value,
         title: m.title,
         commitment: m.commitment || null,
+        consequence: m.consequence || null,
         reward: m.reward || null,
         icon_emoji: m.icon_emoji || '🎯',
         theme_color: m.theme_color || '#E7C778',
-        sort_order: m.sort_order ?? index
+        sort_order: m.sort_order ?? index,
+        deadline: m.deadline || null,
+        milestone_type: m.milestone_type || 'value',
+        task_description: m.task_description || null
     }))
 
     const { data, error } = await supabase
@@ -159,6 +163,84 @@ export const unlockMilestone = async (milestoneId, currentValue) => {
     }
 
     return { milestone: data, error: null }
+}
+
+/**
+ * Mark a milestone as broken (promise failed)
+ */
+export const markMilestoneBroken = async (milestoneId, reason = null) => {
+    const { data, error } = await supabase
+        .from('lock_milestones')
+        .update({
+            is_broken: true,
+            broken_at: new Date().toISOString(),
+            broken_reason: reason,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', milestoneId)
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error marking milestone as broken:', error.message)
+        return { milestone: null, error }
+    }
+
+    return { milestone: data, error: null }
+}
+
+/**
+ * Check for expired deadlines and mark them as broken
+ */
+export const checkExpiredDeadlines = async (mountainId) => {
+    const now = new Date().toISOString()
+
+    const { data, error } = await supabase
+        .from('lock_milestones')
+        .update({
+            is_broken: true,
+            broken_at: now,
+            updated_at: now
+        })
+        .eq('mountain_id', mountainId)
+        .eq('is_unlocked', false)
+        .eq('is_broken', false)
+        .not('deadline', 'is', null)
+        .lt('deadline', now)
+        .select()
+
+    if (error) {
+        console.error('Error checking expired deadlines:', error.message)
+        return { expiredMilestones: [], error }
+    }
+
+    return { expiredMilestones: data || [], error: null }
+}
+
+/**
+ * Get upcoming deadlines (within N hours)
+ */
+export const getUpcomingDeadlines = async (mountainId, hoursAhead = 24) => {
+    const now = new Date()
+    const futureTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000)
+
+    const { data, error } = await supabase
+        .from('lock_milestones')
+        .select('*')
+        .eq('mountain_id', mountainId)
+        .eq('is_unlocked', false)
+        .eq('is_broken', false)
+        .not('deadline', 'is', null)
+        .gte('deadline', now.toISOString())
+        .lte('deadline', futureTime.toISOString())
+        .order('deadline', { ascending: true })
+
+    if (error) {
+        console.error('Error getting upcoming deadlines:', error.message)
+        return { milestones: [], error }
+    }
+
+    return { milestones: data || [], error: null }
 }
 
 // ============ DAILY CHECK-INS ============
@@ -328,4 +410,18 @@ export const REWARD_PRESETS = [
     { label: 'New gear/gadget', icon: '🎧' },
     { label: 'Weekend trip', icon: '✈️' },
     { label: 'Celebrate with friends', icon: '🎉' }
+]
+
+/**
+ * Consequence preset suggestions (what happens if promise is broken)
+ */
+export const CONSEQUENCE_PRESETS = [
+    { label: 'Donate $5 to charity', icon: '💸' },
+    { label: 'Donate $10 to charity', icon: '💰' },
+    { label: 'Donate $20 to charity', icon: '🏦' },
+    { label: 'No coffee for a day', icon: '☕' },
+    { label: 'Cold shower tomorrow', icon: '🚿' },
+    { label: 'Extra 30min workout', icon: '🏋️' },
+    { label: 'Clean the house', icon: '🧹' },
+    { label: 'Write a public apology post', icon: '📝' }
 ]
